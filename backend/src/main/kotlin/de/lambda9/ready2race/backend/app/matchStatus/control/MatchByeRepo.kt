@@ -26,10 +26,27 @@ object MatchByeRepo {
             COMPETITION_REGISTRATION.NAME.`as`("team_name"),
             COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
             COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason"),
+            COMPETITION_MATCH.BYE_MUST_RACE.`as`("bye_must_race"),
+            COMPETITION_SETUP_PARTICIPANT.SEED.`as`("team_seed"),
         )
             .from(COMPETITION_MATCH_TEAM)
             .join(COMPETITION_SETUP_MATCH)
             .on(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            // Der Lauf zum Setup-Lauf: competition_match ist über competition_setup_match
+            // Primärschlüssel-gejoint - existiert die Team-Zeile, existiert auch der Lauf.
+            .join(COMPETITION_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_MATCH_TEAM.COMPETITION_MATCH))
+            // Der Setup-Platz dieser Mannschaft, für die Setzungszahl im Freilos-Label
+            // ("Freilos 1"): `createNewRound` vergibt die Startnummer als `ranking` des
+            // Setup-Platzes, dessen `seed` die Mannschaft belegt - die Rückrichtung ist also
+            // genau dieser Join. Left join, weil nicht jeder Lauf Setup-Plätze hat (Erstrunden
+            // werden über die Standard-Setzliste besetzt) und Startnummern nachträglich
+            // umgetragen sein können (Bahnentausch) - dann bleibt die Zahl schlicht weg.
+            .leftJoin(COMPETITION_SETUP_PARTICIPANT)
+            .on(
+                COMPETITION_SETUP_PARTICIPANT.COMPETITION_SETUP_MATCH.eq(COMPETITION_MATCH_TEAM.COMPETITION_MATCH)
+                    .and(COMPETITION_SETUP_PARTICIPANT.RANKING.eq(COMPETITION_MATCH_TEAM.START_NUMBER))
+            )
             .join(COMPETITION_SETUP_ROUND)
             .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
             .join(COMPETITION_PROPERTIES)

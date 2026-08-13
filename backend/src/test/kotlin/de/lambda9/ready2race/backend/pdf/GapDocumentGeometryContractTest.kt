@@ -87,9 +87,15 @@ class GapDocumentGeometryContractTest {
         val font = PDType1Font(Standard14Fonts.FontName.HELVETICA)
         val pageHeight = PDRectangle.A4.height
         val boxHeight = pageHeight * addition.relHeight.toFloat()
-        val fontSize = addition.fontSize ?: boxHeight
-        val lineHeight = fontSize * 1.2f
-        val capHeight = fontSize * font.fontDescriptor.capHeight / 1000
+        // Die tatsächlich gerenderte Schriftgröße kommt aus der geteilten Kette (Umbruch +
+        // gapTextMetrics), nicht aus addition.fontSize: seit dem 11.08.2026 schrumpft ein zu
+        // voller Kasten die Schrift, die Rückrechnung muss also mit derselben Kette messen.
+        val wrapped = GapTextWidths.of(null).use { widths ->
+            listOf(addition).wrappedToBoxes(PDRectangle.A4.width, pageHeight, widths).single()
+        }
+        val metrics = wrapped.gapTextMetrics(boxHeight, wrapped.content.count { it == '\n' } + 1)
+        val lineHeight = metrics.lineHeight
+        val capHeight = metrics.fontSize * font.fontDescriptor.capHeight / 1000
 
         val baseline = firstLineBaseline(doc)
         // baseline = blockTop - lineHeight * 0 - (lineHeight + capHeight) / 2, siehe drawAddition.
@@ -179,5 +185,18 @@ class GapDocumentGeometryContractTest {
     @Test
     fun aWrappedChainStartsAtTheSameSpotInBothFormats() {
         assertSamePosition(addition(fiveClubs, fontSize = 18f))
+    }
+
+    /**
+     * Der Namensblock eines Doppelvierers mit Steuerleuten: fünf Zeilen in einem Kasten, der auf
+     * eine Zeile eingemessen ist. Seit dem 11.08.2026 schrumpft hier die Schrift, statt dass der
+     * Block über den Kasten hinauswächst - und die geschrumpfte Geometrie muss in beiden Formaten
+     * identisch bleiben, sonst träfen PDF und DOCX verschiedene Punkte auf dem Papier.
+     */
+    @Test
+    fun aShrunkFiveNameBlockLandsOnTheSameSpotInBothFormats() {
+        assertSamePosition(
+            addition("Carina Hein\nMalte Hein\nJette Petersen\nBjarne Lorenzen\nFriederike Sinning", fontSize = 20f)
+        )
     }
 }

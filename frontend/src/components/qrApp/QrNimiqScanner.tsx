@@ -18,6 +18,12 @@ const QrNimiqScanner = (props: {callback: (qrCodeContent: string) => void}) => {
     const {t} = useTranslation()
     const [lastScannedCode, setLastScannedCode] = useState<string | null>(null)
     const [cameraId, setCameraId] = useState<string | undefined>(undefined)
+    // Die tatsächlich aktive Kamera, wenn das Betriebssystem gewählt hat (facingMode) —
+    // nur für die Anzeige im Select, löst keinen Neustart des Streams aus.
+    const [activeCameraId, setActiveCameraId] = useState<string | undefined>(undefined)
+    // Erst wenn geklärt ist, ob eine gespeicherte Kamerawahl noch gültig ist, darf der
+    // Stream starten — sonst liefe kurz die Systemwahl und würde gleich wieder ersetzt.
+    const [storedChecked, setStoredChecked] = useState(false)
     const [devices, setDevices] = useState<{id: string; label: string}[]>([])
     const videoRef = useRef<HTMLVideoElement>(null)
     const scannerRef = useRef<QrScanner | null>(null)
@@ -30,18 +36,13 @@ const QrNimiqScanner = (props: {callback: (qrCodeContent: string) => void}) => {
             const validCamera = cams.find(cam => cam.id === storedCameraId)
             if (validCamera) {
                 setCameraId(validCamera.id)
-            } else {
-                const backCam = cams.find(
-                    d =>
-                        d.label.toLowerCase().includes('back') ||
-                        d.label.toLowerCase().includes('rear'),
-                )
-                if (backCam) {
-                    setCameraId(backCam.id)
-                } else if (cams.length > 0) {
-                    setCameraId(cams[0].id)
-                }
             }
+            // Ohne gespeicherte Auswahl wird nicht über Gerätelabels geraten: auf
+            // deutschsprachigen iPhones heißen die Kameras „Rückkamera“/„Frontkamera“,
+            // „back“/„rear“ matcht dort nie und der Fallback landete auf der Frontkamera.
+            // Stattdessen überlässt der Stream-Effekt die Wahl per facingMode dem
+            // Betriebssystem — das kennt seine logische Rückkamera sprachunabhängig.
+            setStoredChecked(true)
         })
         return () => {
             setCameraId(undefined)
@@ -55,14 +56,21 @@ const QrNimiqScanner = (props: {callback: (qrCodeContent: string) => void}) => {
     }, [cameraId])
 
     useEffect(() => {
-        if (!videoRef.current || !cameraId) return
+        if (!videoRef.current || !storedChecked) return
         if (videoRef.current.srcObject) {
             ;(videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop())
             videoRef.current.srcObject = null
         }
         let stopped = false
         navigator.mediaDevices
-            .getUserMedia({video: {deviceId: {exact: cameraId}}})
+            .getUserMedia(
+                cameraId
+                    ? // Eine gespeicherte bzw. manuell gewählte Kamera gewinnt weiterhin.
+                      {video: {deviceId: {exact: cameraId}}}
+                    : // Keine Auswahl: das Betriebssystem wählt die logische Rückkamera —
+                      // funktioniert auf iOS und Android unabhängig von der Gerätesprache.
+                      {video: {facingMode: {ideal: 'environment'}}},
+            )
             .then(stream => {
                 if (stopped) {
                     stream.getTracks().forEach(track => track.stop())
@@ -70,6 +78,9 @@ const QrNimiqScanner = (props: {callback: (qrCodeContent: string) => void}) => {
                 }
                 videoRef.current!.srcObject = stream
                 videoRef.current!.play()
+                // Das Select soll die tatsächlich aktive Kamera anzeigen, auch wenn das
+                // Betriebssystem sie gewählt hat.
+                setActiveCameraId(stream.getVideoTracks()[0]?.getSettings().deviceId)
                 if (!scannerRef.current) {
                     scannerRef.current = new QrScanner(
                         videoRef.current!,
@@ -104,7 +115,7 @@ const QrNimiqScanner = (props: {callback: (qrCodeContent: string) => void}) => {
                 scannerRef.current = null
             }
         }
-    }, [cameraId, feedback, t, lastScannedCode, props])
+    }, [cameraId, storedChecked, feedback, t, lastScannedCode, props])
 
     return (
         <Stack spacing={2} direction="column" alignItems="center" justifyContent="center" p={2}>
@@ -118,7 +129,7 @@ const QrNimiqScanner = (props: {callback: (qrCodeContent: string) => void}) => {
                     </InputLabel>
                     <Select
                         labelId="camera-select-label"
-                        value={cameraId || ''}
+                        value={cameraId ?? activeCameraId ?? ''}
                         label="Kamera"
                         onChange={e => setCameraId(e.target.value)}
                         fullWidth

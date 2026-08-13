@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.control.*
 import de.lambda9.ready2race.backend.app.event.entity.*
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -106,6 +107,37 @@ object EventService {
         }.orDie()
 
         KIO.ok(ApiResponse.NoData)
+    }
+
+    /**
+     * Setzt oder löscht den veranstaltungsweiten Hinweis - der schmale Handgriff am Renntag,
+     * bewusst getrennt vom großen [updateEvent] (siehe [UpdateEventNoticeRequest]).
+     *
+     * Sichtbar wird die Änderung mit dem nächsten Poll der Geräte (bis 15 Sekunden): die
+     * Zwischenspeicher der gepollten Antworten (MyEventService, BoardService,
+     * EventInfoService.getLiveMatches) werden über den [EventChangeMarker]-Bump unten sofort
+     * entwertet — ihre TTL kommt nicht mehr obendrauf, sie deckelt nur den Ruhezustand.
+     */
+    fun updateEventNotice(
+        eventId: UUID,
+        userId: UUID,
+        request: UpdateEventNoticeRequest,
+    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+
+        val eventRecord = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
+
+        !EventRepo.update(eventRecord) {
+            noticeText = request.text
+            noticeSeverity = request.severityOrNull()?.name
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        // Der Hinweis liegt in den Antworten der öffentlichen Anzeigen eingebettet — ohne den
+        // Bump hinge er dort noch bis zu TTL-Länge im Zwischenspeicher fest.
+        EventChangeMarker.bump(eventId)
+
+        noData
     }
 
     fun deleteEvent(

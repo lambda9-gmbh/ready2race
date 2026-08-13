@@ -47,9 +47,9 @@ object RaceClockerPollRepo {
     }
 
     /**
-     * Die Läufe einer Veranstaltung, die der Job anfassen darf. Dieselbe Coalesce-Kette wie
+     * Die Läufe einer Veranstaltung, die der Job anfassen darf. Dieselbe Anwahl wie
      * [de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo.getForRaceClockerPull]
-     * - Wettkampf-Anwahl vor Veranstaltungs-Voreinstellung.
+     * - das eine Rennen des Wettkampfs.
      *
      * Ausgeschlossen sind hier nur die harten Fälle: beendet, pausiert, kein RaceClocker, kein
      * angewähltes Rennen, Slot abgesagt. Das Zeitfenster fehlt bewusst - es hängt an `now` und gehört in die prüfbare
@@ -63,15 +63,10 @@ object RaceClockerPollRepo {
         // mehrdeutig, weil sowohl competition.timing_system als auch event.timing_system in der
         // Join-Kette stehen.
         //
-        // Die Rennen kommen aus zwei getrennten Joins statt aus coalesce-Ausdrücken in der
-        // SELECT-Liste. Anders als das Zeitnahme-System erben sie NICHT von der Veranstaltung: die
+        // Das Rennen erbt anders als das Zeitnahme-System NICHT von der Veranstaltung: die
         // Zuordnung ist pro Wettkampf (Wunsch vom 11.08.2026), deshalb steht hier direkt die
         // Wettkampf-Spalte statt eines coalesce mit der Veranstaltung.
         val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM)
-        val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
-        val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
-        val qualiRaceId = COMPETITION.RACECLOCKER_RACE_QUALIFICATION
-        val roundsRaceId = COMPETITION.RACECLOCKER_RACE_ROUNDS
 
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
@@ -79,19 +74,17 @@ object RaceClockerPollRepo {
             COMPETITION_MATCH.ACTIVATED_AT,
             // Der Ist-Start entscheidet, ob der Abruf ihn im Feed noch nachtragen muss.
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_SETUP_MATCH.NAME,
-            COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
+            // Freilose tragen ihren materialisierten Namen (V202608121300) - dieselbe Koaleszenz
+            // wie startlist_view, sonst fände der Wellennamen-Abgleich die exportierte Welle nicht.
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION.ID.`as`("competition_id"),
-            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die sechs
+            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die drei
             // Rennen-Spalten die Anwahl.
             COMPETITION_PROPERTIES.IDENTIFIER,
             COMPETITION_PROPERTIES.SHORT_NAME,
-            qualiRace.ID,
-            qualiRace.NAME,
-            qualiRace.RESULTS_URL,
-            roundsRace.ID,
-            roundsRace.NAME,
-            roundsRace.RESULTS_URL,
+            RACECLOCKER_RACE.ID,
+            RACECLOCKER_RACE.NAME,
+            RACECLOCKER_RACE.RESULTS_URL,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -102,15 +95,13 @@ object RaceClockerPollRepo {
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
-            .leftJoin(qualiRace).on(qualiRace.ID.eq(qualiRaceId))
-            .leftJoin(roundsRace).on(roundsRace.ID.eq(roundsRaceId))
+            // Innerer Join, kein leftJoin: Ohne angewähltes Rennen gibt es nichts zu holen - der
+            // Lauf fällt still heraus, statt den Takt mit einem Fehler zu belasten.
+            .join(RACECLOCKER_RACE).on(RACECLOCKER_RACE.ID.eq(COMPETITION.RACECLOCKER_RACE))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
             .and(COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT.isNull)
             .and(timingSystem.eq(TimingSystem.RACECLOCKER.name))
-            // Ohne jede Anwahl gibt es nichts zu holen - der Lauf fällt still heraus, statt den
-            // Takt mit einem Fehler zu belasten.
-            .and(DSL.or(qualiRaceId.isNotNull, roundsRaceId.isNotNull))
             // Ein abgesagter Slot bleibt abgesagt, auch wenn in RaceClocker jemand die Welle
             // startet. Die volle Zustandsableitung (EventScheduleLogic.deriveSlotState) ist hier
             // nicht nötig: Ihre beiden anderen Eingaben sind an dieser Stelle konstant - der Lauf
@@ -130,17 +121,13 @@ object RaceClockerPollRepo {
                     startedAt = record[COMPETITION_MATCH.STARTED_AT],
                     target = RaceClockerMatchTarget(
                         waveName = WaveName.format(
-                            matchName = record[COMPETITION_SETUP_MATCH.NAME],
+                            matchName = record["match_name", String::class.java],
                             startTime = record[COMPETITION_MATCH.START_TIME],
                             competitionIdentifier = record[COMPETITION_PROPERTIES.IDENTIFIER],
                             competitionShortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
                         ),
-                        isQualification = record[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                        qualificationRace = record[qualiRace.ID]?.let {
-                            RaceClockerRaceRef(it, record[qualiRace.NAME]!!, record[qualiRace.RESULTS_URL]!!)
-                        },
-                        roundsRace = record[roundsRace.ID]?.let {
-                            RaceClockerRaceRef(it, record[roundsRace.NAME]!!, record[roundsRace.RESULTS_URL]!!)
+                        race = record[RACECLOCKER_RACE.ID]?.let {
+                            RaceClockerRaceRef(it, record[RACECLOCKER_RACE.NAME]!!, record[RACECLOCKER_RACE.RESULTS_URL]!!)
                         },
                     ),
                 )
@@ -151,7 +138,7 @@ object RaceClockerPollRepo {
      * Ob dieser Lauf gerade für die Automatik pausiert ist.
      *
      * [getCandidates] filtert das schon einmal, aber am Anfang des Takts. Zwischen dieser Lesung und
-     * dem Schreiben liegen bis zu zwei HTTP-Abrufe mit je zehn Sekunden Zeitlimit - lang genug, dass
+     * dem Schreiben liegt der HTTP-Abruf mit zehn Sekunden Zeitlimit - lang genug, dass
      * ein Schiedsrichter dazwischen von Hand einträgt und damit pausiert. Der Job fragt deshalb ein
      * zweites Mal, in derselben Transaktion wie das Schreiben, und lässt den Lauf dann in Ruhe.
      */

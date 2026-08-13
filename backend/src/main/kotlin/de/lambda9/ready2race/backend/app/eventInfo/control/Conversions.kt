@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.AthleteBoardLogic
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardParticipant
+import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardRequirement
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardResultTeam
 import de.lambda9.ready2race.backend.app.eventInfo.entity.AthleteBoardTeam
@@ -17,6 +18,7 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.LiveMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchTeamInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
+import de.lambda9.ready2race.backend.app.eventInfo.entity.ParticipantInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchParticipantInfo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchTeamInfo
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardLogic
@@ -25,6 +27,7 @@ import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchStatusTeam
 import de.lambda9.ready2race.backend.database.generated.tables.records.BoardRecord
 import org.jooq.JSONB
 import java.time.LocalDateTime
+import java.util.UUID
 import java.util.*
 
 /**
@@ -76,13 +79,35 @@ fun BoardRequest.toRecord(eventId: UUID): BoardRecord {
 
 private fun participantName(firstName: String, lastName: String) = "$firstName $lastName"
 
-fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant(includeDetails: Boolean = false) =
+fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant(
+    includeDetails: Boolean = false,
+    requirements: List<AthleteBoardRequirement> = emptyList(),
+) =
     AthleteBoardParticipant(
         name = participantName(firstName, lastName),
         role = namedRole,
         // Nur auf Anforderung (Sprecherinnen-Kacheln): sonst bleibt die Antwort schlank.
         year = if (includeDetails) year else null,
         clubName = if (includeDetails) wornClubName else null,
+        // Bereits serverseitig auf freigegebene, für die Rolle geltende Bedingungen gefiltert
+        // (BoardService.participantRequirements) — hier nur noch durchgereicht.
+        requirements = requirements,
+    )
+
+/**
+ * Die Ergebnis-Quelle führt weniger Personendaten als die Aufstellungen (kein getragener
+ * Verein); für die Sprecher-Kachel tritt der Gastvereins-Freitext an seine Stelle.
+ */
+private fun ParticipantInfo.toAthleteBoardParticipant(
+    includeDetails: Boolean,
+    requirements: List<AthleteBoardRequirement>,
+) =
+    AthleteBoardParticipant(
+        name = participantName(firstName, lastName),
+        role = namedRole,
+        year = if (includeDetails) year else null,
+        clubName = if (includeDetails) externalClubName else null,
+        requirements = requirements,
     )
 
 /**
@@ -92,14 +117,19 @@ fun UpcomingMatchParticipantInfo.toAthleteBoardParticipant(includeDetails: Boole
 private fun clubsOrRegistering(chain: String?, registeringClubName: String?) =
     chain ?: registeringClubName
 
-fun RunningMatchTeamInfo.toAthleteBoardTeam(includeDetails: Boolean = false) = AthleteBoardTeam(
+fun RunningMatchTeamInfo.toAthleteBoardTeam(
+    includeDetails: Boolean = false,
+    requirements: Map<UUID, List<AthleteBoardRequirement>> = emptyMap(),
+) = AthleteBoardTeam(
     startNumber = startNumber,
     teamNumber = teamNumber,
     clubsShort = clubsOrRegistering(clubsShort, clubName),
     clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
     registeringClub = if (includeDetails) clubName else null,
-    participants = participants.map { it.toAthleteBoardParticipant(includeDetails) },
+    participants = participants.map {
+        it.toAthleteBoardParticipant(includeDetails, requirements[it.participantId] ?: emptyList())
+    },
     // Teilergebnis: gefüllt, sobald die Zeitnahme dieses Boot gewertet hat - der Lauf läuft
     // dabei weiter, bis die Organisation ihn beendet.
     place = currentPosition,
@@ -108,22 +138,29 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam(includeDetails: Boolean = false) = A
     penaltyNote = penaltyNote,
     failed = failed,
     failedReason = failedReason,
+    laps = laps,
 )
 
-fun UpcomingMatchTeamInfo.toAthleteBoardTeam(includeDetails: Boolean = false) = AthleteBoardTeam(
+fun UpcomingMatchTeamInfo.toAthleteBoardTeam(
+    includeDetails: Boolean = false,
+    requirements: Map<UUID, List<AthleteBoardRequirement>> = emptyMap(),
+) = AthleteBoardTeam(
     startNumber = startNumber,
     teamNumber = teamNumber,
     clubsShort = clubsOrRegistering(clubsShort, clubName),
     clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
     registeringClub = if (includeDetails) clubName else null,
-    participants = participants.map { it.toAthleteBoardParticipant(includeDetails) },
+    participants = participants.map {
+        it.toAthleteBoardParticipant(includeDetails, requirements[it.participantId] ?: emptyList())
+    },
 )
 
 fun RunningMatchInfo.toAthleteBoardMatch(
     now: LocalDateTime,
     showCountdown: Boolean,
     includeDetails: Boolean = false,
+    requirements: Map<UUID, List<AthleteBoardRequirement>> = emptyMap(),
 ) =
     AthleteBoardMatch(
         matchId = matchId,
@@ -149,13 +186,14 @@ fun RunningMatchInfo.toAthleteBoardMatch(
             },
         ),
         startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
-        teams = teams.map { it.toAthleteBoardTeam(includeDetails) },
+        teams = teams.map { it.toAthleteBoardTeam(includeDetails, requirements) },
     )
 
 fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(
     now: LocalDateTime,
     showCountdown: Boolean,
     includeDetails: Boolean = false,
+    requirements: Map<UUID, List<AthleteBoardRequirement>> = emptyMap(),
 ) =
     AthleteBoardMatch(
         matchId = matchId,
@@ -177,13 +215,16 @@ fun UpcomingCompetitionMatchInfo.toAthleteBoardMatch(
             skipped = cancelled,
         ),
         startState = AthleteBoardLogic.startState(scheduledStartTime, now, showCountdown),
-        teams = teams.map { it.toAthleteBoardTeam(includeDetails) },
+        teams = teams.map { it.toAthleteBoardTeam(includeDetails, requirements) },
         pendingRound = pendingRound,
         name = name,
         cancelled = cancelled,
     )
 
-fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
+fun LatestMatchResultInfo.toAthleteBoardResult(
+    includeDetails: Boolean = false,
+    requirements: Map<UUID, List<AthleteBoardRequirement>> = emptyMap(),
+) = AthleteBoardResult(
     matchId = matchId,
     competitionName = competitionName,
     competitionShortName = competitionShortName,
@@ -212,6 +253,17 @@ fun LatestMatchResultInfo.toAthleteBoardResult() = AthleteBoardResult(
             failedReason = it.failedReason,
             deregistered = it.deregistered,
             deregisteredReason = it.deregisteredReason,
+            laps = it.laps,
+            // Meldender Verein wie bei der Lauf-Karte (RunningMatchTeamInfo.toAthleteBoardTeam):
+            // nur mit Detailbedarf geladen; ob er erscheint, entscheidet das Element
+            // (showRegisteringClub) auf dem Gerät.
+            registeringClub = if (includeDetails) it.clubName else null,
+            // Crew immer dabei — wie die Lauf-Karte (12.08.2026): dieselbe Kachel zeigte im
+            // Lauf die Besatzung und verlor sie mit dem Beenden. Jahrgang, getragener Verein
+            // und Bedingungen bleiben Detail-gated (toAthleteBoardParticipant).
+            participants = it.participants.map { p ->
+                p.toAthleteBoardParticipant(includeDetails, requirements[p.participantId] ?: emptyList())
+            },
         )
     },
 )

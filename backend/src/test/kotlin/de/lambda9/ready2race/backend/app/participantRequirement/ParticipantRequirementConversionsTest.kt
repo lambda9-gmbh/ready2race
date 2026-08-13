@@ -23,12 +23,31 @@ class ParticipantRequirementConversionsTest {
     private fun upsert(publiclyVisible: Boolean?) = ParticipantRequirementUpsertDto(
         name = "Aktivenpass",
         description = null,
+        publicNote = null,
         optional = false,
         checkInApp = false,
         publiclyVisible = publiclyVisible,
         checkEarliestMinutesBefore = null,
         checkLatestMinutesBefore = null,
     )
+
+    @Test
+    fun upsertCarriesPublicNoteIntoRecordAndBack() {
+        // Der öffentliche Text und die interne Beschreibung sind zwei Spalten; die Abbildung
+        // darf sie in keiner Richtung vertauschen.
+        val record = upsert(false)
+            .copy(description = "intern", publicNote = "öffentlich")
+            .toRecord(UUID.randomUUID())
+            .unsafeRunSync().getOrNull()
+        assertNotNull(record)
+        assertEquals("intern", record.description)
+        assertEquals("öffentlich", record.publicNote)
+
+        val dto = record.toDto().unsafeRunSync().getOrNull()
+        assertNotNull(dto)
+        assertEquals("intern", dto.description)
+        assertEquals("öffentlich", dto.publicNote)
+    }
 
     @Test
     fun upsertCarriesPubliclyVisibleIntoRecord() {

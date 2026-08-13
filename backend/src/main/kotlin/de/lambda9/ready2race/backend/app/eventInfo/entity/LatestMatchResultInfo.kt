@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -54,5 +55,7 @@ data class MatchResultTeamInfo(
     val penaltyNote: String?,
     val deregistered: Boolean,
     val deregisteredReason: String?,
-    val participants: List<ParticipantInfo>
+    val participants: List<ParticipantInfo>,
+    /** Zwischenzeiten dieses Boots, nachträglich gefüllt (EventInfoService.attachLaps). */
+    val laps: List<MatchTeamLapDto> = emptyList(),
 )

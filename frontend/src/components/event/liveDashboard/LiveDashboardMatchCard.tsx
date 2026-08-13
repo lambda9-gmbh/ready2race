@@ -1,6 +1,7 @@
 import {Fragment} from 'react'
-import {Box, Button, Card, CardContent, Divider, Stack, Typography} from '@mui/material'
+import {Box, Button, Card, CardContent, Divider, Stack, Tooltip, Typography} from '@mui/material'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
+import StickyNote2OutlinedIcon from '@mui/icons-material/StickyNote2Outlined'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
@@ -15,11 +16,15 @@ import {
     competitionLabel,
     crewMemberLabel,
     dashboardMatchStatus,
+    latestTeamNote,
+    LiveDashboardDetailSettings,
     matchControls,
+    teamNoteCount,
     matchHasResults,
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
+    dashboardRowColumns,
     teamShowsClubLine,
     teamShowsCrew,
     teamsInDisplayOrder,
@@ -61,6 +66,8 @@ type Props = {
     raceClockerAutoPull?: boolean
     /** Rennen am Kürzel statt am ausgeschriebenen Wettkampfnamen (geteilt mit dem Zeitplan-Tab). */
     shortLabels: boolean
+    /** Detailgrad der Bootszeilen (Notiz-Vorschau, Aufstellung) — geräte-lokal eingestellt. */
+    detail: LiveDashboardDetailSettings
 }
 
 const LiveDashboardMatchCard = ({
@@ -72,6 +79,7 @@ const LiveDashboardMatchCard = ({
     onResumeAutoPull,
     raceClockerAutoPull = false,
     shortLabels,
+    detail,
 }: Props) => {
     const {t} = useTranslation()
 
@@ -136,7 +144,8 @@ const LiveDashboardMatchCard = ({
     )
     const openTeams = openResultTeams(match)
     const resultsComplete = match.teams.length > 0 && openTeams.length === 0
-    const columns = hasResults ? '2ch minmax(0, 1fr) 10.5ch 2rem 26px' : '2ch minmax(0, 1fr) 26px'
+    // Ohne Prüfungs-Icons entfällt deren Spalte ganz — der Platz wächst der Namensspalte zu.
+    const columns = dashboardRowColumns(hasResults, detail.showChecks)
     // Sobald Zeit und Platz ihre Spalten belegen, bleibt der Vereinszeile am Telefon noch die
     // Hälfte der Breite - die Kette muss dann früher aufs "+n" ausweichen.
     const narrowChainChars = hasResults ? CLUB_CHAIN_NARROW_RESULT_CHARS : CLUB_CHAIN_NARROW_CHARS
@@ -214,37 +223,49 @@ const LiveDashboardMatchCard = ({
                             .join(' · ')}
                     </Typography>
                     <Box sx={{justifySelf: 'end'}}>
-                        <Box
-                            component="span"
-                            sx={{
-                                display: 'inline-block',
-                                px: 0.75,
-                                py: 0.25,
-                                borderRadius: 1,
-                                fontSize: '0.8rem',
-                                fontWeight: 700,
-                                whiteSpace: 'nowrap',
-                                // Die Farbe bleibt die Betonung der Karte (der laufende Lauf trägt
-                                // den kräftigsten Ton), der Text kommt aus der geteilten
-                                // Ableitung. „In Vorbereitung" bekommt den helleren Blauton, weil
-                                // „wartet auf Beenden" den dunklen schon belegt.
-                                backgroundColor: running
-                                    ? 'success.dark'
-                                    : preparing
-                                      ? 'info.main'
-                                      : skipped
-                                        ? 'warning.dark'
-                                        : awaitingFinish
-                                          ? 'info.dark'
-                                          : 'grey.200',
-                                color:
-                                    running || preparing || skipped || awaitingFinish
-                                        ? 'common.white'
-                                        : 'grey.900',
-                                textDecoration: statusChip.strikeThrough ? 'line-through' : 'none',
-                            }}>
-                            {translate(statusChip.labelKey, statusChip.values)}
-                        </Box>
+                        {/* Beim „muss gefahren werden"-Freilos erklärt der Tooltip am Chip,
+                            warum das Boot allein fährt (Fairness, Zeit zählt nicht fürs
+                            Weiterkommen). Ein leerer Titel schaltet den Tooltip ab. */}
+                        <Tooltip
+                            title={
+                                bye?.mustRace
+                                    ? translate('event.match.bye.mustRaceExplanation')
+                                    : ''
+                            }>
+                            <Box
+                                component="span"
+                                sx={{
+                                    display: 'inline-block',
+                                    px: 0.75,
+                                    py: 0.25,
+                                    borderRadius: 1,
+                                    fontSize: '0.8rem',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    // Die Farbe bleibt die Betonung der Karte (der laufende Lauf trägt
+                                    // den kräftigsten Ton), der Text kommt aus der geteilten
+                                    // Ableitung. „In Vorbereitung" bekommt den helleren Blauton, weil
+                                    // „wartet auf Beenden" den dunklen schon belegt.
+                                    backgroundColor: running
+                                        ? 'success.dark'
+                                        : preparing
+                                          ? 'info.main'
+                                          : skipped
+                                            ? 'warning.dark'
+                                            : awaitingFinish
+                                              ? 'info.dark'
+                                              : 'grey.200',
+                                    color:
+                                        running || preparing || skipped || awaitingFinish
+                                            ? 'common.white'
+                                            : 'grey.900',
+                                    textDecoration: statusChip.strikeThrough
+                                        ? 'line-through'
+                                        : 'none',
+                                }}>
+                                {translate(statusChip.labelKey, statusChip.values)}
+                            </Box>
+                        </Tooltip>
                     </Box>
                     {/*
                         Muss der letzte Kind-Knoten dieses Grids bleiben: die vier Kinder davor
@@ -256,7 +277,10 @@ const LiveDashboardMatchCard = ({
                     {bye && (
                         <Box sx={{gridColumn: '1 / -1'}}>
                             <Typography variant="caption" sx={{color: 'grey.700'}}>
-                                {translate(bye.key, bye.values)}
+                                {translate(bye.key, bye.values) +
+                                    (bye.mustRace
+                                        ? ` – ${translate('event.match.bye.mustRace')}`
+                                        : '')}
                             </Typography>
                         </Box>
                     )}
@@ -317,7 +341,11 @@ const LiveDashboardMatchCard = ({
                 {teams.map((team, index) => {
                     const substituted = team.substituted
                     const showClubLine = teamShowsClubLine(team)
-                    const showCrew = teamShowsCrew(team)
+                    // Die Aufstellung nur, wenn die Daten sie tragen UND die Einstellung sie
+                    // will — „Aufstellung anzeigen" (aus) räumt die Karten radikaler auf als
+                    // der Kompaktmodus, der nur verdichtet.
+                    const showCrew = teamShowsCrew(team) && detail.showCrew
+                    const notePreview = detail.notePreview ? latestTeamNote(team) : null
                     const heading = headingBeforeTeam.get(team.teamId)
 
                     return (
@@ -445,7 +473,44 @@ const LiveDashboardMatchCard = ({
                                                 )}
                                             />
                                         )}
+                                        {/*
+                                            Schiedsrichter-Notizen zu diesem Boot - derselbe Platz
+                                            wie der Ummeldungs-Marker daneben: ein Zeichen an der
+                                            Zeile, die Notizen selbst stehen im Detail-Dialog.
+                                            Nur wenn es welche gibt; eine Null hätte nichts zu sagen.
+                                        */}
+                                        {teamNoteCount(team) > 0 && (
+                                            <Stack
+                                                direction="row"
+                                                spacing={0.25}
+                                                alignItems="center"
+                                                sx={{flexShrink: 0, color: 'info.dark'}}
+                                                title={t('event.liveDashboard.notes.indicator', {
+                                                    count: teamNoteCount(team),
+                                                })}>
+                                                <StickyNote2OutlinedIcon sx={{fontSize: 20}} />
+                                                <Typography variant="caption" fontWeight={700}>
+                                                    {teamNoteCount(team)}
+                                                </Typography>
+                                            </Stack>
+                                        )}
                                     </Stack>
+                                    {/*
+                                        Die jüngste Notiz als einzeilige Vorschau direkt an der
+                                        Zeile — zusätzlich zum Icon+Zähler oben, der weiterhin
+                                        sagt, WIE VIELE es sind. Einzeilig und ellipsiert: die
+                                        Vorschau soll ein Blickfang sein, kein zweiter Dialog;
+                                        den vollen Text zeigt wie bisher der Detail-Dialog.
+                                    */}
+                                    {notePreview && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            noWrap
+                                            sx={{color: 'info.dark', fontStyle: 'italic'}}>
+                                            {notePreview.note}
+                                        </Typography>
+                                    )}
                                     {showCrew && (
                                         <Typography
                                             variant="caption"
@@ -461,6 +526,21 @@ const LiveDashboardMatchCard = ({
                                                 overflow: 'hidden',
                                             }}>
                                             {(team.crew ?? []).map(crewMemberLabel).join(' / ')}
+                                        </Typography>
+                                    )}
+                                    {/* Zwischenzeiten aus RaceClocker, sobald der Feed sie liefert -
+                                        dieselben Laps wie auf den Boards, hier in der Zeile mit. */}
+                                    {(team.laps ?? []).length > 0 && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{
+                                                color: 'grey.700',
+                                                fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                            {(team.laps ?? [])
+                                                .map(lap => `${lap.name} ${lap.timeString}`)
+                                                .join(' · ')}
                                         </Typography>
                                     )}
                                     {/*
@@ -483,25 +563,22 @@ const LiveDashboardMatchCard = ({
                                         unterwegs?" beantwortet der gemessene Boot-Start aus der
                                         Zeitnahme, solange weder Zielzeit noch Ausscheidung da ist.
                                     */}
-                                    {running &&
-                                        team.startedAt &&
-                                        !team.time &&
-                                        !team.failed && (
-                                            <Typography
-                                                variant="caption"
-                                                display="block"
-                                                sx={{
-                                                    color: 'primary.main',
-                                                    fontVariantNumeric: 'tabular-nums',
-                                                }}>
-                                                {t('event.liveDashboard.team.startedAt', {
-                                                    time: format(
-                                                        new Date(team.startedAt),
-                                                        t('format.timeWithSeconds'),
-                                                    ),
-                                                })}
-                                            </Typography>
-                                        )}
+                                    {running && team.startedAt && !team.time && !team.failed && (
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{
+                                                color: 'primary.main',
+                                                fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                            {t('event.liveDashboard.team.startedAt', {
+                                                time: format(
+                                                    new Date(team.startedAt),
+                                                    t('format.timeWithSeconds'),
+                                                ),
+                                            })}
+                                        </Typography>
+                                    )}
                                     {team.inArenaRequired && team.inArenaAt && (
                                         <Typography
                                             variant="caption"
@@ -582,7 +659,16 @@ const LiveDashboardMatchCard = ({
                                         </Box>
                                     </>
                                 )}
-                                <SeverityIcon severity={team.severity} />
+                                {/*
+                                    „Prüfungen anzeigen" aus heißt: kein Icon UND keine Spalte —
+                                    `columns` (siehe dashboardRowColumns) hat den 26px-Platz dann
+                                    gar nicht erst reserviert, die Zeile wird wirklich schmaler
+                                    statt eine leere Lücke zu behalten. Die verdichtete Severity
+                                    je Boot kommt fertig bewertet aus dem Backend
+                                    (LiveDashboardTeamDto.severity); der Detail-Dialog zeigt die
+                                    Prüfungen unabhängig von dieser Einstellung weiter.
+                                */}
+                                {detail.showChecks && <SeverityIcon severity={team.severity} />}
                             </Box>
                         </Fragment>
                     )

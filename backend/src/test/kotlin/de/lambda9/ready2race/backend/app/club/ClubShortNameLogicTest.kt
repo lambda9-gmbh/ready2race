@@ -77,6 +77,37 @@ class ClubShortNameLogicTest {
         assertEquals("RVg „Bille“", heuristic("Ruder-Vereinigung „Bille“ v. 1896 e.V."))
     }
 
+    /**
+     * Steht die Jahreszahl zwischen Trennstrichen, muss der übriggebliebene Strich mitgehen. Auf
+     * dem Board der CRF 2026 stand sonst "Ruder-Union Arkona Berlin - -".
+     */
+    @Test
+    fun aSeparatorLeftAloneByTheRemovedYearGoesWithIt() {
+        assertEquals("Ruder-Union Arkona Berlin", heuristic("Ruder-Union Arkona Berlin - 1879 - e.V."))
+    }
+
+    /**
+     * Ein Strich, der zwei Namensteile trennt, ist kein Rest und bleibt - sonst verschmölzen
+     * Verein und Hochschule zu einem Wort.
+     */
+    @Test
+    fun aSeparatorBetweenTwoPartsOfTheNameStays() {
+        assertEquals(
+            "RC Allemannia - Leuphana Universität Lüneburg",
+            heuristic("Ruder-Club Allemannia von 1866 e.V. - Leuphana Universität Lüneburg"),
+        )
+    }
+
+    /**
+     * Eine Jahresspanne ohne Klammern fällt ganz weg. "von 1875/1905" ließ bisher ein "/1905"
+     * stehen, weil nur der erste Jahrgang zum Muster passte.
+     */
+    @Test
+    fun anUnbracketedSpanOfYearsFallsAwayCompletely() {
+        assertEquals("Würzburger RV Bayern", heuristic("Würzburger Ruderverein Bayern von 1875/1905 e.V."))
+        assertEquals("Bremer RC HANSA", heuristic("Bremer Ruder-Club HANSA 1879/83 e.V."))
+    }
+
     /** Eine gepflegte Kurzform schlägt die Heuristik - genau dafür gibt es die Tabelle. */
     @Test
     fun aMaintainedShortNameBeatsTheHeuristic() {

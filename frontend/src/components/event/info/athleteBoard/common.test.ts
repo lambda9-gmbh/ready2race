@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {TFunction} from 'i18next'
-import {COUNTDOWN_MAX_SECONDS, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
+import {COUNTDOWN_MAX_SECONDS, compactLapLabel, finishComplete, formatClockTimeWithSeconds, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
 
 // Gibt den letzten Abschnitt des Schlüssels zurück, damit die Erwartungen unabhängig
 // von den echten Übersetzungen lesbar bleiben: "…hoursUnit" -> "hoursUnit".
@@ -92,11 +92,56 @@ describe('COUNTDOWN_MAX_SECONDS', () => {
     })
 })
 
+// Die Kurzform der Rundennamen an der Zeit: nur „ein Wort plus Zahl" wird eingedampft,
+// freier Text aus RaceClocker bleibt unangetastet.
+describe('compactLapLabel', () => {
+    test('Runde 1 wird zu R1', () => {
+        expect(compactLapLabel('Runde 1')).toBe('R1')
+        expect(compactLapLabel('Runde 12')).toBe('R12')
+    })
+
+    test('englische Namen ebenso', () => {
+        expect(compactLapLabel('Lap 2')).toBe('L2')
+    })
+
+    test('ohne Leerzeichen zwischen Wort und Zahl', () => {
+        expect(compactLapLabel('Runde2')).toBe('R2')
+    })
+
+    // Eine Marke wie „500m" beginnt mit einer Zahl und passt nicht ins Muster —
+    // sie bleibt stehen, bevor eine zu forsche Kürzung den Sinn kostet.
+    test('freie Namen bleiben unverändert', () => {
+        expect(compactLapLabel('500m')).toBe('500m')
+        expect(compactLapLabel('Boje Ost')).toBe('Boje Ost')
+    })
+
+    test('kleingeschriebene Namen liefern ein grosses Kürzel', () => {
+        expect(compactLapLabel('runde 3')).toBe('R3')
+    })
+})
+
 describe('scaled', () => {
     test('haengt die Groesse an die Dichte der Buehne', () => {
         expect(scaled('1rem', '2vw', '3rem')).toBe(
             'calc(var(--ab-scale, 1) * clamp(1rem, 2vw, 3rem))',
         )
+    })
+})
+
+// Die Wartestand-Kennzeichnung der „Im Rennen"-Karte: genau dann, wenn jedes Boot
+// Platz/Zeit hat oder gescheitert ist — dieselbe Auslegung wie teamHasResult im Backend.
+describe('finishComplete', () => {
+    test('alle Boote gewertet oder gescheitert: komplett', () => {
+        expect(finishComplete([{place: 1}, {place: 2}, {failed: true}])).toBe(true)
+    })
+
+    test('ein Boot noch ohne Ergebnis: nicht komplett', () => {
+        expect(finishComplete([{place: 1}, {place: null, failed: false}])).toBe(false)
+    })
+
+    // Leere Aufstellung (Platzhalter, wartende Runde): kein Zieleinlauf, kein Band.
+    test('ohne Boote nie komplett', () => {
+        expect(finishComplete([])).toBe(false)
     })
 })
 
@@ -138,5 +183,19 @@ describe('sortRunningTeams', () => {
             team(3, null, true),
         ])
         expect(sorted.map(t => t.startNumber)).toEqual([2, 1, 3])
+    })
+})
+
+describe('formatClockTimeWithSeconds', () => {
+    // Locale-tolerant geprüft (Trennzeichen und 12/24h variieren mit der Testumgebung):
+    // entscheidend ist, dass die Sekunden dabei sind — bei Einzelstarts zählen sie.
+    test('trägt die Sekunden', () => {
+        expect(formatClockTimeWithSeconds('2026-08-14T10:31:04')).toMatch(/10[:.]31[:.]04/)
+    })
+
+    test('unterscheidet Boote, die dieselbe Minute starten', () => {
+        const a = formatClockTimeWithSeconds('2026-08-14T10:31:04')
+        const b = formatClockTimeWithSeconds('2026-08-14T10:31:34')
+        expect(a).not.toBe(b)
     })
 })

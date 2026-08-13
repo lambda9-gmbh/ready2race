@@ -29,9 +29,49 @@ sealed interface CompetitionExecutionError : ServiceError {
      */
     data object MatchIsBye : CompetitionExecutionError
 
+    /**
+     * Die Umkehrung: "muss gefahren werden" (bye_must_race) lässt sich nur an einem Lauf setzen,
+     * der überhaupt ein Freilos ist - an jedem anderen wäre das Flag wirkungslos und irreführend.
+     */
+    data object MatchIsNoBye : CompetitionExecutionError
+
     /** Beenden zurücknehmen setzt einen beendeten Lauf voraus - sonst gibt es nichts zurückzunehmen. */
     data object MatchNotFinished : CompetitionExecutionError
+
+    /**
+     * Ein Lauf lässt sich nur zurücksetzen, solange seine Folgerunde noch keine erzeugten Läufe
+     * hat - dieselbe Stromrichtung wie beim Löschen der aktuellen Runde: Sobald aus den Ergebnissen
+     * die nächste Runde gesät ist, würde der Reset einen Stand leeren, auf dem die Setzung der
+     * Folgerunde bereits aufbaut. Eigener Fehler statt [MatchResultsLocked], weil die Abhilfe eine
+     * andere ist: erst die Folgerunde löschen, dann zurücksetzen.
+     */
+    data object ResetBlockedByNextRound : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
+
+    /**
+     * Ein Lauf ohne geplante Startzeit, wie ihn [StartlistMatchesWithoutStartTime] benennt -
+     * Kürzel/Name des Wettkampfs, Runde und Laufname, damit der Nutzer den Lauf im Zeitplan
+     * findet, ohne zu raten.
+     */
+    data class StartlistMatchWithoutStartTime(
+        val matchId: java.util.UUID,
+        val competitionIdentifier: String,
+        val competitionShortName: String?,
+        val competitionName: String?,
+        val roundName: String,
+        val matchName: String?,
+    )
+
+    /**
+     * Der Startlisten-Sammelexport enthält Läufe ohne geplante Startzeit. Bewusst ALLE gesammelt
+     * statt beim ersten abzubrechen ([StartTimeNotSet], 12.08.2026 per HAR belegt: ein nacktes
+     * „StartTime not set" ohne Laufbezug ist am Renntag unbrauchbar). Der Export blockiert
+     * weiterhin laut, statt still unvollständig zu liefern - abwählen kann der Nutzer die Läufe
+     * über die Vorschau (matchIds), dann exportiert der Rest.
+     */
+    data class StartlistMatchesWithoutStartTime(
+        val matches: List<StartlistMatchWithoutStartTime>,
+    ) : CompetitionExecutionError
     data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
     data object IsChallengeEvent : CompetitionExecutionError
     data object ResultConfirmationImageMissing : CompetitionExecutionError
@@ -144,14 +184,42 @@ sealed interface CompetitionExecutionError : ServiceError {
             errorCode = ErrorCode.EXECUTION_MATCH_IS_BYE,
         )
 
+        MatchIsNoBye -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "This match is not a bye - 'must race' can only be set on a bye match.",
+        )
+
         MatchNotFinished -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "This match is not finished - there is nothing to reopen.",
         )
 
+        ResetBlockedByNextRound -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "This match cannot be reset: the following round has already been created from its results. Delete the following round first.",
+            errorCode = ErrorCode.EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND,
+        )
+
         StartTimeNotSet -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "StartTime not set",
+        )
+
+        is StartlistMatchesWithoutStartTime -> ApiError(
+            status = HttpStatusCode.Conflict,
+            // Lesbarer Fallback für Klienten ohne Detail-Auswertung: „11 CF1x Viertelfinale VF2, …"
+            message = "${matches.size} matches without a planned start time: " +
+                matches.joinToString { match ->
+                    listOfNotNull(
+                        match.competitionIdentifier,
+                        match.competitionShortName ?: match.competitionName,
+                        match.roundName,
+                        match.matchName,
+                    ).joinToString(" ")
+                },
+            errorCode = ErrorCode.STARTLIST_MATCHES_WITHOUT_START_TIME,
+            // Strukturiert fürs Frontend: die Liste als Detail-Feld, nicht nur als Satz.
+            details = mapOf("matches" to matches),
         )
 
         TeamWasPreviouslyDeregistered -> ApiError(

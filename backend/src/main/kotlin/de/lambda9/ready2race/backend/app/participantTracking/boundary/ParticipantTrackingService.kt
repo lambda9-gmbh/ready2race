@@ -230,14 +230,23 @@ object ParticipantTrackingService {
                 KIO.fail(ParticipantTrackingError.SequenceConflict)
         }
 
+    /**
+     * Das Status-Protokoll, wahlweise gefiltert. [onlyLatest] reduziert auf das jüngste Ereignis
+     * je Person, [scanType] filtert nach dem Status. Die Reihenfolge der beiden ist fachlich
+     * festgelegt: Der Status-Filter greift NACH der Reduktion - "nur letzter Status" + EXIT
+     * beantwortet damit die Sicherheitsfrage "wer ist aufs Wasser abgemeldet und noch nicht
+     * zurück?". Details in [ParticipantTrackingRepo.filterOnlyLatest].
+     */
     fun page(
         eventId: UUID,
         params: PaginationParameters<ParticipantTrackingSort>,
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope,
+        onlyLatest: Boolean,
+        scanType: ParticipantScanType?,
     ): App<Nothing, ApiResponse.Page<ParticipantTrackingDto, ParticipantTrackingSort>> = KIO.comprehension {
-        val total = !ParticipantTrackingRepo.count(params.search, eventId, user, scope).orDie()
-        val page = !ParticipantTrackingRepo.page(params, eventId, user, scope).orDie()
+        val total = !ParticipantTrackingRepo.count(params.search, eventId, user, scope, onlyLatest, scanType).orDie()
+        val page = !ParticipantTrackingRepo.page(params, eventId, user, scope, onlyLatest, scanType).orDie()
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(

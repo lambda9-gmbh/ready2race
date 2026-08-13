@@ -247,13 +247,28 @@ fun List<AdditionalText>.wrappedToBoxes(
     widths: GapTextWidths,
 ): List<AdditionalText> = map { addition ->
     val boxWidth = pageWidth * addition.relWidth.toFloat()
-    val fontSize = addition.gapFontSize(pageHeight * addition.relHeight.toFloat())
+    val boxHeight = pageHeight * addition.relHeight.toFloat()
+    val baseSize = addition.gapFontSize(boxHeight)
 
-    addition.copy(
-        content = GapTextWrap.wrap(addition.content, boxWidth) {
-            widths.width(it, fontSize, addition.bold, addition.italic)
-        }
-    )
+    fun wrapAt(fontSize: Float): String = GapTextWrap.wrap(addition.content, boxWidth) {
+        widths.width(it, fontSize, addition.bold, addition.italic)
+    }
+
+    val wrapped = wrapAt(baseSize)
+    val metrics = addition.gapTextMetrics(boxHeight, wrapped.count { it == '\n' } + 1)
+
+    if (metrics.fontSize == baseSize) {
+        addition.copy(content = wrapped)
+    } else {
+        // Der Block passte nicht in den Kasten und die Schrift wurde geschrumpft (siehe
+        // gapTextMetrics). Der Umbruch oben hat aber mit der Ausgangsgröße gemessen - in der
+        // kleineren Schrift passt ggf. mehr in eine Zeile, deshalb einmal neu umbrechen. Eine
+        // Runde reicht: die Messbreite ist linear in der Schriftgröße, eine kleinere Schrift
+        // liefert also nie *mehr* Zeilen - und mit der geschrumpften Größe als neuer Basis
+        // (sie wird hier in den Platzhalter zurückgeschrieben, damit beide Renderer sie über
+        // gapTextMetrics wiederfinden) schrumpft der nächste Metrik-Aufruf nicht weiter.
+        addition.copy(content = wrapAt(metrics.fontSize), fontSize = metrics.fontSize)
+    }
 }
 
 private fun drawAddition(
@@ -384,8 +399,17 @@ fun document(
     return pdf
 }
 
+/**
+ * Baut das Dokument im Seitenformat (und mit dem Seitenrand) der Vorlage.
+ *
+ * @param withBackground legt die Vorlagenseite als Layer unter jede Seite - derselbe Schalter wie
+ * bei [gapDocuments]: Für den Druck auf vorgedrucktes „Amtspapier" bleibt er aus, sonst läge das
+ * Design doppelt auf dem Blatt. Format und Rand der Vorlage gelten in BEIDEN Fällen - nur so
+ * passt der Ausdruck ohne Hintergrund deckungsgleich auf das vorgedruckte Papier.
+ */
 fun document(
     pageTemplate: PageTemplate?,
+    withBackground: Boolean = true,
     builder: DocumentBuilder.() -> Unit,
 ): PDDocument {
 
@@ -397,6 +421,12 @@ fun document(
     val templatePage = templateDoc.getPage(0)
     val format = templatePage.mediaBox
     val doc = document(format, pageTemplate.pagepadding, builder)
+
+    if (!withBackground) {
+        // Geometrie der Vorlage, aber ohne ihr Design: das Dokument ist schon fertig.
+        templateDoc.close()
+        return doc
+    }
 
     val pages = doc.pages
 

@@ -145,8 +145,10 @@ const BoardDisplayPage = () => {
         <Box
             onMouseMove={handleMouseMove}
             sx={{
-                height: {xs: 'auto', lg: '100dvh'},
-                overflow: {xs: 'visible', lg: 'hidden'},
+                // Immer Bildschirmhöhe, auf jeder Breite: das Raster des Boards gilt
+                // ohne Breakpoint-Fallback, zu volle Zellen scrollen innen (BoardRenderer).
+                height: '100dvh',
+                overflow: 'hidden',
                 position: 'relative',
                 display: 'grid',
                 gridTemplateRows: showHeader ? 'auto minmax(0, 1fr)' : 'minmax(0, 1fr)',

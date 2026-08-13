@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest'
 import {AthleteBoardMatch, BoardElement, BoardTile, BoardViewDto} from '@api/types.gen'
 import {densityScale} from '../info/athleteBoard/boardLayout'
-import {ceremonyForElement, elementScale, gridPlacement, listForElement, programForElement, slotForElement} from './boardView'
+import {boardColumns, ceremonyForElement, elementScale, gridPlacement, hasMatchDetail, listForElement, programForElement, rowSizes, slotForElement, tileColor} from './boardView'
 
 const match = (id: string, boats = 4): AthleteBoardMatch =>
     ({
@@ -81,6 +81,17 @@ describe('gridPlacement', () => {
         const {rows} = gridPlacement([tile(3, 1), tile(3, 2)], 3)
         expect(rows).toBe(3)
     })
+
+    // Der Editor erlaubt bis zu 4 Spalten (MAX_COLUMNS); mit dem immer aktiven Raster
+    // muss auch das volle 4×4 sauber platziert werden — 16 Kacheln, keine Lücke.
+    test('ein volles 4×4-Raster platziert alle 16 Kacheln lückenlos', () => {
+        const tiles = Array.from({length: 16}, () => tile())
+        const {rows, positions} = gridPlacement(tiles, 4)
+        expect(rows).toBe(4)
+        expect(positions.map(p => [p.column, p.row])).toEqual(
+            Array.from({length: 16}, (_, i) => [(i % 4) + 1, Math.floor(i / 4) + 1]),
+        )
+    })
 })
 
 describe('slotForElement', () => {
@@ -109,6 +120,27 @@ describe('slotForElement', () => {
 
     test('andere Elementtypen haben keinen Slot', () => {
         expect(slotForElement(v, {type: 'CLOCK'})).toBeNull()
+    })
+
+    // Die Sprecher-Kachel wählt über denselben Offset wie MATCH.
+    test('die Sprecher-Kachel greift denselben Slot wie MATCH', () => {
+        expect(slotForElement(v, {type: 'MATCH_DETAIL', offset: 0})?.match?.matchId).toBe('r1')
+    })
+})
+
+// Der Editor sperrt „Kachel hinzufügen", solange eine Sprecher-Kachel existiert —
+// die Vollbild-Regel des Backends soll in der Maske gar nicht erst verletzbar sein.
+describe('hasMatchDetail', () => {
+    test('findet die Sprecher-Kachel auch als Rotations-Element', () => {
+        expect(
+            hasMatchDetail([
+                {elements: [matchElement(0), {type: 'MATCH_DETAIL', offset: 0}]},
+            ]),
+        ).toBe(true)
+    })
+
+    test('ohne Sprecher-Kachel bleibt alles erlaubt', () => {
+        expect(hasMatchDetail([tile(), tile()])).toBe(false)
     })
 })
 
@@ -207,6 +239,35 @@ describe('programForElement', () => {
     test('andere Modi haben kein Programm', () => {
         expect(programForElement(v, {type: 'MATCH_LIST', listMode: 'UPCOMING', limit: 4})).toBeNull()
     })
+
+    // FOLLOW explizit gesetzt verhält sich wie das Alt-Verhalten ohne Feld.
+    test('scheduleMode FOLLOW schneidet wie ohne Feld zu', () => {
+        const program = programForElement(v, {
+            type: 'MATCH_LIST',
+            listMode: 'SCHEDULE',
+            scheduleMode: 'FOLLOW',
+            limit: 4,
+        })
+        expect(program?.map(e => e.startTime)).toEqual(['08:30', '09:00', '09:30', '10:00'])
+    })
+
+    // FULL: ganzer Tag ohne Zuschnitt — auch das Limit greift nicht, die Kachel scrollt.
+    test('scheduleMode FULL liefert den ganzen Tag und ignoriert das Limit', () => {
+        const program = programForElement(v, {
+            type: 'MATCH_LIST',
+            listMode: 'SCHEDULE',
+            scheduleMode: 'FULL',
+            limit: 2,
+        })
+        expect(program?.map(e => e.startTime)).toEqual([
+            '08:00',
+            '08:30',
+            '09:00',
+            '09:30',
+            '10:00',
+            '10:30',
+        ])
+    })
 })
 
 describe('elementScale', () => {
@@ -235,5 +296,102 @@ describe('elementScale', () => {
 
     test('leerer Inhalt skaliert wie eine leere Kachel', () => {
         expect(elementScale(matchElement(0), null, 3, 1)).toBe(densityScale(0, 3))
+    })
+})
+
+describe('tileColor', () => {
+    // Beide Hex-Formen der Konfiguration gehen unverändert durch — für Fläche und Rand.
+    test('lässt gültiges Hex in beiden Formen durch', () => {
+        expect(tileColor('#C62828')).toBe('#C62828')
+        expect(tileColor('#0a0')).toBe('#0a0')
+    })
+
+    // Ohne (gültige) Farbe bleibt das bisherige Aussehen — undefined statt Farbwert.
+    test('fehlende oder ungültige Farbe ergibt undefined', () => {
+        expect(tileColor(undefined)).toBeUndefined()
+        expect(tileColor(null)).toBeUndefined()
+        expect(tileColor('rot')).toBeUndefined()
+        expect(tileColor('C62828')).toBeUndefined()
+        expect(tileColor('#C6282')).toBeUndefined()
+        expect(tileColor('#GGHHII')).toBeUndefined()
+    })
+})
+
+describe('rowSizes', () => {
+    const tileOf = (types: BoardElement['type'][], colSpan = 1, rowSpan = 1): BoardTile => ({
+        colSpan,
+        rowSpan,
+        elements: types.map(type => ({type}) as BoardElement),
+    })
+
+    const sizesFor = (tiles: BoardTile[], columns: number) => {
+        const {rows, positions} = gridPlacement(tiles, columns)
+        return rowSizes(tiles, positions, rows)
+    }
+
+    // Der Anlass: eine Zeile, in der nur eine Uhr (oder die Verspätung) liegt,
+    // verschwendete als 1fr ein Drittel des Bildschirms.
+    test('eine reine Uhr/Verspätungs-Zeile wird kompakt', () => {
+        const sizes = sizesFor(
+            [tileOf(['MATCH'], 2), tileOf(['CLOCK']), tileOf(['DELAY'])],
+            2,
+        )
+        expect(sizes).toEqual(['1fr', 'auto'])
+    })
+
+    test('eine gemischte Zeile bleibt 1fr', () => {
+        const sizes = sizesFor([tileOf(['CLOCK']), tileOf(['MATCH'])], 2)
+        expect(sizes).toEqual(['1fr'])
+    })
+
+    // Rotation Uhr+Lauf in EINER Kachel: die Kachel ist Inhalt, nicht kompakt.
+    test('eine rotierende Kachel mit Lauf zählt als Inhalt', () => {
+        const sizes = sizesFor([tileOf(['CLOCK', 'MATCH'])], 1)
+        expect(sizes).toEqual(['1fr'])
+    })
+
+    // Eine Inhalts-Kachel, die per rowSpan auch die Uhr-Zeile überspannt, braucht
+    // ihre Höhe über die ganze Spannweite — beide Zeilen bleiben 1fr.
+    test('rowSpan über Inhalts- und Kompakt-Zeile macht beide 1fr', () => {
+        const sizes = sizesFor(
+            [tileOf(['MATCH'], 1, 2), tileOf(['CLOCK']), tileOf(['CLOCK'])],
+            2,
+        )
+        expect(sizes).toEqual(['1fr', '1fr'])
+    })
+
+    // Sonderfall Board nur aus Kompakt-Kacheln: alle Zeilen 'auto' — der Rest der
+    // Bildschirmhöhe bleibt leer, statt dass sich eine Uhr auf 100% aufbläst.
+    test('ohne Inhalts-Kacheln sind alle Zeilen auto', () => {
+        const sizes = sizesFor([tileOf(['CLOCK']), tileOf(['DELAY'])], 1)
+        expect(sizes).toEqual(['auto', 'auto'])
+    })
+})
+
+describe('boardColumns', () => {
+    const detailTile: BoardTile = {
+        colSpan: 1,
+        rowSpan: 1,
+        elements: [{type: 'MATCH_DETAIL', offset: 0} as BoardElement],
+    }
+
+    // Der Nutzer-Befund vom 12.08.2026: 3 Spalten + Sprecher-Kachel quetschte die
+    // Kachel in eine Spalte. Das Rendering ignoriert die Geometrie und heilt damit
+    // auch gespeicherte Fehlkonfigurationen — ohne neuen Validierungsfehler.
+    test('ein Sprecher-Board rendert immer einspaltig', () => {
+        expect(boardColumns({columns: 3, tiles: [detailTile]})).toBe(1)
+        expect(boardColumns({columns: 1, tiles: [detailTile]})).toBe(1)
+    })
+
+    test('normale Boards behalten ihre Spaltenwahl', () => {
+        expect(boardColumns({columns: 4, tiles: [tile(), tile()]})).toBe(4)
+        // Ohne Spaltenwahl gilt der alte Default.
+        expect(boardColumns({tiles: [tile()]})).toBe(3)
+    })
+
+    // Die Heilung gilt nur für das Vollbild-Board (einzige Kachel) — ein hypothetischer
+    // Altbestand mit Nachbarkacheln bleibt beim konfigurierten Raster.
+    test('mit Nachbarkacheln greift die Heilung nicht', () => {
+        expect(boardColumns({columns: 3, tiles: [detailTile, tile()]})).toBe(3)
     })
 })

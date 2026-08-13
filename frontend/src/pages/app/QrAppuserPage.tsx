@@ -75,7 +75,9 @@ const QrAppuserPage = () => {
             spacing={2}
             alignItems="center"
             justifyContent="center"
-            sx={{width: '100%', maxWidth: 600}}>
+            // mx: 'auto' zentriert die Spalte — das App-Layout streckt seine Kinder nur, auf dem
+            // Tablet klebte der auf 600px begrenzte Stack sonst am linken Rand.
+            sx={{width: '100%', maxWidth: 600, mx: 'auto'}}>
             <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrAppuser.title')}
             </Typography>

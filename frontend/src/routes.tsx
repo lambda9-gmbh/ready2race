@@ -54,6 +54,7 @@ import AppDashboardPage from './pages/app/AppDashboardPage.tsx'
 import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
 import InvoicesPage from './pages/InvoicePage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
+import {parseResultsTabSearch} from './pages/results/resultsTab.ts'
 import SelectResultsEventPage from './pages/results/SelectResultsEventPage.tsx'
 import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
 import ResultsLayout from './layouts/ResultsLayout.tsx'
@@ -497,8 +498,11 @@ export const resultsEventRoute = createRoute({
     getParentRoute: () => resultsRoute,
     path: '/event/$eventId',
     component: () => <ResultsPage />,
+    // Direkteinstieg für QR-Aushänge: ?tab=live öffnet den Live-Reiter, ?tab=my-event wie
+    // bisher „Mein Event", ?tab=results ist das ausgeschriebene Default-Ziel — alles andere
+    // fällt auf den Default (siehe resultsTab.ts).
     validateSearch: (search: {tab?: string} & SearchSchemaInput) => ({
-        tab: search.tab === 'my-event' ? ('my-event' as const) : undefined,
+        tab: parseResultsTabSearch(search.tab),
     }),
 })
 

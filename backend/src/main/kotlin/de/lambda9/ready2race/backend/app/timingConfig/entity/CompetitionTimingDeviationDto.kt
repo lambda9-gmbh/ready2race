@@ -16,7 +16,6 @@ data class CompetitionTimingDeviationDto(
     val identifier: String,
     val name: String,
     val timingSystem: TimingSystem?,
-    val startlistConfigQualification: UUID?,
-    val startlistConfigRounds: UUID?,
+    val startlistConfig: UUID?,
     val resultImportConfig: UUID?,
 )

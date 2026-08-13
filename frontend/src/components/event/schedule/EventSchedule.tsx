@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {
     Box,
@@ -17,9 +17,12 @@ import {
     Tabs,
     Tooltip,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material'
 import {
     Add,
+    Close,
     Delete,
     DirectionsRun,
     Edit,
@@ -28,10 +31,9 @@ import {
     OpenInNew,
     PlayArrow,
     Replay,
-    ShortText,
     Stop,
-    Subject,
     Undo,
+    ViewSidebarOutlined,
 } from '@mui/icons-material'
 import {format} from 'date-fns'
 import {Link} from '@tanstack/react-router'
@@ -47,7 +49,7 @@ import {
     unskipScheduleSlot,
     updateMatchActivation,
 } from '@api/sdk.gen.ts'
-import {EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
+import {EventDto, EventScheduleSlotDto, UnplannedSetupMatchDto} from '@api/types.gen.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
@@ -64,13 +66,25 @@ import {
 } from './common.ts'
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {useShortLabels} from '@components/event/shortLabels.ts'
+import {
+    EXECUTION_NEW_TAB_KEY,
+    SCHEDULE_EVENT_MODE_KEY,
+    useDeviceFlag,
+} from '@components/event/deviceSettings.ts'
 import {scheduleSlotsToEntries} from './timelineIndicator.ts'
+import {EventModeSelection, isSlotSelected, nextEventModeSelection} from './eventMode.ts'
+import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
+import {useFullWidthLayout} from '../../../layouts/fullWidthLayout.ts'
+import {debounce} from '@utils/debounce.ts'
+import {delayChipColor, delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 import {
     matchStatusChip,
     slotMatchStatus,
     unplannedMatchStatus,
 } from '@components/event/match/matchStatusChip.ts'
 import {byeExplanation} from '@components/event/match/matchBye.ts'
+import ScheduleStartlistExportButton from './ScheduleStartlistExportButton.tsx'
+import ScheduleSettingsPopover from './ScheduleSettingsPopover.tsx'
 import ScheduleSlotDialog from './ScheduleSlotDialog.tsx'
 import ScheduleShiftDialog from './ScheduleShiftDialog.tsx'
 import ScheduleAdvanceDialog from './ScheduleAdvanceDialog.tsx'
@@ -143,12 +157,18 @@ const stateChipProps = (
     }
 }
 
-const EventSchedule = () => {
+type Props = {
+    /** Die geladene Veranstaltung — der Veranstaltungs-Modus liest daraus den Auto-Refresh-Takt. */
+    event: EventDto
+}
+
+const EventSchedule = ({event}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const user = useUser()
     const {confirmAction} = useConfirmation()
     const {eventId} = eventRoute.useParams()
+    const theme = useTheme()
 
     const canEdit = user.checkPrivilege(updateEventGlobal)
 
@@ -187,8 +207,33 @@ const EventSchedule = () => {
 
     // Geteilt mit dem Schiedsrichter-Board (siehe shortLabels.ts). Seit dem 11.08.2026 startet
     // auch der Zeitplan in der Kurzform - die vollen Wettkampfnamen sprengten jede Zeile, und wer
-    // sie will, schaltet einmal um und behält das überall.
+    // sie will, schaltet einmal um und behält das überall. Umgeschaltet wird seit dem 11.08.2026
+    // im Einstellungs-Popover der Kopfzeile statt am Spaltenkopf "Slot".
     const [shortLabels, toggleShortLabels] = useShortLabels(true)
+
+    // Geräte-lokal (siehe deviceSettings.ts): ob der Sprung "Zur Durchführung" ein neues Fenster
+    // öffnet. Am Regattatag lebt der Zeitplan oft auf einem eigenen Bildschirm - der Sprung soll
+    // ihn dann nicht wegnavigieren.
+    const [openExecutionInNewTab, setOpenExecutionInNewTab] = useDeviceFlag(EXECUTION_NEW_TAB_KEY)
+
+    // Veranstaltungs-Modus: Zeitplan als Leitstand in nahezu voller Browserbreite, die
+    // Durchführung des angeklickten Wettkampfs daneben statt auf der eigenen Seite. Die Wahl ist
+    // geräte-lokal (deviceSettings.ts); unterhalb von lg fällt der Modus automatisch auf das
+    // normale Verhalten zurück — ein Split auf Tablet-Breite hilft niemandem.
+    const [eventModeStored, setEventModeStored] = useDeviceFlag(SCHEDULE_EVENT_MODE_KEY)
+    const wideEnoughForEventMode = useMediaQuery(theme.breakpoints.up('lg'))
+    const eventMode = eventModeStored && wideEnoughForEventMode
+    // Nur State, keine Persistenz: Nach einem Tab- oder Seitenwechsel darf die Fläche wieder
+    // leer starten, aber ein Re-Render (30-Sekunden-Abgleich!) soll die Auswahl nicht verlieren.
+    const [eventModeSelection, setEventModeSelection] = useState<EventModeSelection>(null)
+    useFullWidthLayout(eventMode)
+
+    // Änderungen aus der rechten Durchführung sofort links zeigen, statt auf den
+    // 30-Sekunden-Takt zu warten. Entprellt, damit Aktions-Serien („Speichern & weiter")
+    // keinen Abruf-Sturm auslösen; useMemo hält dieselbe Instanz über Re-Renders, sonst
+    // liefe jede Entprellung ins Leere. setLastRequested (in reload) ist stabil.
+    const reloadDebounced = useMemo(() => debounce(reload, 500), [])
+    useEffect(() => () => reloadDebounced.cancel(), [reloadDebounced])
 
     const now = useLocalClock(30_000)
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>())
@@ -314,9 +359,7 @@ const EventSchedule = () => {
                           time: format(new Date(slot.startTime), t('format.time')),
                       }),
                 okText: t(
-                    slot.setupRoundId
-                        ? 'event.schedule.skipOk'
-                        : 'event.schedule.skipOkFree',
+                    slot.setupRoundId ? 'event.schedule.skipOk' : 'event.schedule.skipOkFree',
                 ),
             },
         )
@@ -513,20 +556,94 @@ const EventSchedule = () => {
             ? daySections
             : daySections.filter(section => section.date === effectiveDay)
 
-    return (
+    // Aktuelle Verspätung aus den Ist-Starts der Slots — dieselbe Regel wie das
+    // Verspätungs-Element der Boards (scheduleDelay.ts): der zuletzt gestartete Lauf zählt.
+    // Die Daten liegen im Zeitplan-Tab bereits vor (matchStartedAt), kein eigener Endpoint.
+    const delaySeconds = latestStartDelaySeconds(
+        (data?.slots ?? []).map(slot => ({
+            startTime: slot.startTime,
+            startedAt: slot.matchStartedAt,
+        })),
+    )
+    const delay = delaySeconds != null ? delayParts(delaySeconds) : null
+
+    // Der eigentliche Zeitplan — im Normalfall die ganze Tab-Fläche, im Veranstaltungs-Modus die
+    // linke Spalte des Splits.
+    const scheduleContent = (
         <Stack spacing={4}>
-            <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
-                <Typography variant={'h2'}>{t('event.schedule.tab')}</Typography>
-                {canEdit && (
-                    <Stack direction={'row'} spacing={2}>
-                        <Button variant={'outlined'} onClick={openImportDialog}>
-                            {t('event.schedule.import')}
-                        </Button>
-                        <Button variant={'outlined'} startIcon={<Add />} onClick={openAddDialog}>
-                            {t('event.schedule.addSlot')}
-                        </Button>
-                    </Stack>
-                )}
+            {/* flexWrap: in der schmalen Zeitplan-Spalte des Veranstaltungs-Modus passen Titel
+                und Aktionen nicht nebeneinander — sie brechen dann um, statt rechts aus der
+                Spalte zu laufen. In voller Breite ändert das nichts. */}
+            <Stack
+                direction={'row'}
+                justifyContent={'space-between'}
+                alignItems={'center'}
+                flexWrap={'wrap'}
+                rowGap={1}>
+                <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                    <Typography variant={'h2'}>{t('event.schedule.tab')}</Typography>
+                    {delay && (
+                        <Chip
+                            size={'small'}
+                            // Dieselbe Ampel wie das Verspätungs-Element der Boards —
+                            // eine Quelle (delayChipColor), keine eigene Zuordnung mehr.
+                            color={delayChipColor(delay.kind)}
+                            label={
+                                delay.kind === 'onTime'
+                                    ? t('event.boards.delay.onTime')
+                                    : `${delay.kind === 'late' ? '+' : '−'}${delay.minutes} min`
+                            }
+                            title={t('event.boards.delay.subtitle')}
+                        />
+                    )}
+                </Stack>
+                <Stack
+                    direction={'row'}
+                    spacing={2}
+                    alignItems={'center'}
+                    flexWrap={'wrap'}
+                    rowGap={1}
+                    justifyContent={'flex-end'}>
+                    {canEdit && (
+                        <>
+                            <ScheduleStartlistExportButton eventId={eventId} />
+                            <Button variant={'outlined'} onClick={openImportDialog}>
+                                {t('event.schedule.import')}
+                            </Button>
+                            <Button
+                                variant={'outlined'}
+                                startIcon={<Add />}
+                                onClick={openAddDialog}>
+                                {t('event.schedule.addSlot')}
+                            </Button>
+                        </>
+                    )}
+                    <Tooltip
+                        title={
+                            !wideEnoughForEventMode
+                                ? t('event.schedule.eventMode.tooSmall')
+                                : eventModeStored
+                                  ? t('event.schedule.eventMode.disable')
+                                  : t('event.schedule.eventMode.enable')
+                        }>
+                        {/* Das span trägt den Tooltip auch am disabled-Button — der erklärt
+                            gerade dann, warum sich der Modus hier nicht einschalten lässt. */}
+                        <Box component={'span'}>
+                            <IconButton
+                                disabled={!wideEnoughForEventMode}
+                                color={eventMode ? 'primary' : 'default'}
+                                onClick={() => setEventModeStored(!eventModeStored)}>
+                                <ViewSidebarOutlined />
+                            </IconButton>
+                        </Box>
+                    </Tooltip>
+                    <ScheduleSettingsPopover
+                        shortLabels={shortLabels}
+                        toggleShortLabels={toggleShortLabels}
+                        openExecutionInNewTab={openExecutionInNewTab}
+                        setOpenExecutionInNewTab={setOpenExecutionInNewTab}
+                    />
+                </Stack>
             </Stack>
             {!data && pending && <Throbber />}
             {data && daySections.length === 0 && (
@@ -579,37 +696,16 @@ const EventSchedule = () => {
                         <Table size={'small'}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell width={'10%'}>{t('event.schedule.startTime')}</TableCell>
-                                    <TableCell width={'40%'}>
-                                        {/* Der Umschalter sitzt an der Spalte, deren Inhalt er
-                                            ändert. Er steht in jeder Tagestabelle, wirkt aber auf
-                                            alle - wer oben umschaltet, will nicht am nächsten Tag
-                                            wieder den langen Namen lesen. */}
-                                        <Stack
-                                            direction={'row'}
-                                            spacing={0.5}
-                                            alignItems={'center'}>
-                                            <span>{t('event.schedule.slot')}</span>
-                                            <IconButton
-                                                size={'small'}
-                                                onClick={toggleShortLabels}
-                                                color={shortLabels ? 'primary' : 'default'}
-                                                aria-pressed={shortLabels}
-                                                title={t(
-                                                    shortLabels
-                                                        ? 'event.schedule.showFullNames'
-                                                        : 'event.schedule.showShortNames',
-                                                )}>
-                                                {shortLabels ? (
-                                                    <Subject fontSize={'small'} />
-                                                ) : (
-                                                    <ShortText fontSize={'small'} />
-                                                )}
-                                            </IconButton>
-                                        </Stack>
+                                    <TableCell width={'10%'}>
+                                        {t('event.schedule.startTime')}
                                     </TableCell>
-                                    <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
-                                    <TableCell width={'15%'}>{t('event.schedule.duration')}</TableCell>
+                                    <TableCell width={'40%'}>{t('event.schedule.slot')}</TableCell>
+                                    <TableCell width={'20%'}>
+                                        {t('event.schedule.status')}
+                                    </TableCell>
+                                    <TableCell width={'15%'}>
+                                        {t('event.schedule.duration')}
+                                    </TableCell>
                                     {canEdit && <TableCell width={'15%'} />}
                                 </TableRow>
                             </TableHead>
@@ -633,12 +729,50 @@ const EventSchedule = () => {
                                                     rowRefs.current.delete(slot.id)
                                                 }
                                             }}
+                                            // Im Veranstaltungs-Modus lädt die GANZE Zeile die
+                                            // Durchführung rechts, nicht nur das kleine Symbol —
+                                            // aber nur bei Zeilen mit Wettkampfbezug, und nie,
+                                            // wenn der Klick eigentlich einem Element in der
+                                            // Zeile galt (Aktions-Icons, Links): deren Klicks
+                                            // steigen hierher auf, das closest() erkennt sie am
+                                            // Ziel und lässt sie ihren eigenen Zweck erfüllen.
+                                            onClick={
+                                                eventMode && slot.competitionId
+                                                    ? event => {
+                                                          const target =
+                                                              event.target as HTMLElement
+                                                          if (target.closest('button, a')) {
+                                                              return
+                                                          }
+                                                          setEventModeSelection(
+                                                              nextEventModeSelection(
+                                                                  eventModeSelection,
+                                                                  slot,
+                                                              ),
+                                                          )
+                                                      }
+                                                    : undefined
+                                            }
                                             sx={{
                                                 backgroundColor:
-                                                    highlightedSlotId === slot.id
+                                                    highlightedSlotId === slot.id ||
+                                                    // Im Veranstaltungs-Modus: alle Läufe des
+                                                    // rechts geladenen Wettkampfs.
+                                                    (eventMode &&
+                                                        isSlotSelected(eventModeSelection, slot))
                                                         ? 'action.selected'
                                                         : undefined,
                                                 transition: 'background-color 0.3s ease',
+                                                // Nur im Modus und nur mit Wettkampf: die Zeile
+                                                // zeigt an, dass sie als Ganzes klickbar ist.
+                                                // Außerhalb des Modus bleibt alles wie bisher.
+                                                ...(eventMode &&
+                                                    slot.competitionId && {
+                                                        cursor: 'pointer',
+                                                        '&:hover': {
+                                                            backgroundColor: 'action.hover',
+                                                        },
+                                                    }),
                                             }}>
                                             <TableCell>
                                                 {format(new Date(slot.startTime), t('format.time'))}
@@ -671,44 +805,103 @@ const EventSchedule = () => {
                                                         )}
                                                     </Box>
                                                     <Box sx={{...actionSlotSx, flexShrink: 0}}>
-                                                        {slot.matchId && (
-                                                            <Tooltip
-                                                                title={t(
-                                                                    'event.schedule.goToExecution',
-                                                                )}>
-                                                                <Link
-                                                                    to={
-                                                                        '/event/$eventId/competition/$competitionId'
-                                                                    }
-                                                                    params={{
-                                                                        eventId,
-                                                                        competitionId:
-                                                                            slot.competitionId!,
-                                                                    }}
-                                                                    search={{tab: 'execution'}}
-                                                                    style={{
-                                                                        display: 'inline-flex',
-                                                                        color: 'inherit',
-                                                                    }}>
+                                                        {slot.matchId &&
+                                                            (eventMode ? (
+                                                                // Im Veranstaltungs-Modus lädt der
+                                                                // Sprung die Durchführung in die
+                                                                // Spalte rechts — kein Navigieren,
+                                                                // kein neues Fenster; der Tooltip
+                                                                // erklärt, dass der Geräteschalter
+                                                                // hier nicht greift.
+                                                                <Tooltip
+                                                                    title={t(
+                                                                        'event.schedule.eventMode.loadHint',
+                                                                    )}>
                                                                     <IconButton
                                                                         size={'small'}
-                                                                        component={'span'}>
-                                                                        <OpenInNew
+                                                                        color={
+                                                                            isSlotSelected(
+                                                                                eventModeSelection,
+                                                                                slot,
+                                                                            )
+                                                                                ? 'primary'
+                                                                                : 'default'
+                                                                        }
+                                                                        onClick={() =>
+                                                                            setEventModeSelection(
+                                                                                nextEventModeSelection(
+                                                                                    eventModeSelection,
+                                                                                    slot,
+                                                                                ),
+                                                                            )
+                                                                        }>
+                                                                        <ViewSidebarOutlined
                                                                             fontSize={'small'}
                                                                         />
                                                                     </IconButton>
-                                                                </Link>
-                                                            </Tooltip>
-                                                        )}
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <Tooltip
+                                                                    title={t(
+                                                                        'event.schedule.goToExecution',
+                                                                    )}>
+                                                                    <Link
+                                                                        to={
+                                                                            '/event/$eventId/competition/$competitionId'
+                                                                        }
+                                                                        params={{
+                                                                            eventId,
+                                                                            competitionId:
+                                                                                slot.competitionId!,
+                                                                        }}
+                                                                        search={{tab: 'execution'}}
+                                                                        // Auf Wunsch je Gerät in
+                                                                        // einem neuen Fenster (siehe
+                                                                        // Einstellungs-Popover).
+                                                                        target={
+                                                                            openExecutionInNewTab
+                                                                                ? '_blank'
+                                                                                : undefined
+                                                                        }
+                                                                        style={{
+                                                                            display: 'inline-flex',
+                                                                            color: 'inherit',
+                                                                        }}>
+                                                                        <IconButton
+                                                                            size={'small'}
+                                                                            component={'span'}>
+                                                                            <OpenInNew
+                                                                                fontSize={'small'}
+                                                                            />
+                                                                        </IconButton>
+                                                                    </Link>
+                                                                </Tooltip>
+                                                            ))}
                                                     </Box>
                                                 </Stack>
                                                 {bye && (
-                                                    <Typography
-                                                        variant={'caption'}
-                                                        display={'block'}
-                                                        sx={{color: 'text.secondary'}}>
-                                                        {translate(bye.key, bye.values)}
-                                                    </Typography>
+                                                    // Beim „muss gefahren werden"-Freilos trägt
+                                                    // der Tooltip die volle Begründung (Fairness,
+                                                    // Zeit zählt nicht) - die Zeile selbst bleibt
+                                                    // beim kurzen Suffix.
+                                                    <Tooltip
+                                                        title={
+                                                            bye.mustRace
+                                                                ? translate(
+                                                                      'event.match.bye.mustRaceExplanation',
+                                                                  )
+                                                                : ''
+                                                        }>
+                                                        <Typography
+                                                            variant={'caption'}
+                                                            display={'block'}
+                                                            sx={{color: 'text.secondary'}}>
+                                                            {translate(bye.key, bye.values) +
+                                                                (bye.mustRace
+                                                                    ? ` – ${translate('event.match.bye.mustRace')}`
+                                                                    : '')}
+                                                        </Typography>
+                                                    </Tooltip>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -792,7 +985,9 @@ const EventSchedule = () => {
                                                                         <IconButton
                                                                             size={'small'}
                                                                             onClick={() =>
-                                                                                handleMarkStarted(slot)
+                                                                                handleMarkStarted(
+                                                                                    slot,
+                                                                                )
                                                                             }>
                                                                             <DirectionsRun
                                                                                 fontSize={'small'}
@@ -812,9 +1007,13 @@ const EventSchedule = () => {
                                                                         <IconButton
                                                                             size={'small'}
                                                                             onClick={() =>
-                                                                                handleDeactivate(slot)
+                                                                                handleDeactivate(
+                                                                                    slot,
+                                                                                )
                                                                             }>
-                                                                            <Undo fontSize={'small'} />
+                                                                            <Undo
+                                                                                fontSize={'small'}
+                                                                            />
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
@@ -823,7 +1022,8 @@ const EventSchedule = () => {
                                                             {slot.state === 'LINKED' &&
                                                                 (slot.bye
                                                                     ? !slot.matchFinishedAt
-                                                                    : slot.matchActivatedAt != null) && (
+                                                                    : slot.matchActivatedAt !=
+                                                                      null) && (
                                                                     <Tooltip
                                                                         title={t(
                                                                             slot.bye
@@ -833,9 +1033,13 @@ const EventSchedule = () => {
                                                                         <IconButton
                                                                             size={'small'}
                                                                             onClick={() =>
-                                                                                handleFinishSlot(slot)
+                                                                                handleFinishSlot(
+                                                                                    slot,
+                                                                                )
                                                                             }>
-                                                                            <Stop fontSize={'small'} />
+                                                                            <Stop
+                                                                                fontSize={'small'}
+                                                                            />
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
@@ -850,7 +1054,9 @@ const EventSchedule = () => {
                                                                             onClick={() =>
                                                                                 handleReopen(slot)
                                                                             }>
-                                                                            <Replay fontSize={'small'} />
+                                                                            <Replay
+                                                                                fontSize={'small'}
+                                                                            />
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 )}
@@ -858,7 +1064,9 @@ const EventSchedule = () => {
                                                         <Box sx={actionSlotSx}>
                                                             {slot.state === 'SKIPPED' ? (
                                                                 <Tooltip
-                                                                    title={t('event.schedule.unskip')}>
+                                                                    title={t(
+                                                                        'event.schedule.unskip',
+                                                                    )}>
                                                                     <IconButton
                                                                         size={'small'}
                                                                         onClick={() =>
@@ -894,7 +1102,9 @@ const EventSchedule = () => {
                                                             <Tooltip title={t('common.delete')}>
                                                                 <IconButton
                                                                     size={'small'}
-                                                                    onClick={() => handleDelete(slot)}>
+                                                                    onClick={() =>
+                                                                        handleDelete(slot)
+                                                                    }>
                                                                     <Delete fontSize={'small'} />
                                                                 </IconButton>
                                                             </Tooltip>
@@ -923,10 +1133,14 @@ const EventSchedule = () => {
                         <Table size={'small'}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell width={'25%'}>{t('event.schedule.competition')}</TableCell>
+                                    <TableCell width={'25%'}>
+                                        {t('event.schedule.competition')}
+                                    </TableCell>
                                     <TableCell width={'20%'}>{t('event.schedule.round')}</TableCell>
                                     <TableCell width={'20%'}>{t('event.schedule.match')}</TableCell>
-                                    <TableCell width={'20%'}>{t('event.schedule.status')}</TableCell>
+                                    <TableCell width={'20%'}>
+                                        {t('event.schedule.status')}
+                                    </TableCell>
                                     {canEdit && <TableCell width={'15%'} />}
                                 </TableRow>
                             </TableHead>
@@ -1035,6 +1249,75 @@ const EventSchedule = () => {
                     slots={data?.slots ?? []}
                 />
             )}
+        </Stack>
+    )
+
+    if (!eventMode) {
+        return scheduleContent
+    }
+
+    // Veranstaltungs-Modus: Zeitplan links (kompakt, eigener Scroll), Durchführung rechts
+    // (eigener Scroll). Die Höhe bindet sich ans Fenster, damit beide Spalten unabhängig
+    // scrollen, statt gemeinsam mit der Seite zu wandern.
+    const splitColumnSx = {
+        minWidth: 0,
+        maxHeight: 'calc(100vh - 220px)',
+        minHeight: 400,
+        overflowY: 'auto',
+    } as const
+
+    return (
+        <Stack direction={'row'} spacing={2} alignItems={'stretch'}>
+            <Box sx={{...splitColumnSx, flex: '0 0 40%', pr: 1}}>{scheduleContent}</Box>
+            <Box
+                sx={{
+                    ...splitColumnSx,
+                    flex: 1,
+                    borderLeft: 1,
+                    borderColor: 'divider',
+                    pl: 2,
+                }}>
+                {eventModeSelection !== null ? (
+                    <>
+                        <Stack
+                            direction={'row'}
+                            justifyContent={'space-between'}
+                            alignItems={'center'}>
+                            <Typography variant={'h2'}>
+                                {eventModeSelection.competitionName ||
+                                    t('event.schedule.eventMode.execution')}
+                            </Typography>
+                            <Tooltip title={t('event.schedule.eventMode.close')}>
+                                <IconButton onClick={() => setEventModeSelection(null)}>
+                                    <Close />
+                                </IconButton>
+                            </Tooltip>
+                        </Stack>
+                        {/* key: beim Wettkampf-Wechsel frisch aufsetzen, statt Formulare und
+                            Accordion-Zustand des vorherigen Wettkampfs mitzuschleppen. */}
+                        <CompetitionExecution
+                            key={eventModeSelection.competitionId}
+                            eventId={eventId}
+                            competitionId={eventModeSelection.competitionId}
+                            focusMatchId={eventModeSelection.matchId}
+                            onDataChanged={reloadDebounced}
+                            autoRefresh={{
+                                enabled: event.executionAutoRefresh,
+                                seconds: event.executionAutoRefreshSeconds,
+                            }}
+                        />
+                    </>
+                ) : (
+                    <Stack
+                        alignItems={'center'}
+                        justifyContent={'center'}
+                        sx={{height: 1, minHeight: 240}}>
+                        <Typography color={'text.secondary'}>
+                            {t('event.schedule.eventMode.empty')}
+                        </Typography>
+                    </Stack>
+                )}
+            </Box>
         </Stack>
     )
 }

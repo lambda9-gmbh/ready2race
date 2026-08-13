@@ -14,6 +14,10 @@ export type ActionColors = {
     info: string
 }
 
+export type AddEventExportBundleItemRequest = {
+    document: string
+}
+
 /**
  * Only the target slot: start slot and delta are derived from the cancelled slot by the server.
  */
@@ -198,6 +202,10 @@ export type AthleteBoardMatch = {
      * number of seats in the following round; null when the following round is an open field
      */
     advancingSeats?: number | null
+    /**
+     * the bye of this match, same derivation as schedule and referee dashboard - public boards need it mainly for must-race byes, where a second line explains why the boat races alone and that its time runs out of competition
+     */
+    bye?: MatchByeDto | null
 }
 
 export type AthleteBoardParticipant = {
@@ -205,6 +213,18 @@ export type AthleteBoardParticipant = {
     role?: string | null
     year?: number | null
     clubName?: string | null
+    /**
+     * only filled for boards with a MATCH_DETAIL tile; server-side restricted to publicly visible requirements applicable to this person's role
+     */
+    requirements?: Array<AthleteBoardRequirement>
+}
+
+/**
+ * a participant requirement on the public announcer tile - deliberately just name and fulfilled state, never internal notes
+ */
+export type AthleteBoardRequirement = {
+    name: string
+    fulfilled: boolean
 }
 
 export type AthleteBoardResult = {
@@ -265,6 +285,22 @@ export type AthleteBoardResultTeam = {
      */
     deregistered: boolean
     deregisteredReason?: string | null
+    /**
+     * split times from RaceClocker, in mark order; empty when the race records none
+     */
+    laps?: Array<MatchTeamLapDto>
+    /**
+     * the crew of this boat - always present like on the running card; birth year and worn club stay detail-gated
+     */
+    participants?: Array<AthleteBoardParticipant>
+    /**
+     * registering club - only filled when a board element requests showRegisteringClub
+     */
+    registeringClub?: string | null
+    /**
+     * measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element
+     */
+    startedAt?: string | null
 }
 
 export type AthleteBoardStartState = 'UNSCHEDULED' | 'COUNTDOWN' | 'SCHEDULED' | 'OVERDUE'
@@ -307,6 +343,14 @@ export type AthleteBoardTeam = {
      * registering club - only filled when a board element requests showRegisteringClub
      */
     registeringClub?: string | null
+    /**
+     * split times from RaceClocker, in mark order; empty when the race records none
+     */
+    laps?: Array<MatchTeamLapDto>
+    /**
+     * measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element
+     */
+    startedAt?: string | null
 }
 
 export type AwardCeremonyAthlete = {
@@ -447,15 +491,34 @@ export type BoardElement = {
     showAdvancement?: boolean | null
     showRegisteringClub?: boolean | null
     listMode?: BoardListMode
+    scheduleMode?: BoardScheduleMode
     limit?: number | null
     useShortNames?: boolean | null
     competitionId?: string | null
     ratingCategoryId?: string | null
     showEventName?: boolean | null
     text?: string | null
+    /**
+     * Tile background as hex color (#RGB or #RRGGBB), allowed on every element type; absent = default look
+     */
+    backgroundColor?: string | null
+    /**
+     * Tile border as hex color (#RGB or #RRGGBB), independent of backgroundColor; absent = default look
+     */
+    borderColor?: string | null
 }
 
-export type BoardElementType = 'MATCH' | 'MATCH_LIST' | 'CLOCK' | 'TEXT' | 'AWARD_CEREMONY'
+/**
+ * MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile
+ */
+export type BoardElementType =
+    | 'MATCH'
+    | 'MATCH_DETAIL'
+    | 'MATCH_LIST'
+    | 'CLOCK'
+    | 'TEXT'
+    | 'AWARD_CEREMONY'
+    | 'DELAY'
 
 export type BoardListDto = {
     mode: BoardListMode
@@ -503,6 +566,11 @@ export type BoardRequest = {
     config: BoardConfig
 }
 
+/**
+ * SCHEDULE only: FOLLOW = moving window around now (default), FULL = the whole day, the tile scrolls instead
+ */
+export type BoardScheduleMode = 'FOLLOW' | 'FULL'
+
 export type BoardTile = {
     rotationIntervalSeconds?: number
     colSpan?: number
@@ -519,6 +587,11 @@ export type BoardViewDto = {
     slots: Array<BoardMatchSlotDto>
     lists: Array<BoardListDto>
     ceremonies?: Array<BoardCeremonyDto>
+    notice?: EventNoticeDto
+    /**
+     * current delay in seconds: started_at minus start_time of the latest started match; negative = ahead of schedule; null while nothing has started or the board has no DELAY element
+     */
+    currentDelaySeconds?: number | null
 }
 
 export type CaptchaDto = {
@@ -896,17 +969,9 @@ export type CompetitionRaceAssignmentDto = {
     identifier: string
     name: string
     /**
-     * Whether the competition's setup even has a qualification round
+     * The one selected race; null means no race is assigned
      */
-    hasQualificationRound: boolean
-    /**
-     * Explicitly chosen qualification race; null means it inherits the event default
-     */
-    raceQualification?: string | null
-    /**
-     * Explicitly chosen rounds race; null means it inherits the event default
-     */
-    raceRounds?: string | null
+    race?: string | null
 }
 
 export type CompetitionRegistrationDto = {
@@ -1186,7 +1251,7 @@ export type CompetitionTemplateDto = {
 }
 
 /**
- * A competition that overrides the event-wide timing defaults. Only the inheritable fields are listed; the column presets are per competition anyway and therefore no deviation. A null timingSystem with a URL set is a partial override - the competition inherits the system and has a race of its own.
+ * A competition that overrides the event-wide timing defaults. Only the inheritable fields are listed - system, start list export and result import. The race selection is no deviation: it is always assigned per competition, there is no event default to deviate from.
  *
  */
 export type CompetitionTimingDeviationDto = {
@@ -1194,8 +1259,7 @@ export type CompetitionTimingDeviationDto = {
     identifier: string
     name: string
     timingSystem?: TimingSystem | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
 }
 
@@ -1381,11 +1445,13 @@ export type ErrorCode =
     | 'RACECLOCKER_RACE_NAME_TAKEN'
     | 'RACECLOCKER_RACE_URL_TAKEN'
     | 'STARTLIST_CONFIG_NOT_CONFIGURED'
+    | 'STARTLIST_MATCHES_WITHOUT_START_TIME'
     | 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
     | 'SCHEDULE_SHIFT_WITHOUT_CHANGE'
     | 'SCHEDULE_SHIFT_TARGET_INVALID'
     | 'SCHEDULE_SHIFT_LEAVES_RACE_DAY'
     | 'SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR'
+    | 'SCHEDULE_SHIFT_OVERTAKES_FOLLOWER'
     | 'SCHEDULE_ADVANCE_NO_DELTA'
     | 'SCHEDULE_SLOT_NOT_SKIPPED'
     | 'SCHEDULE_IMPORT_DUPLICATE_ROWS'
@@ -1437,6 +1503,7 @@ export type ErrorCode =
     | 'EXECUTION_MATCH_IS_BYE'
     | 'EXECUTION_PLACES_NOT_CONTINUOUS'
     | 'EXECUTION_START_TIME_MANAGED_BY_SCHEDULE'
+    | 'EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND'
     | 'LIVE_DASHBOARD_FINISH_RESERVED_FOR_OFFICE'
     | 'QR_CODE_ALREADY_IN_USE'
     | 'TRACKING_TEAM_ALREADY_CHECKED_IN'
@@ -1451,6 +1518,9 @@ export type ErrorCode =
     | 'DEREGISTRATION_RESULTS_ALREADY_EXIST'
     | 'DEREGISTRATION_NOT_IN_CURRENT_ROUND'
     | 'DEREGISTRATION_REGISTRATION_STILL_OPEN'
+    | 'EXPORT_BUNDLE_DUPLICATE_DOCUMENT'
+    | 'EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE'
+    | 'EXPORT_BUNDLE_ORDER_MISMATCH'
 
 export type EventDayDto = {
     id: string
@@ -1537,6 +1607,26 @@ export type EventDto = {
      */
     executionAutoRefreshSeconds: number
     challengesFinished?: boolean
+    notice?: EventNoticeDto
+}
+
+export type EventExportBundleItemDto = {
+    id: string
+    kind: EventExportBundleItemKind
+    /**
+     * Only set for kind DOCUMENT - the event document's id.
+     */
+    document?: string | null
+    /**
+     * Only set for kind DOCUMENT - the document's file name, for display.
+     */
+    documentName?: string | null
+}
+
+export type EventExportBundleItemKind = 'DOCUMENT' | 'GENERATED_STARTLISTS'
+
+export type EventExportBundleOrderRequest = {
+    itemIds: Array<string>
 }
 
 export type EventForExportDto = {
@@ -1550,6 +1640,19 @@ export type EventInvoicesInfoDto = {
     paidAmount: string
     producing: boolean
 }
+
+/**
+ * The event-wide notice banner (e.g. a weather warning). Absent/null means: no banner.
+ */
+export type EventNoticeDto = {
+    text: string
+    severity: EventNoticeSeverity
+}
+
+/**
+ * Severity of the event-wide notice banner; drives the banner color (CRITICAL=red, WARNING=yellow, INFO=green)
+ */
+export type EventNoticeSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
 
 export type EventParticipantRequirementDto = {
     requirementId: string
@@ -1744,13 +1847,35 @@ export type EventScheduleSlotDto = {
 export type EventScheduleSlotState = 'FREE' | 'WAITING' | 'LINKED' | 'OBSOLETE' | 'SKIPPED'
 
 /**
+ * Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer needs, one race per competition), CSV writes one big file sorted by start time (what RaceClocker needs, one race carrying all waves), PDF concatenates the per-match start list PDFs sorted by start time (notice board / registration report style; rendered with the event's assigned START_LIST template, or the built-in layout when none is assigned).
+ */
+export type EventStartlistFileType = 'ZIP' | 'CSV' | 'PDF'
+
+/**
+ * One row of the bulk start list export preview: a match the export with the same parameters would export. startTime null means the match would block the export until it is deselected via matchIds.
+ */
+export type EventStartlistPreviewMatchDto = {
+    matchId: string
+    competitionId: string
+    competitionIdentifier: string
+    competitionShortName?: string
+    competitionName?: string
+    roundName: string
+    matchName?: string
+    startTime?: string
+    /**
+     * Whether the match is missing in the feed of the competition's assigned RaceClocker race. Trivially true everywhere in delta mode (the others are already filtered out); without delta the flag carries the information. Absent/null = no race assigned, there is nothing to compare against.
+     */
+    missingInRaceClocker?: boolean
+}
+
+/**
  * Event-wide timing defaults. Timing system and the file-format presets live here once and every competition without its own values inherits them. The race selection is NOT here - it is assigned per race on each competition (RaceClockerRaceAssignments), no event-wide default.
  *
  */
 export type EventTimingConfigDto = {
     timingSystem?: TimingSystem | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
     /**
      * Whether the background job pulls results for this event on its own.
@@ -1784,8 +1909,7 @@ export type EventTimingConfigDto = {
  */
 export type EventTimingConfigRequest = {
     timingSystem?: TimingSystem | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
     /**
      * Whether the background job pulls results for this event on its own.
@@ -2056,6 +2180,7 @@ export type LiveDashboardDto = {
      */
     pendingSlots: Array<PendingSlotDto>
     chainProgressionMode: ChainProgressionMode
+    notice?: EventNoticeDto
 }
 
 export type LiveDashboardInvoiceState = 'PAID' | 'OPEN' | 'NONE'
@@ -2218,6 +2343,22 @@ export type LiveDashboardTeamDto = {
      * When the boat entered the arena (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known
      */
     inArenaAt?: string | null
+    /**
+     * split times from RaceClocker, in mark order; empty when the race records none
+     */
+    laps?: Array<MatchTeamLapDto>
+    /**
+     * referee notes on this boat, oldest first - communication between referees, not scoring; only part of this internal poll, never of the public endpoints
+     */
+    notes?: Array<MatchTeamNoteDto>
+}
+
+/**
+ * Response of the public results page's "live" tab. Used to be a bare array of LiveMatchInfo; the envelope carries the event-wide notice banner - this tab is the only polled answer of the public results page.
+ */
+export type LiveMatchesDto = {
+    notice?: EventNoticeDto
+    matches: Array<LiveMatchInfo>
 }
 
 /**
@@ -2274,7 +2415,7 @@ export type ManualTrackingRequest = {
 export type MatchByeCause = 'DEREGISTRATION' | 'NO_OPPONENT'
 
 /**
- * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place.
+ * The bye of a match. Display only - it changes nothing about the chain, the result lock or the automatic first place. Exception: mustRace makes the match operationally a real race.
  */
 export type MatchByeDto = {
     cause: MatchByeCause
@@ -2286,6 +2427,14 @@ export type MatchByeDto = {
      * The stored withdrawal reason - only when exactly one row is deregistered, because with several the mapping name -> reason would be a guess.
      */
     reason?: string | null
+    /**
+     * 'Must race' (competition_match.bye_must_race): the match stays a bye but is raced - exports, polling and the chain treat it like any match, the measured time runs out of competition.
+     */
+    mustRace: boolean
+    /**
+     * Seeding number of the racing team - 'Bye 1' is the bye of the boat that advanced first. It is the seed of the setup seat the team occupies in this match; null when no seat matches the start number (e.g. first-round byes created by a withdrawal), the label then stays a plain 'Bye'.
+     */
+    seed?: number | null
 }
 
 export type MatchForRunningStatusDto = {
@@ -2409,6 +2558,26 @@ export type MatchTeamLapDto = {
     timeString: string
 }
 
+/**
+ * A referee note on a boat in a match ('touched a buoy'). Append-only: entries are immutable, a correction is delete plus re-add.
+ */
+export type MatchTeamNoteDto = {
+    id: string
+    note: string
+    createdAt: string
+    /**
+     * display name of the author; null when the account was deleted
+     */
+    author?: string | null
+}
+
+export type MatchTeamNoteRequest = {
+    /**
+     * must not be blank
+     */
+    note: string
+}
+
 export type MyEventDto = {
     displayName: string
     clubName?: string | null
@@ -2420,6 +2589,7 @@ export type MyEventDto = {
     results: Array<MyEventResultDto>
     unscheduled: Array<MyEventRegistrationDto>
     requirements: Array<MyEventRequirementDto>
+    notice?: EventNoticeDto
 }
 
 export type MyEventMatchDto = {
@@ -2460,13 +2630,28 @@ export type MyEventRegistrationDto = {
 export type MyEventRequirementDto = {
     id: string
     name: string
-    description?: string | null
+    /**
+     * Public, athlete-facing text. The internal description is deliberately never delivered here.
+     */
+    publicNote?: string | null
     optional: boolean
     fulfilled: boolean
+    /**
+     * Earliest moment the requirement can be checked - first future start minus checkEarliestMinutesBefore; null without a window or a future start
+     */
+    checkFrom?: string | null
+    /**
+     * Latest moment, analogous from checkLatestMinutesBefore
+     */
+    checkUntil?: string | null
 }
 
 export type MyEventResultDto = {
     matchId: string
+    /**
+     * The own boat's registration - matches teamId of the teams in /latest-match-results, used to mark the own boat in the full field
+     */
+    teamId?: string | null
     competitionName: string
     categoryName?: string | null
     roundName?: string | null
@@ -2738,6 +2923,10 @@ export type ParticipantRequirementDto = {
     id: string
     name: string
     description?: string
+    /**
+     * Public, athlete-facing text shown on My Event - separate from the internal description
+     */
+    publicNote?: string | null
     optional: boolean
     /**
      * Per App prüfbar
@@ -2777,6 +2966,10 @@ export type ParticipantRequirementForEventDto = {
 export type ParticipantRequirementUpsertDto = {
     name: string
     description?: string
+    /**
+     * Public, athlete-facing text shown on My Event - separate from the internal description
+     */
+    publicNote?: string | null
     optional?: boolean
     /**
      * Per App prüfbar
@@ -2987,20 +3180,15 @@ export type QrCodePublicResponse = {
 
 export type RaceClockerRaceAssignmentsRequest = {
     /**
-     * Competitions that use this race for their qualification
+     * Competitions that use this race for all of their rounds
      */
-    qualificationCompetitions: Array<string>
-    /**
-     * Competitions that use this race for their remaining rounds
-     */
-    roundsCompetitions: Array<string>
+    competitions: Array<string>
 }
 
 export type RaceClockerRaceDto = {
     id: string
     name: string
     resultsUrl: string
-    startMode: RaceClockerStartMode
     capturesLaps: boolean
     position: number
 }
@@ -3008,11 +3196,8 @@ export type RaceClockerRaceDto = {
 export type RaceClockerRaceRequest = {
     name: string
     resultsUrl: string
-    startMode: RaceClockerStartMode
     capturesLaps: boolean
 }
-
-export type RaceClockerStartMode = 'INDIVIDUAL' | 'WAVE'
 
 export type RatingCategoriesToEventRequest = {
     ratingCategories: Array<RatingCategoryToEventRequest>
@@ -3231,7 +3416,7 @@ export type ScheduleImportResultDto = {
 
 export type Scope = 'OWN' | 'GLOBAL'
 
-export type ShiftMode = 'PLUS_MINUTES' | 'SET_TIME' | 'COMPRESS_TO_TARGET'
+export type ShiftMode = 'PLUS_MINUTES' | 'SET_TIME' | 'COMPRESS_TO_TARGET' | 'PLUS_MINUTES_RANGE'
 
 export type ShiftPreviewDto = {
     entries: Array<ShiftPreviewEntryDto>
@@ -3245,7 +3430,7 @@ export type ShiftPreviewEntryDto = {
 }
 
 /**
- * Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime, COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two.
+ * Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime, COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two, PLUS_MINUTES_RANGE needs minutes plus targetSlotId (the upper bound of the shifted range).
  */
 export type ShiftScheduleRequest = {
     fromSlotId: string
@@ -3460,33 +3645,19 @@ export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
 export type TimingConfigDto = {
     timingSystem?: TimingSystem | null
     /**
-     * The selected RaceClocker race for qualification rounds.
+     * The one selected RaceClocker race of this competition - qualification and all other rounds alike.
      */
-    raceQualification?: string | null
-    /**
-     * The selected RaceClocker race for all other rounds.
-     */
-    raceRounds?: string | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    race?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
-    /**
-     * Whether this competition's setup contains a qualification round. Read-only; it comes along with the timing config because both the timing tab and the execution tab already load it, and both need to know whether the qualification start list preset and the qualification race are required at all.
-     *
-     */
-    hasQualificationRound?: boolean
     /**
      * Event-wide default timing system; the competition inherits it while its own field is null.
      */
     eventTimingSystem?: TimingSystem | null
     /**
-     * Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
+     * Event-wide default start list export; inherited while the competition's own field is null.
      */
-    eventStartlistConfigQualification?: string | null
-    /**
-     * Event-wide default start list export for the other rounds; inherited while the competition's own field is null.
-     */
-    eventStartlistConfigRounds?: string | null
+    eventStartlistConfig?: string | null
     /**
      * Event-wide default race results import; inherited while the competition's own field is null.
      */
@@ -3494,21 +3665,16 @@ export type TimingConfigDto = {
 }
 
 /**
- * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. Both race ids must belong to this competition's event; the service rejects a race from another event.
+ * Every field is optional - the RaceClocker races only exist shortly before the regatta, so an incomplete configuration must be storable. The race id must belong to this competition's event; the service rejects a race from another event.
  *
  */
 export type TimingConfigRequest = {
     timingSystem?: TimingSystem | null
     /**
-     * The selected RaceClocker race for qualification rounds.
+     * The one selected RaceClocker race - qualification and all other rounds alike.
      */
-    raceQualification?: string | null
-    /**
-     * The selected RaceClocker race for all other rounds.
-     */
-    raceRounds?: string | null
-    startlistConfigQualification?: string | null
-    startlistConfigRounds?: string | null
+    race?: string | null
+    startlistConfig?: string | null
     resultImportConfig?: string | null
 }
 
@@ -3665,6 +3831,14 @@ export type UpdateCompetitionMatchTeamResultRequest = {
     penaltyNote?: string
 }
 
+/**
+ * Sets (both fields) or clears (both null) the event-wide notice banner. A blank text or an unknown severity is rejected with 422.
+ */
+export type UpdateEventNoticeRequest = {
+    text?: string
+    severity?: EventNoticeSeverity
+}
+
 export type UpdateEventRequest = {
     name: string
     description?: string
@@ -3703,6 +3877,13 @@ export type UpdateEventRequest = {
 
 export type UpdateGlobalConfigurationsRequest = {
     allowClubCreationOnRegistration: boolean
+}
+
+/**
+ * Toggles 'must race' on a bye match. Fairness rule of some rule books: even a boat without an opponent races the course. Progression keeps bye semantics, the time is taken and shown as out of competition.
+ */
+export type UpdateMatchByeMustRaceRequest = {
+    mustRace: boolean
 }
 
 export type UpdateQrCodeRequirementDto = {
@@ -4807,6 +4988,19 @@ export type DownloadRoundStartListResponse = Blob | File
 
 export type DownloadRoundStartListError = BadRequestError | ApiError
 
+export type UpdateMatchByeMustRaceData = {
+    body: UpdateMatchByeMustRaceRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateMatchByeMustRaceResponse = void
+
+export type UpdateMatchByeMustRaceError = BadRequestError | ApiError
+
 export type MarkMatchStartedFromExecutionData = {
     path: {
         competitionId: string
@@ -4819,6 +5013,24 @@ export type MarkMatchStartedFromExecutionResponse = void
 
 export type MarkMatchStartedFromExecutionError = BadRequestError | ApiError
 
+export type FinishMatchFromExecutionData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+    query?: {
+        /**
+         * Marks every team without a result as failed with this reason. Deregistered teams are left alone.
+         */
+        openResults?: 'DNS' | 'DNF' | 'DSQ'
+    }
+}
+
+export type FinishMatchFromExecutionResponse = void
+
+export type FinishMatchFromExecutionError = BadRequestError | ApiError
+
 export type ReopenMatchData = {
     path: {
         competitionId: string
@@ -4830,6 +5042,18 @@ export type ReopenMatchData = {
 export type ReopenMatchResponse = void
 
 export type ReopenMatchError = BadRequestError | ApiError
+
+export type ResetMatchData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type ResetMatchResponse = void
+
+export type ResetMatchError = BadRequestError | ApiError
 
 export type UpdateMatchResultsData = {
     body: UpdateCompetitionMatchResultRequest
@@ -4930,6 +5154,17 @@ export type UpdateEventTimingConfigData = {
 export type UpdateEventTimingConfigResponse = void
 
 export type UpdateEventTimingConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateEventNoticeData = {
+    body: UpdateEventNoticeRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateEventNoticeResponse = void
+
+export type UpdateEventNoticeError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetTimingConfigData = {
     path: {
@@ -5178,6 +5413,49 @@ export type DeleteDocumentResponse = void
 
 export type DeleteDocumentError = BadRequestError | ApiError
 
+export type GetExportBundleData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetExportBundleResponse = Array<EventExportBundleItemDto>
+
+export type GetExportBundleError = BadRequestError | ApiError
+
+export type AddExportBundleDocumentData = {
+    body: AddEventExportBundleItemRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type AddExportBundleDocumentResponse = string
+
+export type AddExportBundleDocumentError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ReorderExportBundleData = {
+    body: EventExportBundleOrderRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type ReorderExportBundleResponse = void
+
+export type ReorderExportBundleError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type RemoveExportBundleItemData = {
+    path: {
+        eventId: string
+        itemId: string
+    }
+}
+
+export type RemoveExportBundleItemResponse = void
+
+export type RemoveExportBundleItemError = BadRequestError | ApiError
+
 export type GetParticipantTrackingsData = {
     path: {
         eventId: string
@@ -5191,6 +5469,14 @@ export type GetParticipantTrackingsData = {
          * Result offset for pagination
          */
         offset?: number
+        /**
+         * Reduces the log to the most recent event per participant. Defaults to false. The scanType filter is applied AFTER this reduction, so onlyLatest=true with scanType=EXIT answers "who has checked out onto the water and is not back yet".
+         */
+        onlyLatest?: boolean
+        /**
+         * Only events with this status. Applied after the onlyLatest reduction.
+         */
+        scanType?: 'ENTRY' | 'EXIT'
         /**
          * Filter result with space-separated search terms for pagination
          */
@@ -7208,6 +7494,10 @@ export type GetLatestMatchResultsData = {
     query: {
         competitionId?: string
         limit: number
+        /**
+         * Restricts the response to the field of one single match (used by My Event) - the visibility rule stays the same, an unreleased match answers with an empty list
+         */
+        matchId?: string
     }
 }
 
@@ -7237,7 +7527,7 @@ export type GetLiveMatchesData = {
     }
 }
 
-export type GetLiveMatchesResponse = Array<LiveMatchInfo>
+export type GetLiveMatchesResponse = LiveMatchesDto
 
 export type GetLiveMatchesError = ApiError
 
@@ -7350,6 +7640,32 @@ export type GetLiveDashboardTeamDetailResponse = LiveDashboardTeamDetailDto
 
 export type GetLiveDashboardTeamDetailError = ApiError
 
+export type AddLiveDashboardTeamNoteData = {
+    body: MatchTeamNoteRequest
+    path: {
+        eventId: string
+        matchId: string
+        teamId: string
+    }
+}
+
+export type AddLiveDashboardTeamNoteResponse = string
+
+export type AddLiveDashboardTeamNoteError = ApiError | UnprocessableEntityError
+
+export type DeleteLiveDashboardTeamNoteData = {
+    path: {
+        eventId: string
+        matchId: string
+        noteId: string
+        teamId: string
+    }
+}
+
+export type DeleteLiveDashboardTeamNoteResponse = void
+
+export type DeleteLiveDashboardTeamNoteError = ApiError
+
 export type GetCheckSeverityConfigData = {
     path: {
         eventId: string
@@ -7380,6 +7696,71 @@ export type GetEventScheduleData = {
 export type GetEventScheduleResponse = EventScheduleDto
 
 export type GetEventScheduleError = ApiError
+
+export type DownloadEventStartlistsData = {
+    path: {
+        eventId: string
+    }
+    query: {
+        /**
+         * Deselected bundle entries (event_export_bundle_item ids, repeatable parameter) - also the generated-startlists placeholder can be deselected. Foreign ids match nothing and are ignored. Only meaningful with includeBundleDocuments=true.
+         */
+        excludedBundleItems?: Array<string>
+        fileType: EventStartlistFileType
+        /**
+         * PDF only: assemble the event's export bundle (default false) - the bundle documents and the generated start lists in bundle order instead of the start lists alone. Non-PDF documents in the bundle are skipped tolerantly.
+         */
+        includeBundleDocuments?: boolean
+        /**
+         * Restrict the export to these setup match ids (repeatable parameter) - the deselection made in the export preview. Safety rule: this only ever INTERSECTS the plan - ids the plan does not yield (foreign competitions, other events, matches excluded by the bye or race filter) are silently ignored, so the parameter can only narrow the export, never widen it. Omitted means everything the plan yields.
+         */
+        matchIds?: Array<string>
+        /**
+         * Delta export (default false): fetch each competition's configured RaceClocker race feed server-side and export only matches whose match team ids do not appear in the feed's 'Extra info'. Competitions without an assigned race are excluded. An unreachable race fails the whole export with a structured error instead of a silent partial export.
+         */
+        onlyMissingInRaceClocker?: boolean
+        /**
+         * Restrict the export to competitions whose assigned RaceClocker race (competition.raceclocker_race) is the given one - for importing race by race. Applies to both the full and the delta export; omitted means all competitions.
+         */
+        raceclockerRaceId?: string
+        /**
+         * Skip bye matches (default true). Matches flagged as 'bye must race' (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are raced and need their wave in the timing tooling.
+         */
+        skipByes?: boolean
+        /**
+         * PDF only: print the assigned start list template's design as background (default true). false omits the design for printing on pre-printed 'official paper' - page format and padding of the template still apply. Bundle documents are never touched by this flag, they are always taken over unchanged.
+         */
+        withBackground?: boolean
+    }
+}
+
+export type DownloadEventStartlistsResponse = Blob | File
+
+export type DownloadEventStartlistsError = BadRequestError | ApiError
+
+export type PreviewEventStartlistsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Same semantics as on the export itself.
+         */
+        onlyMissingInRaceClocker?: boolean
+        /**
+         * Same semantics as on the export itself.
+         */
+        raceclockerRaceId?: string
+        /**
+         * Same semantics as on the export itself.
+         */
+        skipByes?: boolean
+    }
+}
+
+export type PreviewEventStartlistsResponse = Array<EventStartlistPreviewMatchDto>
+
+export type PreviewEventStartlistsError = BadRequestError | ApiError
 
 export type CreateScheduleSlotData = {
     body: UpsertScheduleSlotRequest
@@ -8215,6 +8596,42 @@ export type DownloadAwardCeremonySheetsData = {
 export type DownloadAwardCeremonySheetsResponse = Blob | File
 
 export type DownloadAwardCeremonySheetsError = BadRequestError | ApiError
+
+export type DownloadResultListData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Je Wertungskategorie ein eigener Abschnitt statt des Gesamtfelds. Vorgabe true.
+         */
+        byRatingCategory?: boolean
+        /**
+         * Nur dieser Wettkampf. Jeder Abschnitt kostet eine Platzberechnung, deshalb ist die Einschränkung mehr als ein Anzeigefilter.
+         */
+        competitionId?: string
+        /**
+         * Mit Crew-Aufstellung (Namen je Boot). Vorgabe true.
+         */
+        crew?: boolean
+        /**
+         * Nur die Plätze 1 bis 3 statt aller platzierten Boote. Vorgabe false.
+         */
+        podiumOnly?: boolean
+        /**
+         * Schriftgrad - POSTING (Aushang, groß) oder CEREMONY (wie der Bogen). Vorgabe POSTING.
+         */
+        size?: 'POSTING' | 'CEREMONY'
+        /**
+         * Mit Zeiten und Zeitstrafen. Vorgabe true.
+         */
+        times?: boolean
+    }
+}
+
+export type DownloadResultListResponse = Blob | File
+
+export type DownloadResultListError = BadRequestError | ApiError
 
 export type DownloadAwardCertificatesForCompetitionData = {
     path: {

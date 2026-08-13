@@ -1,6 +1,7 @@
 import {Box, Chip, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch} from '@api/types.gen'
+import {byeExplanation} from '@components/event/match/matchBye.ts'
 import AthleteBoardPenaltyNote from './AthleteBoardPenaltyNote'
 import AthleteBoardTeamLabel from './AthleteBoardTeamLabel'
 import {
@@ -8,17 +9,19 @@ import {
     AthleteBoardBoatRow,
     AthleteBoardBoatStatus,
     AthleteBoardBoatSubline,
+    AthleteBoardLapTimes,
 } from './AthleteBoardBoatRow'
 import {
     COUNTDOWN_MAX_SECONDS,
+    finishComplete,
     formatClockTime,
-    formatPlace,
     formatRemaining,
     formatShortDate,
     isSameDay,
     scaled,
     sortRunningTeams,
 } from './common'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 
 /**
  * "running": Karte im Block "Aktueller Lauf" — das Boot ist bereits in der Arena,
@@ -65,6 +68,13 @@ const AthleteBoardMatchCard = ({
     showRegisteringClub = false,
 }: AthleteBoardMatchCardProps) => {
     const {t} = useTranslation()
+    // Der Freilos-Schlüssel steht erst zur Laufzeit fest — dieselbe gelockerte Signatur wie in
+    // Zeitplan und Schiedsrichter-Dashboard.
+    const translate = t as (key: string, values?: Record<string, string | number>) => string
+
+    // „Muss gefahren werden"-Freilos: die Zweitzeile erklärt der Besatzung am Steg, warum das
+    // Boot allein fährt (Fairness) und dass die Zeit nicht fürs Weiterkommen zählt.
+    const bye = byeExplanation(match.bye)
 
     const startsInSeconds = match.startTime
         ? (new Date(match.startTime).getTime() - now.getTime()) / 1000
@@ -227,6 +237,14 @@ const AthleteBoardMatchCard = ({
     // umsortierte Liste ohne sichtbare Zeiten wäre vom Steg aus nicht zu deuten.
     const teams = showLiveResult ? sortRunningTeams(match.teams) : match.teams
 
+    // Zieleinlauf komplett, aber der Schiedsrichter hat den Lauf noch nicht beendet: die Karte
+    // sagt das ausdrücklich, denn in „Letztes Ergebnis" taucht der Lauf bewusst erst mit dem
+    // Beenden auf (BoardService, confirmedOnly) — ohne den Hinweis sähe der volle Zieleinlauf
+    // hier wie ein hängengebliebenes Rennen aus. Client-seitig abgeleitet ([finishComplete]),
+    // dieselbe Auslegung wie die Zustandsableitung des Backends für laufende Läufe.
+    const awaitingReferee =
+        variant === 'running' && !match.name && !match.pendingRound && finishComplete(match.teams)
+
     return (
         <>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
@@ -235,7 +253,11 @@ const AthleteBoardMatchCard = ({
                         Darstellung ohne Wettkampf-/Team-Bezug und ohne Interaktion. */}
                     {match.name ? (
                         <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-                            <Chip label={t('event.info.freeSlot')} size="small" variant="outlined" />
+                            <Chip
+                                label={t('event.info.freeSlot')}
+                                size="small"
+                                variant="outlined"
+                            />
                             <Typography
                                 sx={{fontSize: scaled('1rem', '1.8vw', '2.6rem'), fontWeight: 700}}
                                 color="text.secondary">
@@ -268,11 +290,40 @@ const AthleteBoardMatchCard = ({
                                     />
                                 )}
                             </Stack>
+                            {/* Deutlich sichtbares Band statt eines weiteren grauen Chips: die
+                                Zeiten/Plätze stehen normal darunter, nur ihr Status („noch nicht
+                                bestätigt") muss auffallen. Die Schrift läuft über scaled() mit
+                                der Dichte-Skalierung mit und darf umbrechen — so sprengt das Band
+                                auch kleine Kacheln nicht. */}
+                            {awaitingReferee && (
+                                <Box
+                                    sx={{
+                                        display: 'inline-block',
+                                        mt: scaled('0.15rem', '0.25vw', '0.4rem'),
+                                        px: scaled('0.35rem', '0.6vw', '0.9rem'),
+                                        py: scaled('0.1rem', '0.15vw', '0.25rem'),
+                                        borderRadius: 1,
+                                        bgcolor: 'warning.main',
+                                        color: 'warning.contrastText',
+                                    }}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: scaled('0.7rem', '1.2vw', '1.6rem'),
+                                            fontWeight: 700,
+                                            lineHeight: 1.25,
+                                        }}>
+                                        {t('event.info.athleteBoard.awaitingReferee')}
+                                    </Typography>
+                                </Box>
+                            )}
                             {/* Sprecherinnen-Zeile: worum geht es in diesem Lauf. Ohne
                                 Platzzahl (Massenfeld-Folgerunde) nur die Runde. */}
                             {showAdvancement && match.nextRoundName && (
                                 <Typography
-                                    sx={{fontSize: scaled('0.75rem', '1.2vw', '1.6rem'), fontWeight: 600}}
+                                    sx={{
+                                        fontSize: scaled('0.75rem', '1.2vw', '1.6rem'),
+                                        fontWeight: 600,
+                                    }}
                                     color="primary">
                                     {match.advancingSeats != null
                                         ? t('event.info.athleteBoard.advancing', {
@@ -282,6 +333,17 @@ const AthleteBoardMatchCard = ({
                                         : t('event.info.athleteBoard.advancingUnsized', {
                                               round: match.nextRoundName,
                                           })}
+                                </Typography>
+                            )}
+                            {/* Kleine Zweitzeile nur beim „muss gefahren werden"-Freilos:
+                                Label („Freilos 1 …") plus die volle Begründung. Gewöhnliche
+                                Freilose erscheinen in diesen Blöcken ohnehin nicht als
+                                gefahrene Läufe und behalten ihre bisherige Darstellung. */}
+                            {bye?.mustRace && (
+                                <Typography
+                                    sx={{fontSize: scaled('0.7rem', '1.2vw', '1.6rem')}}
+                                    color="text.secondary">
+                                    {`${translate(bye.key, bye.values)} – ${t('event.match.bye.mustRaceExplanation')}`}
                                 </Typography>
                             )}
                         </>
@@ -315,24 +377,46 @@ const AthleteBoardMatchCard = ({
                                 // Teilergebnis: sobald die Zeitnahme dieses Boot gewertet hat,
                                 // steht die Zeit hier — der Lauf läuft dabei weiter, bis die
                                 // Organisation ihn beendet, und eine später ergänzte Zeitstrafe
-                                // ändert die Zeile beim nächsten Abruf noch.
-                                showLiveResult && (team.failed || team.timeString) ? (
+                                // ändert die Zeile beim nächsten Abruf noch. Rundenzeiten allein
+                                // (Boot zwischen zwei Marken, noch ohne Endzeit) öffnen die
+                                // Spalte ebenfalls — sie gehören an die Zeit, nicht zur Crew.
+                                showLiveResult &&
+                                (team.failed ||
+                                    team.timeString ||
+                                    (team.laps ?? []).length > 0) ? (
                                     <>
-                                        <AthleteBoardBoatStatus
-                                            muted={team.failed}
-                                            label={
-                                                team.failed
-                                                    ? (team.failedReason ??
-                                                      t('event.info.athleteBoard.failed'))
-                                                    // Als Ordnungszahl, damit der Zwischenstand
-                                                    // nicht wie eine zweite Startnummer liest.
-                                                    : `${team.place != null ? `${formatPlace(team.place, t)} ` : ''}${team.timeString}`
-                                            }
-                                        />
+                                        {(team.failed || team.timeString) && (
+                                            <AthleteBoardBoatStatus
+                                                muted={team.failed}
+                                                label={
+                                                    team.failed
+                                                        ? (team.failedReason ??
+                                                          t('event.info.athleteBoard.failed'))
+                                                        // Als Ordnungszahl (Suffix hochgestellt),
+                                                        // damit der Zwischenstand nicht wie eine
+                                                        // zweite Startnummer liest.
+                                                        : (
+                                                              <>
+                                                                  {team.place != null && (
+                                                                      <>
+                                                                          <PlaceOrdinal
+                                                                              place={team.place}
+                                                                          />{' '}
+                                                                      </>
+                                                                  )}
+                                                                  {team.timeString}
+                                                              </>
+                                                          )
+                                                }
+                                            />
+                                        )}
                                         <AthleteBoardPenaltyNote
                                             penaltySeconds={team.penaltySeconds}
                                             penaltyNote={team.penaltyNote}
                                         />
+                                        {/* Rundenzeiten prominent unter der Zwischen-/Endzeit
+                                            (12.08.2026) — vorher eine Crew-Subline links. */}
+                                        <AthleteBoardLapTimes laps={team.laps} />
                                     </>
                                 ) : undefined
                             }>

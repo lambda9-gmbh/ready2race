@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.raceclocker
 
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.raceclocker.control.RaceClockerRaceRepo
-import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerStartMode
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceclockerRaceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
@@ -37,7 +36,6 @@ class RaceClockerRaceRepoTest {
         eventId: UUID,
         name: String,
         url: String,
-        startMode: RaceClockerStartMode = RaceClockerStartMode.WAVE,
         position: Int = 1,
     ): UUID {
         val raceId = UUID.randomUUID()
@@ -47,7 +45,6 @@ class RaceClockerRaceRepoTest {
                 event = eventId,
                 name = name,
                 resultsUrl = url,
-                startMode = startMode.name,
                 capturesLaps = false,
                 position = position,
                 createdAt = now,
@@ -61,12 +58,11 @@ class RaceClockerRaceRepoTest {
     fun `liefert die Rennen einer Veranstaltung nach Position sortiert`() = testComprehension {
         val eventId = seedEvent()
         seedRace(eventId, "Kurzstrecke", "https://www.raceclocker.com/kurz", position = 2)
-        seedRace(eventId, "Timetrials", "https://www.raceclocker.com/tt", RaceClockerStartMode.INDIVIDUAL, position = 1)
+        seedRace(eventId, "Timetrials", "https://www.raceclocker.com/tt", position = 1)
 
         val races = !RaceClockerRaceRepo.getForEvent(eventId)
 
         assertEquals(listOf("Timetrials", "Kurzstrecke"), races.map { it.name })
-        assertEquals(RaceClockerStartMode.INDIVIDUAL, races.first().startMode)
     }
 
     @Test

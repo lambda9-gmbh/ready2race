@@ -84,6 +84,7 @@
     },
     "ok": "Ok",
     "save": "Save",
+    "settings": "Settings",
     "saveAndNew": "Save and new",
     "saveAndNext": "Save and next",
     "search": "Search",
@@ -554,6 +555,14 @@
         "log": "Participant Status Log",
         "entry": "Log entry",
         "status": "Status",
+        "filter": {
+          "onlyLatest": "Only latest status",
+          "status": {
+            "all": "All",
+            "entry": "Checked in",
+            "exit": "Checked out"
+          }
+        },
         "in": "In",
         "out": "Out",
         "teams": "Teams",
@@ -672,6 +681,16 @@
       "seconds": "Interval in seconds",
       "hint": "The execution page picks up times, results, matches, round changes and check-ins in the background at the configured interval — without reloading the page. Allowed are 5 to 60 seconds, 5 by default. The sync rests while a dialog is open."
     },
+    "settings": {
+      "openExecutionInNewTab": "Open “Go to execution” in a new window",
+      "shortLabels": "Short names instead of full competition names",
+      "compact": "Compact view",
+      "deviceHint": "All settings apply to this device only.",
+      "execution": {
+        "title": "Execution",
+        "hint": "How matches are finished and following rounds are created on race day, and how often the execution page keeps itself up to date. Applies to the whole event, not just this device."
+      }
+    },
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -714,8 +733,6 @@
       "competition": "Competition",
       "competitions": "Competitions",
       "navigation": {
-        "modeCompetitions": "Races",
-        "modeSchedule": "Schedule",
         "backToEvent": "Back to the event",
         "filter": "Filter",
         "showShortNames": "Show short names",
@@ -1017,6 +1034,18 @@
           "error": "An error has occurred when deleting the round",
           "success": "Round successfully deleted"
         },
+        "resetMatch": {
+          "action": "Reset race",
+          "confirmation": {
+            "title": "Reset race?",
+            "warning": "Warning: This race will be reset to “never raced”. Irrevocably lost: the actual start, all finish and split times, all places, disqualifications and time penalties of this race.",
+            "keeps": "Kept: line-up, lanes and the boats' identifiers — the RaceClocker mapping stays valid and the race can be raced again right away.",
+          "autoPull": "The automatic RaceClocker pull is paused for this race — otherwise the next pull would immediately re-import the deleted results. After cleaning up in RaceClocker, resume deliberately via “Resume automatic pull”.",
+            "question": "Really reset this race?"
+          },
+          "error": "An error has occurred when resetting the race",
+          "success": "Race has been reset"
+        },
         "cancelRound": {
           "action": "Cancel round",
           "confirmation": {
@@ -1032,6 +1061,11 @@
           "success": "Round marked as cancelled"
         },
         "teamsWithBye": "Teams with a bye",
+        "byeMustRace": {
+          "label": "Must be raced",
+          "hint": "Fairness: the athletes race the course despite the bye. Placement does not matter – the team advances either way – the time is taken and shown out of competition.",
+          "success": "Saved"
+        },
         "match": {
           "status": "Status",
           "startTime": "Start time",
@@ -1056,6 +1090,9 @@
             "activate": "Activate race",
             "deactivate": "Deactivate race",
             "markStarted": "Running",
+          "finish": "Finish race",
+          "finishConfirm": "Finish this race now? If the event advances automatically, this activates the next races.",
+          "finishSuccess": "Race finished",
             "reopen": "Undo finish"
           }
         },
@@ -1268,6 +1305,7 @@
           "matchIsBye": "This run is a bye: the boat moves on without racing, there is no result to record.",
           "placesNotContinuous": "Places have to start at 1 without gaps. Place {{expected}} was expected, place {{actual}} was entered.",
           "startTimeManagedBySchedule": "The start time of this run is managed by the event schedule and cannot be changed here. Please adjust the slot in the schedule tab.",
+          "resetBlockedByNextRound": "This race can no longer be reset: the next round has already been created from its results. Delete the newer round first, then reset the race.",
           "teamsNotMatching": "The submitted boats do not match the boats of this run — the line-up has probably changed in the meantime (substitution or deregistration). Please reload the view and save again."
         }
       },
@@ -1286,15 +1324,16 @@
         },
         "override": {
           "label": "Set separately for this competition",
-          "hint": "Off: the competition follows the event and picks up every later change there. On: it gets values of its own – only useful if it has a race of its own in the timing system."
+          "hint": "Applies to the timing system and the file formats. Off: the competition follows the event and picks up every later change there. On: it gets values of its own. The race assignment above is not affected — it always belongs to the competition."
+        },
+        "raceSection": {
+          "title": "This competition's race"
         },
         "presets": {
           "title": "File formats",
           "hint": "Which columns are exported and imported. Only needed separately if this competition runs into a different race in the timing system."
         },
-        "raceclockerHint": "RaceClocker races are created in the event settings. Select this competition's race for qualification and for all other rounds here — the same assignment can also be ticked the other way round, at the race.",
-        "startlistQualification": "Start list export for qualification",
-        "startlistRounds": "Start list export for other rounds",
+        "raceclockerHint": "RaceClocker races are created in the event settings. Select this competition's one race here — it applies to the qualification and all other rounds. The same assignment can also be ticked the other way round, at the race.",
         "startlist": "Start list export",
         "resultImport": "Race results import",
         "importHint": "The RaceClocker presets export without a header row, because RaceClocker would otherwise import that row as a participant. Map the columns by their position when importing into RaceClocker – the internal identifier in particular onto \"Extra info\".",
@@ -1305,16 +1344,13 @@
         },
         "incomplete": {
           "title": "This timing setup is not ready for use yet",
-          "startlistRounds": "The start list export is missing – without it, no start list can be exported as CSV.",
-          "startlistQualification": "This competition has a qualification round, but the start list export for the qualification is missing – without it, no start list can be exported for the qualification.",
-          "link": "Go to the timing settings",
-          "raceRounds": "No race is selected for the heats – without one, results cannot be pulled from RaceClocker.",
-          "raceQualification": "This competition has a qualification round, but no time trial race is selected – without one, no results can be pulled from RaceClocker for the qualification."
+          "startlist": "The start list export is missing – without it, no start list can be exported as CSV.",
+          "race": "No race is selected – without one, results cannot be pulled from RaceClocker.",
+          "link": "Go to the timing settings"
         },
         "saved": "Timing settings saved",
         "invalid": "Please select a race belonging to this event.",
-        "raceQualification": "Race for qualification rounds",
-        "raceRounds": "Race for all other rounds"
+        "race": "RaceClocker race"
       },
       "places": {
         "places": "Places",
@@ -1424,6 +1460,17 @@
       },
       "error": {
         "emptyList": "Please add one or more documents"
+      },
+      "exportBundle": {
+        "title": "Export bundle",
+        "hint": "The order of the regatta bundle: the PDF start list export on the schedule tab can concatenate these documents and the collected start lists into one file in exactly this order.",
+        "startlistsPlaceholder": "Collected start lists",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "addDocument": "Add document",
+        "add": "Add",
+        "noAddableDocuments": "No further PDF documents available",
+        "onlyPdfHint": "Only PDF files are offered – the bundle cannot include other formats."
       }
     },
     "registration": {
@@ -1482,6 +1529,21 @@
       "organisation": "Organisation",
       "invoices": "Invoices"
     },
+    "notice": {
+      "title": "Global notice",
+      "description": "A banner on all public displays (results page, My event, boards) and on the referee dashboard — e.g. for a weather warning. Changes appear on the devices with their next poll (a few seconds up to a quarter of a minute).",
+      "text": "Notice text",
+      "severity": {
+        "label": "Level",
+        "CRITICAL": "Red (critical)",
+        "WARNING": "Yellow (warning)",
+        "INFO": "Green (info)"
+      },
+      "remove": "Remove notice",
+      "saved": "Notice saved",
+      "removed": "Notice removed",
+      "saveError": "The notice could not be saved"
+    },
     "timing": {
       "title": "Timing",
       "hint": "Applies to every competition of this event. A single competition can enter its own values in its timing tab and deviate deliberately.",
@@ -1491,7 +1553,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker races belong to the event, not to a single competition. Create each race once here — for example “Time trials”, “Long course” and “Short course” — and tick below, per race, which competitions use it for qualification rounds and which for all other rounds.",
+      "raceclockerHint": "RaceClocker races belong to the event, not to a single competition. Create each race once here — for example “Long course” and “Short course” — and tick below, per race, which competitions use it. Each competition runs all of its rounds in one race.",
       "autoPull": {
         "enabled": "Pull results automatically",
         "hint": "While a match is running, the server pulls its results at the fast interval. Upcoming matches are watched at the slow interval to detect their start; finished matches are not polled at all.",
@@ -1500,8 +1562,6 @@
         "watchBefore": "Start watching (minutes before the planned start)",
         "watchAfter": "Stop watching (minutes after the planned start)"
       },
-      "startlistQualification": "Start list export for qualification",
-      "startlistRounds": "Start list export for other rounds",
       "startlist": "Start list export",
       "resultImport": "Race results import",
       "formatsHint": {
@@ -1515,8 +1575,7 @@
         "title": "Competitions with their own timing",
         "none": "No competition deviates – all of them follow these defaults.",
         "system": "own system",
-        "startlistQualification": "own start list export for qualification",
-        "startlistRounds": "own start list export",
+        "startlist": "own start list export",
         "resultImport": "own race results import"
       },
       "races": {
@@ -1526,11 +1585,6 @@
         "edit": "Edit race",
         "name": "Name",
         "url": "Results URL",
-        "startMode": "Start type",
-        "startModes": {
-          "INDIVIDUAL": "Individual starts (time trial)",
-          "WAVE": "Wave starts"
-        },
         "capturesLaps": "Records lap times",
         "none": "No race created yet.",
         "deleteConfirm": "Delete “{{name}}”? As long as a competition still points at it, it cannot be deleted — untick the assignment below first.",
@@ -1542,9 +1596,8 @@
       },
       "assignments": {
         "title": "Assign competitions per race",
-        "hint": "The reverse of choosing in the competition: tick here which competitions use each race. A competition uses exactly one race per round type — ticking it here moves it away from another. Unticked competitions have no race for that round type.",
-        "forQualification": "Used for the qualification of",
-        "forRounds": "Used for the rounds of",
+        "hint": "The reverse of choosing in the competition: tick here which competitions use each race. A competition belongs to exactly one race with all of its rounds — ticking it here moves it away from another. Unticked competitions have no race.",
+        "competitions": "Used by",
         "saved": "Assignment saved."
       }
     },
@@ -1566,6 +1619,7 @@
         "unscheduled": "Time open",
         "failed": "not classified",
         "startedAt": "started {{time}}",
+        "awaitingReferee": "Finish complete — awaiting referee decision",
         "preparing": "in preparation",
         "penalty": "incl. {{seconds}} s penalty",
         "deregistered": "withdrawn",
@@ -1585,11 +1639,6 @@
         "minutesUnit": "min",
         "hoursUnit": "h",
         "secondsUnit": "s",
-        "place": "{{count}}th",
-        "place_ordinal_one": "{{count}}st",
-        "place_ordinal_two": "{{count}}nd",
-        "place_ordinal_few": "{{count}}rd",
-        "place_ordinal_other": "{{count}}th",
         "advancing": "{{count}} boats advance → {{round}}",
         "advancing_one": "1 boat advances → {{round}}",
         "advancingUnsized": "Next up: {{round}}",
@@ -1612,9 +1661,9 @@
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Does not take place",
         "bye": {
-          "open": "Bye · open",
-          "acknowledged": "Bye · acknowledged",
-          "cancelled": "Bye · cancelled"
+          "open": "Bye{{seed}} · open",
+          "acknowledged": "Bye{{seed}} · acknowledged",
+          "cancelled": "Bye{{seed}} · cancelled"
         },
         "counter": {
           "preparing": "{{n}} preparing",
@@ -1625,9 +1674,11 @@
         }
       },
       "bye": {
-        "deregistration": "Bye after withdrawal — {{team}}",
-        "deregistrationWithReason": "Bye after withdrawal — {{team}} ({{reason}})",
-        "noOpponent": "Bye — no opponent in this round"
+        "deregistration": "Bye{{seed}} after withdrawal — {{team}}",
+        "deregistrationWithReason": "Bye{{seed}} after withdrawal — {{team}} ({{reason}})",
+        "noOpponent": "Bye{{seed}} — no opponent in this round",
+        "mustRace": "raced — time out of competition",
+        "mustRaceExplanation": "Raced for fairness: the same effort as the competition. The time does not count towards advancing."
       }
     },
     "liveDashboard": {
@@ -1659,6 +1710,31 @@
         "label": "Refresh interval",
         "tooltip": "Next refresh in {{seconds}} s (every {{interval}} s)",
         "everySeconds": "Every {{seconds}} seconds"
+      },
+      "settings": {
+        "focus": "Focus",
+        "competitionFilter": {
+          "label": "Filter competitions",
+          "all": "All competitions",
+          "empty": "No races available",
+          "chip_one": "filtered: {{count}} competition",
+          "chip_other": "filtered: {{count}} competitions"
+        },
+        "onlyToday": "Show only the current race day",
+        "hideFinished": "Hide finished races (last {{count}} stay)",
+        "followCurrent": "Follow the current race",
+        "display": "Display",
+        "notePreview": "Note preview on the boat row",
+        "showCrew": "Show line-up",
+        "showChecks": "Show checks",
+        "readability": "Readability",
+        "fontSize": {
+          "label": "Font size",
+          "normal": "Normal",
+          "large": "Large",
+          "xlarge": "Extra large"
+        },
+        "refresh": "Refresh"
       },
       "penaltyIncluded": "incl. {{seconds}} s",
       "resultsCompleteWaiting": "Results complete — waiting to finish",
@@ -1710,6 +1786,21 @@
         "note": "Note: {{note}}",
         "none": "No requirements assigned"
       },
+      "notes": {
+        "title": "Notes",
+        "indicator_one": "{{count}} note",
+        "indicator_other": "{{count}} notes",
+        "empty": "No notes on this boat.",
+        "inputLabel": "New note",
+        "placeholder": "e.g. touched a buoy",
+        "add": "Add",
+        "byAt": "{{author}} · {{time}}",
+        "unknownAuthor": "Unknown",
+        "delete": "Delete note",
+        "deleteConfirm": "Delete this note? “{{note}}”",
+        "error": "The note could not be saved.",
+        "deleteError": "The note could not be deleted."
+      },
       "timeCheck": {
         "TOO_EARLY": "Fulfilled too early",
         "LATE": "Fulfilled late",
@@ -1746,6 +1837,61 @@
       "showShortNames": "Show short names",
       "showFullNames": "Show full names",
       "addSlot": "Add slot",
+      "startlistExport": {
+        "button": "Start lists",
+        "title": "Export start lists",
+        "kind": {
+          "label": "Export type",
+          "data": "CSV/ZIP – import into the timing system",
+          "pdf": "PDF – notice board or regatta bundle"
+        },
+        "format": {
+          "label": "Split",
+          "zip": "ZIP – one CSV per competition",
+          "csv": "One big CSV – sorted by start time"
+        },
+        "background": {
+          "label": "Print official paper",
+          "hint": "Prints the start list template's design as background. Turn off for printing on pre-printed paper – page format and margins stay the same. Attached bundle documents are not affected."
+        },
+        "bundle": {
+          "label": "Attach bundle documents",
+          "hint": "Assembles the event's export bundle – documents and collected start lists in the order configured under settings, each deselectable.",
+          "skippedNonPdf": "not a PDF, will be skipped",
+          "disabled": {
+            "onlyStartlists": "The export bundle contains nothing to attach besides the collected start lists – documents can be added on the event's “Settings” tab under “Export bundle”.",
+            "loading": "Loading the export bundle …",
+            "loadFailed": "The export bundle could not be loaded – close the dialog and try again.",
+            "forbidden": "No permission to read the export bundle."
+          }
+        },
+        "skipByes": {
+          "label": "Skip byes",
+          "hint": "Matches flagged “Must be raced” are always exported – even with this box checked."
+        },
+        "race": {
+          "label": "RaceClocker race",
+          "all": "All",
+          "hint": "Exports only the competitions whose assigned RaceClocker race is the selected one – for importing race by race."
+        },
+        "onlyMissing": {
+          "label": "Only matches missing in RaceClocker",
+          "hint": "Fetches each competition's assigned race and exports only matches whose teams do not appear there yet."
+        },
+        "preview": {
+          "loading": "Loading preview …",
+          "selectedCount": "{{selected}} of {{total}} selected",
+          "toggleAll": "Select or deselect all",
+          "empty": "Nothing to export – all matches are already in RaceClocker.",
+          "noStartTime": "No planned start time – excluded from the export:"
+        },
+        "download": "Download",
+        "error": {
+          "unreachable": "A RaceClocker race was unreachable – nothing was exported.",
+          "noStartTime_one": "{{count}} match without a planned start time blocks the export:",
+          "noStartTime_other": "{{count}} matches without a planned start time block the export:"
+        }
+      },
       "slotType": "Type",
       "freeSlot": "Free slot",
       "matchSlot": "Race",
@@ -1832,9 +1978,11 @@
         "title": "Adjust schedule",
         "fromSlot": "Start slot",
         "modePlus": "+X minutes",
+        "modeRange": "Shift range",
         "modeSetTime": "Set start time",
         "modeCompress": "Catch up by",
         "targetSlot": "Target slot",
+        "toSlot": "Up to slot",
         "minutes": "Minutes",
         "newTime": "New start time",
         "preview": "Preview",
@@ -1852,20 +2000,35 @@
           "leavesRaceDayPlain": "The shift would move at least one slot past the end of the race day. Please shift by less; the next day's schedule is adjusted separately.",
           "overtakesPredecessor": "Cannot move that far ahead: the preceding slot starts at {{earliest}} and would be overtaken. Move up by at most {{max}} minutes — no shifted run may start before {{earliest}}.",
           "overtakesPredecessorPlain": "Cannot move that far ahead: the shifted block would overtake the preceding slot. Please move up by less.",
+          "overtakesFollower": "Cannot delay that far: the next slot after the range starts at {{latest}} and would be caught up. Delay by at most {{max}} minutes — or choose a later 'up to' slot.",
+          "overtakesFollowerPlain": "Cannot delay that far: the shifted range would catch up with the first slot after it. Please delay by less or choose a later 'up to' slot.",
           "unexpected": "The shift was rejected. Please check the values in the form and run the preview again."
         },
         "mode": "Method",
         "delayMinutes": "Delay (minutes)",
         "help": {
           "plus": "All slots from the selected slot onward are shifted by the given minutes (negative = move earlier).",
+          "range": "Only the slots from the start slot up to and including the 'up to' slot are shifted by the given minutes (negative = move earlier). Everything before and after keeps its time.",
           "setTime": "The selected slot gets the new start time; all following slots keep their gaps.",
           "compress": "The given delay is caught up by the target slot: the gaps in between are shortened, and the target slot keeps its original time."
         }
       },
       "allPlanned": "All scheduled races are already planned.",
       "goToExecution": "Go to execution",
+      "eventMode": {
+        "enable": "Enable event mode: schedule and execution side by side",
+        "disable": "Disable event mode",
+        "tooSmall": "Event mode needs a wide screen — this window is too narrow for it.",
+        "loadHint": "Loads the execution next to the schedule. The device setting “Open in new window” does not apply in event mode.",
+        "close": "Close execution",
+        "empty": "Select a race — its execution will appear here next to the schedule.",
+        "execution": "Execution"
+      },
       "indicator": {
         "now": "Now",
+          "planned": "Planned {{time}}",
+          "started": "Started {{time}}",
+          "expected": "Expected ~{{time}}",
         "state": {
           "finished": "Finished",
           "preparing": "Preparing",
@@ -1874,7 +2037,8 @@
           "linked": "Linked",
           "waiting": "Race not set yet",
           "free": "Program item",
-          "skipped": "Skipped"
+          "skipped": "Skipped",
+          "bye": "Bye"
         }
       },
       "error": {
@@ -1935,6 +2099,8 @@
       "copyUrl": "Copy URL",
       "urlCopied": "URL copied",
       "name": "Name",
+      "saveAndClose": "Save and close",
+      "matchDetailFullscreen": "The announcer tile always fills the whole board — columns and spans have no effect here",
       "notFound": "Board not found",
       "tileCount": "{{count}} tiles",
       "tileCount_one": "1 tile",
@@ -1946,14 +2112,31 @@
         "addElement": "Add element",
         "width": "Width (columns)",
         "height": "Height (rows)",
-        "add": "Add tile"
+        "add": "Add tile",
+        "addDisabledMatchDetail": "The announcer tile fills the whole board — no further tiles are possible"
+      },
+      "delay": {
+        "subtitle": "vs. schedule, as of last start",
+        "onTime": "on time",
+        "noStarts": "No race started yet"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Upcoming",
+          "preparing": "Preparing",
+          "running": "Running",
+          "awaiting": "Awaiting referee decision",
+          "finished": "Finished"
+        }
       },
       "element": {
         "type": {
           "label": "Element type",
           "match": "Match",
+          "matchDetail": "Announcer tile (full screen)",
           "matchList": "Match list",
           "clock": "Clock",
+          "delay": "Delay",
           "text": "Notice",
           "awardCeremony": "Award ceremony"
         },
@@ -1976,6 +2159,11 @@
           "running": "Running matches",
           "schedule": "Day program"
         },
+        "scheduleMode": {
+          "label": "View",
+          "follow": "Moving window around now",
+          "full": "Whole day (scrollable)"
+        },
         "titleCurrent": "Racing now",
         "titleNext": "Up next",
         "titleUpcoming": "In {{count}} matches",
@@ -1995,7 +2183,11 @@
         "showCrewDetails": "Crew in detail (one line each)",
         "showBirthYears": "Show birth years",
         "showAdvancement": "Show advancement rule",
-        "showRegisteringClub": "Show registering club"
+        "showRegisteringClub": "Show registering club",
+        "backgroundColor": "Tile color",
+        "borderColor": "Border color",
+        "colorRemove": "Remove color",
+        "backgroundColorHint": "Light color tones keep the content readable"
       },
       "columns": "Columns",
       "columnCount": "{{count}} columns",
@@ -2071,6 +2263,8 @@
     "publiclyVisible": "Visible to participants (My Event)",
     "checkEarliestMinutesBefore": "Earliest (minutes before start)",
     "checkLatestMinutesBefore": "Latest (minutes before start)",
+    "publicNote": "Public note (My Event)",
+    "publicNoteHint": "Shown verbatim to the athletes — the description above stays internal.",
     "namedParticipantRequirements": {
       "title": "Named Participant Requirements",
       "description": "Manage specific requirements for named participants",
@@ -2521,6 +2715,11 @@
       "available": "New version available",
       "reload": "Reload now"
     },
+    "install": {
+      "message": "You can install this app on your device.",
+      "button": "Install app",
+      "iosHint": "You can install this app: tap the share icon and choose “Add to Home Screen”."
+    },
     "reset": {
       "button": "Reset app",
       "confirm": "Resets the app on this device and reloads it. You stay signed in."
@@ -2876,9 +3075,36 @@
       }
     }
   },
+  "resultList": {
+    "download": {
+      "button": "Result list",
+      "title": "Print result list",
+      "action": "Download",
+      "hint": "For the notice board or the podium — pick the parts you need; the preset only pre-selects them. Every page carries an as-of timestamp. Only confirmed placements are printed.",
+      "preset": {
+        "label": "Preset",
+        "posting": "Notice board",
+        "ceremony": "Award ceremony"
+      },
+      "options": {
+        "crew": "Crew line-up (names per boat)",
+        "times": "Times and time penalties",
+        "podiumOnly": "Places 1 to 3 only",
+        "byRatingCategory": "One section per rating category",
+        "largePrint": "Large print (notice board)"
+      },
+      "error": {
+        "noResults": "There are no confirmed placements for this result list yet.",
+        "competitionNotInEvent": "This competition does not belong to this event. Please reload the page.",
+        "isChallengeEvent": "A challenge event has no result lists — there are no runs and no placements.",
+        "unexpected": "The result list could not be created. Please reload the page and try again."
+      }
+    }
+  },
   "myEvent": {
     "tab": "My Event",
-    "hint": "Scan the QR code on your wristband to see your races and results.",
+    "emptyTitle": "Your personal schedule",
+    "emptyHint": "Scan the QR code on your wristband with your phone camera. Your races, start times and results will then appear here automatically.",
     "notFound": "There is no entry for this code at this event.",
     "next": "Your next race",
     "running": "Running now",
@@ -2892,6 +3118,12 @@
     "requirementFulfilled": "done",
     "requirementOpen": "open",
     "requirementOptional": "optional",
+    "requirementCheckBetween": "Complete between {{from}} and {{until}}",
+    "requirementCheckFrom": "Complete from {{from}}",
+    "requirementCheckUntil": "Complete by {{until}}",
+    "fieldOwnBoat": "Your boat",
+    "fieldNotReleased": "The field of this race has not been released yet.",
+    "fieldLoadError": "The field could not be loaded.",
     "remove": "Remove entry",
     "lane": "Start position",
     "team": "Team",

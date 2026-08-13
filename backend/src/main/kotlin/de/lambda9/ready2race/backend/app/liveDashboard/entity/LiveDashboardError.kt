@@ -9,6 +9,7 @@ import java.util.UUID
 sealed interface LiveDashboardError : ServiceError {
     data class EventNotFound(val eventId: UUID) : LiveDashboardError
     data class TeamNotFound(val teamId: UUID) : LiveDashboardError
+    data class NoteNotFound(val noteId: UUID) : LiveDashboardError
 
     /** Event steht auf chainProgressionMode = REGATTABUERO: Beenden geht dort nur über den Zeitplan. */
     data object FinishReservedForOffice : LiveDashboardError
@@ -22,6 +23,13 @@ sealed interface LiveDashboardError : ServiceError {
         is TeamNotFound -> ApiError(
             status = HttpStatusCode.NotFound,
             message = "Team with id $teamId not found in this match"
+        )
+
+        // Deckt auch den Fall "Notiz existiert, gehört aber zu einem anderen Boot" ab - für den
+        // Aufrufer ist beides dasselbe: unter diesem Pfad gibt es die Notiz nicht.
+        is NoteNotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            message = "Note with id $noteId not found for this team"
         )
 
         // Der häufigste Fehlerfall am Steg: das Steg-Personal drückt "Beenden", die Veranstaltung

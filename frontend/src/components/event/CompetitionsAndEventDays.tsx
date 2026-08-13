@@ -10,7 +10,9 @@ import {Trans, useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {Box, Button, Stack} from '@mui/material'
 import EmojiEvents from '@mui/icons-material/EmojiEvents'
+import FormatListNumbered from '@mui/icons-material/FormatListNumbered'
 import AwardCeremonyDialog from '@components/awardCeremony/AwardCeremonyDialog.tsx'
+import ResultListDialog from '@components/awardCeremony/ResultListDialog.tsx'
 import {eventRoute} from '@routes'
 import {useState} from 'react'
 
@@ -23,6 +25,7 @@ const CompetitionsAndEventDays = (props: Props) => {
     const user = useUser()
     const {eventId} = eventRoute.useParams()
     const [awardCeremonyDialogOpen, setAwardCeremonyDialogOpen] = useState(false)
+    const [resultListDialogOpen, setResultListDialogOpen] = useState(false)
 
     const competitionAdministrationProps = useEntityAdministration<CompetitionDto>(
         t('event.competition.competition'),
@@ -74,7 +77,13 @@ const CompetitionsAndEventDays = (props: Props) => {
             />
             {!props.isChallengeEvent && user.checkPrivilege(readEventGlobal) && (
                 <>
-                    <Box sx={{alignSelf: 'flex-end'}}>
+                    <Box sx={{alignSelf: 'flex-end', display: 'flex', gap: 1}}>
+                        <Button
+                            variant={'contained'}
+                            startIcon={<FormatListNumbered />}
+                            onClick={() => setResultListDialogOpen(true)}>
+                            {t('resultList.download.button')}
+                        </Button>
                         <Button
                             variant={'contained'}
                             startIcon={<EmojiEvents />}
@@ -85,6 +94,11 @@ const CompetitionsAndEventDays = (props: Props) => {
                     <AwardCeremonyDialog
                         open={awardCeremonyDialogOpen}
                         onClose={() => setAwardCeremonyDialogOpen(false)}
+                        eventId={eventId}
+                    />
+                    <ResultListDialog
+                        open={resultListDialogOpen}
+                        onClose={() => setResultListDialogOpen(false)}
                         eventId={eventId}
                     />
                     <EventDayTable

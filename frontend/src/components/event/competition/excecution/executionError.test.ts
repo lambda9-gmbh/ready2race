@@ -99,6 +99,18 @@ describe('matchErrorText', () => {
         })
     })
 
+    it('trennt den gesperrten Reset von der gesperrten Ergebniseingabe', () => {
+        // Beide heißen "nicht mehr in der aktuellen Runde", verlangen aber Verschiedenes: Die
+        // Ergebniseingabe sagt "nur die aktuelle Runde", der Reset sagt "erst die Folgerunde
+        // löschen". Ein gemeinsamer Text würde die Abhilfe verschweigen.
+        expect(matchErrorText(error({errorCode: 'EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND'}))).toEqual({
+            key: 'event.competition.execution.error.resetBlockedByNextRound',
+        })
+        expect(
+            matchErrorText(error({errorCode: 'EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND'})),
+        ).not.toEqual(matchErrorText(error({errorCode: 'EXECUTION_MATCH_RESULTS_LOCKED'})))
+    })
+
     it.each([
         ['EXECUTION_START_TIME_MANAGED_BY_SCHEDULE', 'startTimeManagedBySchedule'],
         ['EXECUTION_TEAMS_NOT_MATCHING', 'teamsNotMatching'],
@@ -201,6 +213,15 @@ describe('Übersetzungen', () => {
         'event.competition.execution.error.placesNotContinuous',
         'event.competition.execution.error.startTimeManagedBySchedule',
         'event.competition.execution.error.teamsNotMatching',
+        'event.competition.execution.error.resetBlockedByNextRound',
+        // Die Texte des Reset-Bestätigungsdialogs und seine Rückmeldungen.
+        'event.competition.execution.resetMatch.action',
+        'event.competition.execution.resetMatch.confirmation.title',
+        'event.competition.execution.resetMatch.confirmation.warning',
+        'event.competition.execution.resetMatch.confirmation.keeps',
+        'event.competition.execution.resetMatch.confirmation.question',
+        'event.competition.execution.resetMatch.error',
+        'event.competition.execution.resetMatch.success',
         'event.competition.execution.results.raceclocker.error.urlMissing',
         'event.competition.execution.results.raceclocker.error.urlInvalid',
         'event.competition.execution.results.raceclocker.error.unreachable',

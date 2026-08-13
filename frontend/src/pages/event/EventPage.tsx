@@ -30,6 +30,7 @@ import {
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
+import ExportBundleCard from '@components/event/document/ExportBundleCard.tsx'
 import {
     Forward,
     InfoOutlined,
@@ -79,9 +80,11 @@ import EventRegistrations from '@components/event/competition/registration/Event
 import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
 import RatingCategoriesForEvent from '@components/ratingCategory/RatingCategoriesForEvent.tsx'
 import EventTimingConfig from '@components/event/timing/EventTimingConfig.tsx'
+import EventExecutionSettings from '@components/event/EventExecutionSettings.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
 import CheckSeverityDialog from '@components/event/liveDashboard/CheckSeverityDialog.tsx'
+import EventNoticeCard from '@components/eventNotice/EventNoticeCard.tsx'
 import WorkspacePremium from '@mui/icons-material/WorkspacePremium'
 import SplitButton from '@components/SplitButton.tsx'
 import {useDocumentTitle} from '@utils/useDocumentTitle.ts'
@@ -469,6 +472,15 @@ const EventPage = () => {
                                         )}
                                     </Card>
                                 )}
+                                {/* Globaler Hinweis (z.B. Wetterwarnung): erscheint auf allen
+                                    öffentlichen Anzeigen und im Schiedsrichter-Dashboard. */}
+                                {user.checkPrivilege(updateEventGlobal) && (
+                                    <EventNoticeCard
+                                        eventId={eventId}
+                                        notice={data.notice}
+                                        onChanged={reload}
+                                    />
+                                )}
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'competitions'} activeTab={activeTab}>
@@ -506,11 +518,15 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'schedule'} activeTab={activeTab}>
-                            <EventSchedule/>
+                            <EventSchedule event={data}/>
                         </TabPanel>
                         <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={4}>
                                 <RatingCategoriesForEvent/>
+                                {/* Wie Läufe am Renntag beendet und Folgerunden erzeugt werden -
+                                    aus dem Zeitplan-Popover hierher gezogen (12.08.2026), weil es
+                                    die Veranstaltung ändert und kein Geräte-Schalter ist. */}
+                                <EventExecutionSettings event={data} reloadEvent={reload}/>
                                 <EventTimingConfig />
                                 <DocumentTable
                                     {...documentAdministrationProps.table}
@@ -531,6 +547,14 @@ const EventPage = () => {
                                     ]}
                                 />
                                 <DocumentDialog {...documentAdministrationProps.dialog} />
+                                {/* Die Export-Mappe direkt beim Dokumente-Bereich: sie sortiert
+                                    genau diese Dokumente. lastRequested nimmt Uploads und
+                                    Löschungen der Tabelle mit - ein gelöschtes Dokument fällt
+                                    serverseitig auch aus der Mappe (on delete cascade). */}
+                                <ExportBundleCard
+                                    eventId={eventId}
+                                    lastRequested={documentAdministrationProps.table.lastRequested}
+                                />
                                 <ParticipantRequirementForEventTable
                                     {...participantRequirementAdministrationProps.table}
                                     title={t('participantRequirement.participantRequirements')}

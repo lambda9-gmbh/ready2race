@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventForExportRecord
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
 import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
+import de.lambda9.ready2race.backend.app.event.entity.EventNoticeDto
 import de.lambda9.ready2race.backend.app.event.entity.ExecutionAutoRefresh
 import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
 import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
@@ -91,6 +92,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         executionAutoRefresh = executionAutoRefresh ?: true,
         executionAutoRefreshSeconds = executionAutoRefreshSeconds ?: ExecutionAutoRefresh.DEFAULT_SECONDS,
         challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },
+        notice = EventNoticeDto.fromColumns(noticeText, noticeSeverity),
     )
 )
 

@@ -4,6 +4,7 @@ import {
     LiveDashboardMatchDto,
     LiveDashboardTeamDto,
     MatchStatusDto,
+    MatchTeamNoteDto,
     PendingSlotDto,
 } from '@api/types.gen.ts'
 
@@ -61,6 +62,20 @@ export const dashboardCrew = (windowWidth: number): boolean => windowWidth >= CR
  */
 export const teamShowsCrew = (team: Pick<LiveDashboardTeamDto, 'crew'>): boolean =>
     team.crew != null && team.crew.length > 0
+
+/**
+ * Anzahl der Schiedsrichter-Notizen eines Boots - der Marker auf der Karte erscheint nur, wenn es
+ * welche gibt. `notes` ist im generierten Typ optional, ältere Server-Antworten lassen es weg.
+ */
+export const teamNoteCount = (team: Pick<LiveDashboardTeamDto, 'notes'>): number =>
+    (team.notes ?? []).length
+
+/**
+ * Ob ein Notiz-Text abgeschickt werden kann - Leerraum zählt nicht. Dieselbe Regel wie im Backend
+ * (Validator `notBlank`, DB-Check `btrim(note) <> ''`): der Knopf soll gar nicht erst anbieten,
+ * was der Server ohnehin ablehnt.
+ */
+export const canSubmitNote = (text: string): boolean => text.trim() !== ''
 
 /** Eine Person in der Crew-Zeile: `Meier · RC Bergedorf (Ste.)`, Rolle und Verein je optional. */
 export const crewMemberLabel = (member: LiveDashboardCrewMemberDto): string => {
@@ -349,6 +364,50 @@ export const nextUpEntry = (
 }
 
 /**
+ * Der nächste Vorfahr, der selbst scrollt — z. B. die „Läufe"-Spalte des Dashboards oder die
+ * Durchführungs-Spalte des Veranstaltungs-Modus (overflowY: auto). Gibt es keinen, übernimmt
+ * das Fenster (dann null, und `scrollIntoView` ist der richtige Weg). Die Prüfung auf
+ * scrollHeight > clientHeight lässt Boxen aus, die zwar overflow gesetzt haben, aber mit ihrem
+ * Inhalt wachsen — etwa den Seitenrahmen, dessen overflowX: hidden das berechnete overflowY auf
+ * auto hebt, ohne dass er je scrollt. body/html bleiben außen vor: dort scrollt das Fenster.
+ * Bis zum 12.08.2026 lag die Funktion privat in der LiveDashboardPage; hierher gezogen, weil
+ * der Veranstaltungs-Modus des Zeitplan-Tabs denselben Container-Scroll braucht.
+ */
+export const scrollContainerOf = (el: HTMLElement): HTMLElement | null => {
+    for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+        if (parent === document.body || parent === document.documentElement) {
+            return null
+        }
+        const overflowY = window.getComputedStyle(parent).overflowY
+        if (
+            (overflowY === 'auto' || overflowY === 'scroll') &&
+            parent.scrollHeight > parent.clientHeight
+        ) {
+            return parent
+        }
+    }
+    return null
+}
+
+/**
+ * Ziel-scrollTop, das ein Element mittig in seinen Scroll-Container stellt — das rechnerische
+ * Gegenstück zu `scrollIntoView({block: 'center'})`, nur eben auf einen einzigen Container
+ * bezogen statt auf alle scrollbaren Vorfahren. `elementTop` ist die Oberkante des Elements im
+ * Scroll-Inhalt des Containers (nicht im Viewport). Begrenzt auf den fahrbaren Bereich, damit
+ * Einträge am Anfang und Ende der Liste nicht überschießen.
+ */
+export const centeredScrollTop = (
+    elementTop: number,
+    elementHeight: number,
+    containerClientHeight: number,
+    containerScrollHeight: number,
+): number => {
+    const centered = elementTop - (containerClientHeight - elementHeight) / 2
+    const maxScrollTop = Math.max(0, containerScrollHeight - containerClientHeight)
+    return Math.min(Math.max(0, centered), maxScrollTop)
+}
+
+/**
  * Rennnummer und Kurzname eines Wettkampfs, z. B. "17 CM 4x+" — dieselbe Zusammensetzung wie
  * `competitionTag` im Zeitplan-Tab, hier für die DTOs des Boards. Leer, wo beides fehlt: bei
  * Programmpunkten und bei Wettkämpfen ohne gepflegten Kurznamen und ohne Nummer.
@@ -383,3 +442,215 @@ export const competitionLabel = (
 export const pendingSlotLabel = (slot: PendingSlotDto, mode: 'full' | 'short' = 'full'): string =>
     slot.name ??
     [competitionLabel(slot, mode), slot.roundName, slot.matchName].filter(Boolean).join(' · ')
+
+// === Geräte-lokale Anpassungen des Boards (12.08.2026) ==========================================
+// Die Logik der acht Einstellungen aus dem Einstellungs-Popover — als reine Funktionen hier statt
+// im JSX, damit sie ohne Rendering prüfbar bleibt (siehe common.test.ts). Die Persistenz liegt in
+// deviceSettings.ts, hier steht nur, WAS die Einstellungen mit den gepollten Daten machen.
+
+/** Ein Eintrag der Wettkampf-Mehrfachauswahl: die Id trägt die Wahl, das Label die Anzeige. */
+export type DashboardCompetitionOption = {competitionId: string; label: string}
+
+/**
+ * Die wählbaren Wettkämpfe, abgeleitet aus den im Dashboard vorhandenen Läufen — es gibt keinen
+ * eigenen Abruf dafür, und was keinen Lauf hat, gäbe gefiltert ohnehin eine leere Liste. Das Label
+ * folgt der Kurz-/Langform-Wahl des Boards. Sortiert nach Label, damit die Liste im Popover der
+ * Leserichtung folgt und nicht der Ausführungsreihenfolge der Läufe.
+ */
+export const dashboardCompetitionOptions = (
+    matches: LiveDashboardMatchDto[],
+    mode: 'full' | 'short' = 'full',
+): DashboardCompetitionOption[] => {
+    const byId = new Map<string, string>()
+    for (const match of matches) {
+        if (!byId.has(match.competitionId)) {
+            byId.set(match.competitionId, competitionLabel(match, mode) ?? match.competitionName)
+        }
+    }
+    return [...byId.entries()]
+        .map(([competitionId, label]) => ({competitionId, label}))
+        .sort((a, b) => a.label.localeCompare(b.label))
+}
+
+/**
+ * Der Wettkampf-Filter über den Läufen: leer heißt „alle" — der Filter ist eine Fokushilfe, kein
+ * Pflichtfeld. Ids, die in den Daten gar nicht vorkommen (z. B. eine gespeicherte Wahl von
+ * gestern), filtern schlicht nichts Zusätzliches weg.
+ */
+export const filterMatchesByCompetitions = (
+    matches: LiveDashboardMatchDto[],
+    selectedIds: string[],
+): LiveDashboardMatchDto[] =>
+    selectedIds.length === 0
+        ? matches
+        : matches.filter(match => selectedIds.includes(match.competitionId))
+
+/**
+ * Dieselbe Auswahl für die wartenden Slots. Ein PendingSlotDto trägt keine competitionId, nur den
+ * Namen — verglichen wird deshalb gegen die Namen der gewählten Wettkämpfe aus den Läufen.
+ * Programmpunkte (FREE, `name` gesetzt) bleiben immer stehen: die Mittagspause gehört zu keinem
+ * Wettkampf und soll durch keinen Filter verschwinden. Ebenso bleibt ein Slot stehen, dessen
+ * Wettkampfname sich aus den Läufen nicht auflösen lässt — lieber einer zu viel als ein
+ * „verlorener" Lauf am Renntag.
+ */
+export const filterPendingSlotsByCompetitions = (
+    pendingSlots: PendingSlotDto[],
+    matches: LiveDashboardMatchDto[],
+    selectedIds: string[],
+): PendingSlotDto[] => {
+    if (selectedIds.length === 0) {
+        return pendingSlots
+    }
+    const knownNames = new Set(matches.map(match => match.competitionName))
+    const selectedNames = new Set(
+        filterMatchesByCompetitions(matches, selectedIds).map(match => match.competitionName),
+    )
+    return pendingSlots.filter(
+        slot =>
+            slot.name != null ||
+            slot.competitionName == null ||
+            !knownNames.has(slot.competitionName) ||
+            selectedNames.has(slot.competitionName),
+    )
+}
+
+/**
+ * Kalendertag (YYYY-MM-DD) einer naiven lokalen Zeitangabe — dieselbe Konvention wie `dayOf` in
+ * timelineIndicator.ts, hier dupliziert statt importiert: timelineIndicator.ts importiert bereits
+ * aus dieser Datei, die Gegenrichtung wäre ein Import-Kreis.
+ */
+const entryDay = (isoLikeTime: string): string => isoLikeTime.slice(0, 10)
+
+/**
+ * Der Tagesfilter der Läufe-Spalte: nur die Einträge des Tages [day] — desselben Tages, den auch
+ * der Zeitstrahl-Indikator zeigt (heute bzw. der nächste Renntag, siehe resolveDashboardDay).
+ * Bewusst nicht wörtlich „heute": am Vorabend einer Regatta wäre die Spalte sonst leer, obwohl der
+ * Indikator darüber bereits den Renntag anzeigt. Einträge ohne Startzeit bleiben stehen — ohne
+ * Zeit gehören sie zu keinem Tag, und Verstecken wäre die falsche Antwort darauf.
+ */
+export const filterTimelineEntriesForDay = (
+    entries: LiveDashboardTimelineEntry[],
+    day: string,
+): LiveDashboardTimelineEntry[] =>
+    entries.filter(entry => {
+        const startTime = entry.kind === 'match' ? entry.match.startTime : entry.slot.startTime
+        return startTime == null || entryDay(startTime) === day
+    })
+
+/**
+ * Wie viele beendete Läufe beim Ausblenden als Kontext stehen bleiben. Bewusst fest statt als
+ * eigener Zahlenwähler (Entscheidung vom 12.08.2026): zwei reichen, um „was war eben?" zu
+ * beantworten, und jede weitere Stellschraube macht das Popover am Steg unbedienbarer.
+ */
+export const KEEP_FINISHED_CONTEXT = 2
+
+/**
+ * „Beendete ausblenden": versteckt beendete Läufe der Läufe-Spalte bis auf die [keepLast]
+ * jüngsten — [entries] ist nach Startzeit sortiert (buildLiveDashboardTimeline), die letzten
+ * beendeten der Liste sind also die zuletzt gefahrenen. Nur FINISHED zählt als beendet;
+ * abgesagte Läufe (SKIPPED) bleiben sichtbar, ihre Absage muss auffindbar bleiben, um sie im
+ * Zeitplan zurücknehmen zu können.
+ */
+export const hideFinishedTimelineEntries = (
+    entries: LiveDashboardTimelineEntry[],
+    keepLast: number = KEEP_FINISHED_CONTEXT,
+): LiveDashboardTimelineEntry[] => {
+    const finishedIds = entries.flatMap(entry =>
+        entry.kind === 'match' && entry.match.state === 'FINISHED' ? [entry.match.matchId] : [],
+    )
+    const hidden = new Set(finishedIds.slice(0, Math.max(0, finishedIds.length - keepLast)))
+    return entries.filter(
+        entry => !(entry.kind === 'match' && hidden.has(entry.match.matchId)),
+    )
+}
+
+/**
+ * Wie lange nach einer Hand-Interaktion das automatische Nachführen pausiert — derselbe Wert wie
+ * MANUAL_SCROLL_IDLE_MS der Tagesprogramm-Kachel (BoardMatchListElement): wer gerade selbst liest,
+ * soll nicht vom nächsten Datenupdate weggezogen werden.
+ */
+export const FOLLOW_MANUAL_IDLE_MS = 30_000
+
+/**
+ * Welche Karte „Folge dem aktuellen Lauf" in der Läufe-Spalte zentriert: der erste Lauf, der im
+ * Live-Sinn läuft (an den Start gerufen, unterwegs oder wartet auf Beenden), sonst der nächste
+ * anstehende. [matches] kommt in Server-Reihenfolge (nach Startzeit) — „der erste" ist also der
+ * früheste. Null, wenn es nichts zu folgen gibt (alles beendet oder Liste leer).
+ */
+export const followTargetMatchId = (matches: LiveDashboardMatchDto[]): string | null =>
+    (matches.find(isLiveMatch) ?? matches.find(match => match.state === 'UPCOMING'))?.matchId ??
+    null
+
+/**
+ * Der Detailgrad der Karten, gebündelt durchgereicht (Seite → Spalten → Karte) wie die
+ * [LiveDashboardActions]: die Werte kommen aus den deviceSettings-Schlüsseln, die Karte selbst
+ * kennt nur noch das Ergebnis. Ein Bündel statt einzelner Props, damit jede weitere Einstellung
+ * nicht drei Komponenten-Signaturen gleichzeitig aufbohrt.
+ */
+export type LiveDashboardDetailSettings = {
+    /** Jüngste Schiedsrichter-Notiz einzeilig an der Bootszeile (zusätzlich zu Icon+Zähler). */
+    notePreview: boolean
+    /** Crew-Zeilen (Aufstellung) zeigen — aus ist radikaler als der Kompaktmodus. */
+    showCrew: boolean
+    /** Prüfungs-Icons an den Bootszeilen zeigen — aus entfällt die ganze Icon-Spalte. */
+    showChecks: boolean
+}
+
+/**
+ * Die jüngste Schiedsrichter-Notiz eines Boots für die einzeilige Vorschau an der Bootszeile —
+ * `notes` kommt vom Server älteste zuerst (siehe LiveDashboardTeamDto), die jüngste ist also die
+ * letzte. Null ohne Notizen; die Vorschau erscheint dann gar nicht.
+ */
+export const latestTeamNote = (
+    team: Pick<LiveDashboardTeamDto, 'notes'>,
+): MatchTeamNoteDto | null => {
+    const notes = team.notes ?? []
+    return notes.length > 0 ? notes[notes.length - 1] : null
+}
+
+/**
+ * Die Grid-Spalten einer Bootszeile der Karte. Die letzte Spalte (26px) gehört dem Prüfungs-Icon
+ * und entfällt KOMPLETT, wenn die Icons abgeschaltet sind („Prüfungen anzeigen" aus) — der
+ * Namensspalte wächst der Platz zu, statt dass eine leere Lücke stehen bliebe. Genau dieser
+ * Platzgewinn ist der Zweck der Einstellung (Nutzer-Feedback vom 12.08.2026, Telefon am Steg).
+ */
+export const dashboardRowColumns = (hasResults: boolean, showChecks: boolean): string => {
+    const base = hasResults ? '2ch minmax(0, 1fr) 10.5ch 2rem' : '2ch minmax(0, 1fr)'
+    return showChecks ? `${base} 26px` : base
+}
+
+/** Die drei Stufen der Karten-Schriftgröße — eigene Einstellung NEBEN dem Kompaktmodus. */
+export const DASHBOARD_FONT_SCALES = ['normal', 'large', 'xlarge'] as const
+export type DashboardFontScale = (typeof DASHBOARD_FONT_SCALES)[number]
+
+/** Skalierungsfaktor je Stufe — moderat, damit auch „Sehr groß" die Kartenzeilen nicht sprengt. */
+const FONT_SCALE_FACTORS: Record<DashboardFontScale, number> = {
+    normal: 1,
+    large: 1.15,
+    xlarge: 1.3,
+}
+
+/**
+ * Die rem-Schriftgrößen der drei Typography-Varianten, die der Karten-Wrapper übersteuert —
+ * dasselbe Muster wie der Kompaktmodus, nur berechnet statt fest verdrahtet: Basis sind die
+ * MUI-Standardgrößen bzw. die kleineren Kompakt-Stufen, darauf multipliziert der Faktor der
+ * gewählten Stufe. Kompakt und Groß schließen sich damit nicht aus, sie verrechnen sich —
+ * „kompakt + groß" ergibt dichte Karten mit größerer Schrift, genau das Steg-Szenario
+ * (wenig Platz, viel Sonne). Null bei „nichts zu übersteuern", damit der Wrapper im
+ * Normalzustand gar keine CSS-Regeln aufspannt.
+ */
+export const dashboardTypographySizes = (
+    compact: boolean,
+    scale: DashboardFontScale,
+): {subtitle1: string; body2: string; caption: string} | null => {
+    if (!compact && scale === 'normal') {
+        return null
+    }
+    // Kompakt-Basen wie bisher (0.875/0.8/0.7), sonst die MUI-Standardgrößen der Varianten.
+    const base = compact
+        ? {subtitle1: 0.875, body2: 0.8, caption: 0.7}
+        : {subtitle1: 1, body2: 0.875, caption: 0.75}
+    const factor = FONT_SCALE_FACTORS[scale]
+    const rem = (value: number) => `${Math.round(value * factor * 1000) / 1000}rem`
+    return {subtitle1: rem(base.subtitle1), body2: rem(base.body2), caption: rem(base.caption)}
+}

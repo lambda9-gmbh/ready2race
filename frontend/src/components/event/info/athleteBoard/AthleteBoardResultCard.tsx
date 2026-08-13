@@ -9,10 +9,12 @@ import {
     AthleteBoardBoatRow,
     AthleteBoardBoatStatus,
     AthleteBoardBoatSubline,
+    AthleteBoardLapTimes,
     AthleteBoardSectionHeading,
     BoatListRow,
 } from './AthleteBoardBoatRow'
-import {formatClockTime, formatPlace, scaled} from './common'
+import {formatClockTime, scaled} from './common'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 
 interface AthleteBoardResultCardProps {
@@ -21,9 +23,22 @@ interface AthleteBoardResultCardProps {
     // Gründe ausgeschiedener/abgemeldeter Boote bleiben stehen, sonst wirkte die Zeile
     // wie ein unerklärtes Loch.
     showTimes?: boolean
+    // Dieselben Crew-Optionen wie die Lauf-Karte (AthleteBoardMatchCard) — die Kachel
+    // soll ihre Besatzungszeilen nicht verlieren, wenn der Lauf beendet wird (12.08.2026).
+    showCrew?: boolean
+    showCrewDetails?: boolean
+    showBirthYears?: boolean
+    showRegisteringClub?: boolean
 }
 
-const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCardProps) => {
+const AthleteBoardResultCard = ({
+    result,
+    showTimes = true,
+    showCrew = true,
+    showCrewDetails = false,
+    showBirthYears = false,
+    showRegisteringClub = false,
+}: AthleteBoardResultCardProps) => {
     const {t} = useTranslation()
 
     const teams = [...result.teams].sort((a, b) => {
@@ -68,6 +83,17 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                         {result.matchName && result.matchName !== result.roundName && (
                             <Chip label={result.matchName} size="small" variant="outlined" />
                         )}
+                        {/* Wie auf der Lauf-Karte: die Disziplin-Zeile trägt den
+                            Kategorie-Chip — gleiche Kopf-Hierarchie in beiden Karten
+                            (Angleichung vom 12.08.2026). */}
+                        {result.categoryName && (
+                            <Chip
+                                label={result.categoryName}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                            />
+                        )}
                     </Stack>
                 </Box>
                 {/* Geplanter Start groß, darunter der tatsächliche — so ist eine Verschiebung
@@ -111,14 +137,16 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                 key={`${result.matchId}-${team.startNumber}`}
                                 index={index}
                                 // Der Platz innerhalb der Wertungskategorie — team.place bleibt der
-                                // Platz im Lauf und ist nur seine Grundlage. Als Ordnungszahl
-                                // („1." / "1st"), damit die große Zahl nicht wie die Startnummer
-                                // der Lauf-Karte liest; die Startnummer steht klein darunter,
-                                // damit die Zeile dem Boot zuzuordnen bleibt.
+                                // Platz im Lauf und ist nur seine Grundlage. Als englisches
+                                // Ordinal „1st/2nd/3rd" (formatPlaceOrdinal, Nutzerentscheidung
+                                // 12.08.2026): die zwischenzeitlich nackte Zahl war von einer
+                                // Startnummer nicht zu unterscheiden.
                                 leadNumber={
-                                    team.categoryPlace != null
-                                        ? formatPlace(team.categoryPlace, t)
-                                        : '–'
+                                    team.categoryPlace != null ? (
+                                        <PlaceOrdinal place={team.categoryPlace} />
+                                    ) : (
+                                        '–'
+                                    )
                                 }
                                 trailing={
                                     // Ohne Zeiten bleibt die rechte Spalte den Booten
@@ -144,10 +172,16 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                                 }
                                             />
                                             {!team.deregistered && showTimes && (
-                                                <AthleteBoardPenaltyNote
-                                                    penaltySeconds={team.penaltySeconds}
-                                                    penaltyNote={team.penaltyNote}
-                                                />
+                                                <>
+                                                    <AthleteBoardPenaltyNote
+                                                        penaltySeconds={team.penaltySeconds}
+                                                        penaltyNote={team.penaltyNote}
+                                                    />
+                                                    {/* Rundenzeiten prominent unter der Endzeit
+                                                        (12.08.2026) — identisch zur Lauf-Karte;
+                                                        vorher eine Crew-Subline links. */}
+                                                    <AthleteBoardLapTimes laps={team.laps} />
+                                                </>
                                             )}
                                         </>
                                     )
@@ -159,6 +193,46 @@ const AthleteBoardResultCard = ({result, showTimes = true}: AthleteBoardResultCa
                                 <AthleteBoardBoatSubline>
                                     {t('event.info.athleteBoard.startNumber')} {team.startNumber}
                                 </AthleteBoardBoatSubline>
+                                {/* Crew-Zeilen exakt wie auf der Lauf-Karte
+                                    (AthleteBoardMatchCard): einzeln mit Details für
+                                    Sprecherinnen, sonst die einzeilige Namensliste. */}
+                                {showCrewDetails && (team.participants ?? []).length > 0 ? (
+                                    <>
+                                        {(team.participants ?? []).map((p, i) => (
+                                            <AthleteBoardBoatSubline key={i}>
+                                                {[
+                                                    p.role ? `${p.name} (${p.role})` : p.name,
+                                                    p.clubName,
+                                                    showBirthYears && p.year != null
+                                                        ? t('event.info.athleteBoard.birthYear', {
+                                                              year: p.year,
+                                                          })
+                                                        : null,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </AthleteBoardBoatSubline>
+                                        ))}
+                                    </>
+                                ) : (
+                                    showCrew &&
+                                    (team.participants ?? []).length > 0 && (
+                                        <AthleteBoardBoatSubline>
+                                            {(team.participants ?? [])
+                                                .map(p =>
+                                                    p.role ? `${p.name} (${p.role})` : p.name,
+                                                )
+                                                .join(', ')}
+                                        </AthleteBoardBoatSubline>
+                                    )
+                                )}
+                                {showRegisteringClub && team.registeringClub && (
+                                    <AthleteBoardBoatSubline>
+                                        {t('event.info.athleteBoard.registeringClub', {
+                                            club: team.registeringClub,
+                                        })}
+                                    </AthleteBoardBoatSubline>
+                                )}
                             </AthleteBoardBoatRow>
                         ))}
                     </Fragment>

@@ -1594,6 +1594,42 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/bye-must-race:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchByeMustRace
+      description: >-
+        Toggles 'must race' on a bye match (competition_match.bye_must_race). The match then
+        operationally counts as a real race (start list exports, RaceClocker polling, the chain
+        waits for it to be finished), while progression keeps bye semantics - the racing team moves
+        on regardless of the measured time, which is displayed as out of competition.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMatchByeMustRaceRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/mark-started:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -1620,6 +1656,40 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/finish:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: finishMatchFromExecution
+      description: "Finishes the match from the execution page (regatta office side). Works in every chainProgressionMode, like finishScheduleSlot - unlike finishLiveDashboardMatch, which is gated in REGATTABUERO mode."
+      parameters:
+        - name: openResults
+          in: query
+          required: false
+          description: "Marks every team without a result as failed with this reason. Deregistered teams are left alone."
+          schema:
+            type: string
+            enum: [DNS, DNF, DSQ]
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reopen:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -1633,6 +1703,32 @@ paths:
     put:
       operationId: reopenMatch
       description: "Takes back the finish stamp of a finished match in the latest round - activation, real start and results stay untouched"
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reset:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: resetMatch
+      description: "Resets a single match to 'never raced': clears activation, real start, finish stamp, places, times, penalties and laps while keeping the line-up, lanes and all row UUIDs (external timing references stay valid). Only allowed while the following round has no created matches yet."
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -1878,6 +1974,41 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
+  /event/{eventId}/notice:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    put:
+      operationId: updateEventNotice
+      description: >-
+        Sets or clears the event-wide notice banner (e.g. a weather warning) - both fields set
+        means set, both null means clear. Deliberately a small dedicated endpoint instead of a
+        field on the big event update, so the race-day action stays lightweight. The notice is
+        read through EventDto and embedded in the polled public responses (my-event, board view,
+        live dashboard, live-matches); caches and poll intervals mean a change takes a few
+        seconds to show up on devices.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventNoticeRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/competition/{competitionId}/timing-config:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2378,6 +2509,127 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/exportBundle:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getExportBundle
+      description: >-
+        The event's export bundle in order: uploaded event documents plus exactly one placeholder
+        for the generated start lists. The placeholder is created lazily on first access
+        (default position: last), so every event has one. The PDF bulk start list export
+        concatenates the entries in this order.
+      responses:
+        200:
+          description: The bundle items in bundle order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventExportBundleItemDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addExportBundleDocument
+      description: >-
+        Adds an event document to the end of the export bundle. Fails with 409
+        (EXPORT_BUNDLE_DUPLICATE_DOCUMENT) if the document is already part of the bundle, and
+        with 404 if the document does not belong to this event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEventExportBundleItemRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/exportBundle/order:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    put:
+      operationId: reorderExportBundle
+      description: >-
+        Writes the complete new order of the bundle. The submitted ids must contain exactly the
+        current bundle items (each exactly once) - otherwise the request fails with 409
+        (EXPORT_BUNDLE_ORDER_MISMATCH), typically a second browser tab with a stale state.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventExportBundleOrderRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/exportBundle/{itemId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: removeExportBundleItem
+      description: >-
+        Removes a document entry from the bundle. The generated-startlists placeholder cannot be
+        removed (400, EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE) - it can only be reordered, and
+        deselected per export in the export dialog.
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/participantTracking:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2388,6 +2640,19 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query
+          name: onlyLatest
+          required: false
+          description: "Reduces the log to the most recent event per participant. Defaults to false. The scanType filter is applied AFTER this reduction, so onlyLatest=true with scanType=EXIT answers \"who has checked out onto the water and is not back yet\"."
+          schema:
+            type: boolean
+        - in: query
+          name: scanType
+          required: false
+          description: "Only events with this status. Applied after the onlyLatest reduction."
+          schema:
+            type: string
+            enum: [ENTRY, EXIT]
       responses:
         200:
           description: ParticipantTracking page successfully retrieved
@@ -6449,6 +6714,13 @@ paths:
         schema:
           type: string
           format: uuid
+      - in: query
+        name: matchId
+        required: false
+        description: "Restricts the response to the field of one single match (used by My Event) - the visibility rule stays the same, an unreleased match answers with an empty list"
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: getLatestMatchResults
       parameters:
@@ -6527,9 +6799,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LiveMatchInfo'
+                $ref: '#/components/schemas/LiveMatchesDto'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -6759,6 +7029,80 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: addLiveDashboardTeamNote
+      description: "Adds a referee note to this boat ('touched a buoy'). Notes are communication between referees, not scoring; they are append-only - a correction is delete plus re-add, so no locking is needed and two concurrent authors simply produce two entries. Same privilege as the other referee actions (finish/start/activation)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchTeamNoteRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note/{noteId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: matchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: noteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteLiveDashboardTeamNote
+      description: "Deletes a referee note. Allowed for everyone with the referee write privilege, not only the author - the notes are a tool for internal exchange, and a wrong note must be removable while its author is out on the water."
+      responses:
+        204:
+          description: Note deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/checkSeverity:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6818,6 +7162,173 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventScheduleDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/startlists:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: fileType
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventStartlistFileType'
+      - name: skipByes
+        in: query
+        required: false
+        description: >-
+          Skip bye matches (default true). Matches flagged as 'bye must race'
+          (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are
+          raced and need their wave in the timing tooling.
+        schema:
+          type: boolean
+      - name: onlyMissingInRaceClocker
+        in: query
+        required: false
+        description: >-
+          Delta export (default false): fetch each competition's configured RaceClocker race feed
+          server-side and export only matches whose match team ids do not appear in the feed's
+          'Extra info'. Competitions without an assigned race are excluded. An unreachable race
+          fails the whole export with a structured error instead of a silent partial export.
+        schema:
+          type: boolean
+      - name: raceclockerRaceId
+        in: query
+        required: false
+        description: >-
+          Restrict the export to competitions whose assigned RaceClocker race
+          (competition.raceclocker_race) is the given one - for importing race by race. Applies to
+          both the full and the delta export; omitted means all competitions.
+        schema:
+          type: string
+          format: uuid
+      - name: matchIds
+        in: query
+        required: false
+        style: form
+        explode: true
+        description: >-
+          Restrict the export to these setup match ids (repeatable parameter) - the deselection
+          made in the export preview. Safety rule: this only ever INTERSECTS the plan - ids the
+          plan does not yield (foreign competitions, other events, matches excluded by the bye or
+          race filter) are silently ignored, so the parameter can only narrow the export, never
+          widen it. Omitted means everything the plan yields.
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+      - name: withBackground
+        in: query
+        required: false
+        description: >-
+          PDF only: print the assigned start list template's design as background (default true).
+          false omits the design for printing on pre-printed 'official paper' - page format and
+          padding of the template still apply. Bundle documents are never touched by this flag,
+          they are always taken over unchanged.
+        schema:
+          type: boolean
+      - name: includeBundleDocuments
+        in: query
+        required: false
+        description: >-
+          PDF only: assemble the event's export bundle (default false) - the bundle documents and
+          the generated start lists in bundle order instead of the start lists alone. Non-PDF
+          documents in the bundle are skipped tolerantly.
+        schema:
+          type: boolean
+      - name: excludedBundleItems
+        in: query
+        required: false
+        style: form
+        explode: true
+        description: >-
+          Deselected bundle entries (event_export_bundle_item ids, repeatable parameter) - also
+          the generated-startlists placeholder can be deselected. Foreign ids match nothing and
+          are ignored. Only meaningful with includeBundleDocuments=true.
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+    get:
+      operationId: downloadEventStartlists
+      description: >-
+        Bulk start list export for the whole event: the first created round of every competition
+        (or, in delta mode, every created match missing in RaceClocker), as a ZIP with one CSV
+        per competition (file names like the round export), as one big CSV sorted by start time
+        across all competitions, or as one PDF concatenating the per-match start list PDFs in
+        the same order.
+      responses:
+        200:
+          description: The start list file (ZIP, CSV or PDF, depending on fileType)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/schedule/startlists/preview:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: skipByes
+        in: query
+        required: false
+        description: Same semantics as on the export itself.
+        schema:
+          type: boolean
+      - name: onlyMissingInRaceClocker
+        in: query
+        required: false
+        description: Same semantics as on the export itself.
+        schema:
+          type: boolean
+      - name: raceclockerRaceId
+        in: query
+        required: false
+        description: Same semantics as on the export itself.
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: previewEventStartlists
+      description: >-
+        Preview of the bulk start list export: exactly the matches the export with the same
+        parameters would export (same plan logic, no second truth), as JSON instead of a file.
+        Matches with startTime null would block the export
+        (STARTLIST_MATCHES_WITHOUT_START_TIME) - deselect them via the export's matchIds
+        parameter. RaceClocker feeds are fetched (also without delta mode) whenever the plan
+        contains competitions with an assigned race, so missingInRaceClocker carries information;
+        an unreachable race fails the preview like it fails the export.
+      responses:
+        200:
+          description: The matches the export would contain, sorted by start time (nulls last)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventStartlistPreviewMatchDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -8736,6 +9247,81 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/resultList/pdf:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadResultList
+      description: >-
+        Die Ergebnisliste als druckfertiges PDF, in der Regel zum Aushängen - dieselbe Datenbasis
+        und dieselbe Ergebnisregel wie der Siegerehrungsbogen (nur bestätigte Platzierungen),
+        aber mit wählbaren Bestandteilen. Jedes Blatt trägt eine Fußzeile mit Veranstaltung und
+        Stand-Zeitstempel, damit veraltete Aushänge erkennbar sind. Fehlende Parameter fallen auf
+        die Aushang-Vorgaben zurück.
+      parameters:
+        - in: query
+          name: competitionId
+          description: >-
+            Nur dieser Wettkampf. Jeder Abschnitt kostet eine Platzberechnung, deshalb ist die
+            Einschränkung mehr als ein Anzeigefilter.
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: crew
+          description: Mit Crew-Aufstellung (Namen je Boot). Vorgabe true.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: times
+          description: Mit Zeiten und Zeitstrafen. Vorgabe true.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: podiumOnly
+          description: Nur die Plätze 1 bis 3 statt aller platzierten Boote. Vorgabe false.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: byRatingCategory
+          description: Je Wertungskategorie ein eigener Abschnitt statt des Gesamtfelds. Vorgabe true.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: size
+          description: Schriftgrad - POSTING (Aushang, groß) oder CEREMONY (wie der Bogen). Vorgabe POSTING.
+          required: false
+          schema:
+            type: string
+            enum: [ POSTING, CEREMONY ]
+      responses:
+        200:
+          description: Result list successfully rendered
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/competition/{competitionId}/awardCertificates:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -9130,11 +9716,13 @@ components:
         - RACECLOCKER_RACE_NAME_TAKEN
         - RACECLOCKER_RACE_URL_TAKEN
         - STARTLIST_CONFIG_NOT_CONFIGURED
+        - STARTLIST_MATCHES_WITHOUT_START_TIME
         - RESULT_IMPORT_CONFIG_NOT_CONFIGURED
         - SCHEDULE_SHIFT_WITHOUT_CHANGE
         - SCHEDULE_SHIFT_TARGET_INVALID
         - SCHEDULE_SHIFT_LEAVES_RACE_DAY
         - SCHEDULE_SHIFT_OVERTAKES_PREDECESSOR
+        - SCHEDULE_SHIFT_OVERTAKES_FOLLOWER
         - SCHEDULE_ADVANCE_NO_DELTA
         - SCHEDULE_SLOT_NOT_SKIPPED
         - SCHEDULE_IMPORT_DUPLICATE_ROWS
@@ -9186,6 +9774,7 @@ components:
         - EXECUTION_MATCH_IS_BYE
         - EXECUTION_PLACES_NOT_CONTINUOUS
         - EXECUTION_START_TIME_MANAGED_BY_SCHEDULE
+        - EXECUTION_RESET_BLOCKED_BY_NEXT_ROUND
         - LIVE_DASHBOARD_FINISH_RESERVED_FOR_OFFICE
         - QR_CODE_ALREADY_IN_USE
         - TRACKING_TEAM_ALREADY_CHECKED_IN
@@ -9200,6 +9789,9 @@ components:
         - DEREGISTRATION_RESULTS_ALREADY_EXIST
         - DEREGISTRATION_NOT_IN_CURRENT_ROUND
         - DEREGISTRATION_REGISTRATION_STILL_OPEN
+        - EXPORT_BUNDLE_DUPLICATE_DOCUMENT
+        - EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE
+        - EXPORT_BUNDLE_ORDER_MISMATCH
 
     Gender:
       type: string
@@ -10029,6 +10621,34 @@ components:
           description: "Interval of that background sync in seconds; only in effect while executionAutoRefresh is set"
         challengesFinished:
           type: boolean
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
+
+    EventNoticeSeverity:
+      type: string
+      enum: [ INFO, WARNING, CRITICAL ]
+      description: "Severity of the event-wide notice banner; drives the banner color (CRITICAL=red, WARNING=yellow, INFO=green)"
+
+    EventNoticeDto:
+      type: object
+      description: "The event-wide notice banner (e.g. a weather warning). Absent/null means: no banner."
+      required:
+        - text
+        - severity
+      properties:
+        text:
+          type: string
+        severity:
+          $ref: '#/components/schemas/EventNoticeSeverity'
+
+    UpdateEventNoticeRequest:
+      type: object
+      description: "Sets (both fields) or clears (both null) the event-wide notice banner. A blank text or an unknown severity is rejected with 422."
+      properties:
+        text:
+          type: string
+        severity:
+          $ref: '#/components/schemas/EventNoticeSeverity'
 
     EventPublicDto:
       type: object
@@ -11210,6 +11830,10 @@ components:
           type: string
         description:
           type: string
+        publicNote:
+          type: string
+          nullable: true
+          description: "Public, athlete-facing text shown on My Event - separate from the internal description"
         optional:
           type: boolean
         checkInApp:
@@ -11294,6 +11918,10 @@ components:
           type: string
         description:
           type: string
+        publicNote:
+          type: string
+          nullable: true
+          description: "Public, athlete-facing text shown on My Event - separate from the internal description"
         optional:
           type: boolean
         checkInApp:
@@ -11462,6 +12090,53 @@ components:
           format: date-time
         updatedBy:
           $ref: '#/components/schemas/AppUserNameDto'
+
+    EventExportBundleItemKind:
+      type: string
+      enum:
+        - DOCUMENT
+        - GENERATED_STARTLISTS
+
+    EventExportBundleItemDto:
+      type: object
+      required:
+        - id
+        - kind
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/EventExportBundleItemKind'
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          description: Only set for kind DOCUMENT - the event document's id.
+        documentName:
+          type: string
+          nullable: true
+          description: Only set for kind DOCUMENT - the document's file name, for display.
+
+    AddEventExportBundleItemRequest:
+      type: object
+      required:
+        - document
+      properties:
+        document:
+          type: string
+          format: uuid
+
+    EventExportBundleOrderRequest:
+      type: object
+      required:
+        - itemIds
+      properties:
+        itemIds:
+          type: array
+          items:
+            type: string
+            format: uuid
 
 
     # club
@@ -12720,9 +13395,10 @@ components:
       type: object
       description: >-
         The bye of a match. Display only - it changes nothing about the chain, the result lock or
-        the automatic first place.
+        the automatic first place. Exception: mustRace makes the match operationally a real race.
       required:
         - cause
+        - mustRace
       properties:
         cause:
           $ref: '#/components/schemas/MatchByeCause'
@@ -12736,6 +13412,20 @@ components:
           description: >-
             The stored withdrawal reason - only when exactly one row is deregistered, because with
             several the mapping name -> reason would be a guess.
+        mustRace:
+          type: boolean
+          description: >-
+            'Must race' (competition_match.bye_must_race): the match stays a bye but is raced -
+            exports, polling and the chain treat it like any match, the measured time runs out of
+            competition.
+        seed:
+          type: integer
+          nullable: true
+          description: >-
+            Seeding number of the racing team - 'Bye 1' is the bye of the boat that advanced
+            first. It is the seed of the setup seat the team occupies in this match; null when no
+            seat matches the start number (e.g. first-round byes created by a withdrawal), the
+            label then stays a plain 'Bye'.
 
     MatchStatusDto:
       type: object
@@ -12929,6 +13619,70 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
+
+    EventStartlistFileType:
+      type: string
+      description: >-
+        Format of the bulk start list export: ZIP packs one CSV per competition (what Webscorer
+        needs, one race per competition), CSV writes one big file sorted by start time (what
+        RaceClocker needs, one race carrying all waves), PDF concatenates the per-match start
+        list PDFs sorted by start time (notice board / registration report style; rendered with
+        the event's assigned START_LIST template, or the built-in layout when none is assigned).
+      enum:
+        - ZIP
+        - CSV
+        - PDF
+
+    EventStartlistPreviewMatchDto:
+      type: object
+      description: >-
+        One row of the bulk start list export preview: a match the export with the same
+        parameters would export. startTime null means the match would block the export until it
+        is deselected via matchIds.
+      required:
+        - matchId
+        - competitionId
+        - competitionIdentifier
+        - roundName
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionShortName:
+          type: string
+        competitionName:
+          type: string
+        roundName:
+          type: string
+        matchName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        missingInRaceClocker:
+          type: boolean
+          description: >-
+            Whether the match is missing in the feed of the competition's assigned RaceClocker
+            race. Trivially true everywhere in delta mode (the others are already filtered out);
+            without delta the flag carries the information. Absent/null = no race assigned, there
+            is nothing to compare against.
+
+    UpdateMatchByeMustRaceRequest:
+      type: object
+      description: >-
+        Toggles 'must race' on a bye match. Fairness rule of some rule books: even a boat without
+        an opponent races the course. Progression keeps bye semantics, the time is taken and shown
+        as out of competition.
+      required:
+        - mustRace
+      properties:
+        mustRace:
+          type: boolean
 
     UpdateCompetitionMatchActivationRequest:
       type: object
@@ -13369,21 +14123,12 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        raceQualification:
+        race:
           type: string
           format: uuid
           nullable: true
-          description: The selected RaceClocker race for qualification rounds.
-        raceRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: The selected RaceClocker race for all other rounds.
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+          description: The one selected RaceClocker race of this competition - qualification and all other rounds alike.
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13391,27 +14136,15 @@ components:
           type: string
           format: uuid
           nullable: true
-        hasQualificationRound:
-          type: boolean
-          description: >
-            Whether this competition's setup contains a qualification round. Read-only; it comes along
-            with the timing config because both the timing tab and the execution tab already load it,
-            and both need to know whether the qualification start list preset and the qualification race
-            are required at all.
         eventTimingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
           description: Event-wide default timing system; the competition inherits it while its own field is null.
-        eventStartlistConfigQualification:
+        eventStartlistConfig:
           type: string
           format: uuid
           nullable: true
-          description: Event-wide default start list export for qualification rounds; inherited while the competition's own field is null.
-        eventStartlistConfigRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: Event-wide default start list export for the other rounds; inherited while the competition's own field is null.
+          description: Event-wide default start list export; inherited while the competition's own field is null.
         eventResultImportConfig:
           type: string
           format: uuid
@@ -13451,11 +14184,7 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13494,9 +14223,8 @@ components:
       type: object
       description: >
         A competition that overrides the event-wide timing defaults. Only the inheritable fields are
-        listed; the column presets are per competition anyway and therefore no deviation. A null
-        timingSystem with a URL set is a partial override - the competition inherits the system and
-        has a race of its own.
+        listed - system, start list export and result import. The race selection is no deviation:
+        it is always assigned per competition, there is no event default to deviate from.
       properties:
         competitionId:
           type: string
@@ -13508,11 +14236,7 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13527,7 +14251,7 @@ components:
 
     RaceClockerRaceDto:
       type: object
-      required: [id, name, resultsUrl, startMode, capturesLaps, position]
+      required: [id, name, resultsUrl, capturesLaps, position]
       properties:
         id:
           type: string
@@ -13536,31 +14260,24 @@ components:
           type: string
         resultsUrl:
           type: string
-        startMode:
-          $ref: '#/components/schemas/RaceClockerStartMode'
         capturesLaps:
           type: boolean
         position:
           type: integer
     RaceClockerRaceRequest:
       type: object
-      required: [name, resultsUrl, startMode, capturesLaps]
+      required: [name, resultsUrl, capturesLaps]
       properties:
         name:
           type: string
         resultsUrl:
           type: string
-        startMode:
-          $ref: '#/components/schemas/RaceClockerStartMode'
         capturesLaps:
           type: boolean
-    RaceClockerStartMode:
-      type: string
-      enum: [INDIVIDUAL, WAVE]
 
     CompetitionRaceAssignmentDto:
       type: object
-      required: [competitionId, identifier, name, hasQualificationRound]
+      required: [competitionId, identifier, name]
       properties:
         competitionId:
           type: string
@@ -13569,33 +14286,19 @@ components:
           type: string
         name:
           type: string
-        hasQualificationRound:
-          type: boolean
-          description: "Whether the competition's setup even has a qualification round"
-        raceQualification:
+        race:
           type: string
           format: uuid
           nullable: true
-          description: "Explicitly chosen qualification race; null means it inherits the event default"
-        raceRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: "Explicitly chosen rounds race; null means it inherits the event default"
+          description: "The one selected race; null means no race is assigned"
 
     RaceClockerRaceAssignmentsRequest:
       type: object
-      required: [qualificationCompetitions, roundsCompetitions]
+      required: [competitions]
       properties:
-        qualificationCompetitions:
+        competitions:
           type: array
-          description: "Competitions that use this race for their qualification"
-          items:
-            type: string
-            format: uuid
-        roundsCompetitions:
-          type: array
-          description: "Competitions that use this race for their remaining rounds"
+          description: "Competitions that use this race for all of their rounds"
           items:
             type: string
             format: uuid
@@ -13611,11 +14314,7 @@ components:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13655,27 +14354,18 @@ components:
       type: object
       description: >
         Every field is optional - the RaceClocker races only exist shortly before the regatta, so an
-        incomplete configuration must be storable. Both race ids must belong to this competition's
+        incomplete configuration must be storable. The race id must belong to this competition's
         event; the service rejects a race from another event.
       properties:
         timingSystem:
           $ref: '#/components/schemas/TimingSystem'
           nullable: true
-        raceQualification:
+        race:
           type: string
           format: uuid
           nullable: true
-          description: The selected RaceClocker race for qualification rounds.
-        raceRounds:
-          type: string
-          format: uuid
-          nullable: true
-          description: The selected RaceClocker race for all other rounds.
-        startlistConfigQualification:
-          type: string
-          format: uuid
-          nullable: true
-        startlistConfigRounds:
+          description: The one selected RaceClocker race - qualification and all other rounds alike.
+        startlistConfig:
           type: string
           format: uuid
           nullable: true
@@ -13812,12 +14502,15 @@ components:
 
     BoardElementType:
       type: string
+      description: "MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile"
       enum:
         - MATCH
+        - MATCH_DETAIL
         - MATCH_LIST
         - CLOCK
         - TEXT
         - AWARD_CEREMONY
+        - DELAY
 
     BoardListMode:
       type: string
@@ -13826,6 +14519,13 @@ components:
         - RESULTS
         - RUNNING
         - SCHEDULE
+
+    BoardScheduleMode:
+      type: string
+      description: "SCHEDULE only: FOLLOW = moving window around now (default), FULL = the whole day, the tile scrolls instead"
+      enum:
+        - FOLLOW
+        - FULL
 
     BoardElement:
       type: object
@@ -13869,6 +14569,8 @@ components:
           nullable: true
         listMode:
           $ref: '#/components/schemas/BoardListMode'
+        scheduleMode:
+          $ref: '#/components/schemas/BoardScheduleMode'
         limit:
           type: integer
           minimum: 1
@@ -13890,6 +14592,16 @@ components:
           nullable: true
         text:
           type: string
+          nullable: true
+        backgroundColor:
+          type: string
+          description: "Tile background as hex color (#RGB or #RRGGBB), allowed on every element type; absent = default look"
+          pattern: '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$'
+          nullable: true
+        borderColor:
+          type: string
+          description: "Tile border as hex color (#RGB or #RRGGBB), independent of backgroundColor; absent = default look"
+          pattern: '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$'
           nullable: true
 
     BoardTile:
@@ -14298,6 +15010,23 @@ components:
         clubName:
           type: string
           nullable: true
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardRequirement'
+          description: "only filled for boards with a MATCH_DETAIL tile; server-side restricted to publicly visible requirements applicable to this person's role"
+
+    AthleteBoardRequirement:
+      type: object
+      description: "a participant requirement on the public announcer tile - deliberately just name and fulfilled state, never internal notes"
+      required:
+        - name
+        - fulfilled
+      properties:
+        name:
+          type: string
+        fulfilled:
+          type: boolean
 
     AthleteBoardTeam:
       type: object
@@ -14352,6 +15081,16 @@ components:
           type: string
           nullable: true
           description: "registering club - only filled when a board element requests showRegisteringClub"
+        laps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+          description: "split times from RaceClocker, in mark order; empty when the race records none"
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element"
 
     AthleteBoardMatch:
       type: object
@@ -14419,6 +15158,11 @@ components:
           type: integer
           nullable: true
           description: "number of seats in the following round; null when the following round is an open field"
+        bye:
+          allOf:
+            - $ref: '#/components/schemas/MatchByeDto'
+          nullable: true
+          description: "the bye of this match, same derivation as schedule and referee dashboard - public boards need it mainly for must-race byes, where a second line explains why the boat races alone and that its time runs out of competition"
 
     AthleteBoardResultTeam:
       type: object
@@ -14478,6 +15222,25 @@ components:
         deregisteredReason:
           type: string
           nullable: true
+        laps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+          description: "split times from RaceClocker, in mark order; empty when the race records none"
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteBoardParticipant'
+          description: "the crew of this boat - always present like on the running card; birth year and worn club stay detail-gated"
+        registeringClub:
+          type: string
+          nullable: true
+          description: "registering club - only filled when a board element requests showRegisteringClub"
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "measured start of THIS boat (competition_match_team.started_at, individual starts in time trials) - only filled when the board has a MATCH_DETAIL element"
 
     AthleteBoardResult:
       type: object
@@ -14719,6 +15482,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BoardCeremonyDto'
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
+        currentDelaySeconds:
+          type: integer
+          format: int64
+          nullable: true
+          description: "current delay in seconds: started_at minus start_time of the latest started match; negative = ahead of schedule; null while nothing has started or the board has no DELAY element"
 
     MyEventTeamMemberDto:
       type: object
@@ -14801,6 +15571,11 @@ components:
         matchId:
           type: string
           format: uuid
+        teamId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "The own boat's registration - matches teamId of the teams in /latest-match-results, used to mark the own boat in the full field"
         competitionName:
           type: string
         categoryName:
@@ -14880,13 +15655,24 @@ components:
           format: uuid
         name:
           type: string
-        description:
+        publicNote:
           type: string
           nullable: true
+          description: "Public, athlete-facing text. The internal description is deliberately never delivered here."
         optional:
           type: boolean
         fulfilled:
           type: boolean
+        checkFrom:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Earliest moment the requirement can be checked - first future start minus checkEarliestMinutesBefore; null without a window or a future start"
+        checkUntil:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Latest moment, analogous from checkLatestMinutesBefore"
 
     MyEventDto:
       type: object
@@ -14933,6 +15719,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MyEventRequirementDto'
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
 
     LiveMatchInfo:
       type: object
@@ -14992,6 +15780,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RunningMatchTeamInfo'
+
+    LiveMatchesDto:
+      type: object
+      description: >-
+        Response of the public results page's "live" tab. Used to be a bare array of
+        LiveMatchInfo; the envelope carries the event-wide notice banner - this tab is the only
+        polled answer of the public results page.
+      required:
+        - matches
+      properties:
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiveMatchInfo'
 
     RunningMatchInfo:
       type: object
@@ -15313,6 +16117,46 @@ components:
           format: date-time
           nullable: true
           description: "When the boat entered the arena (latest check-in scan, only if the whole known crew is checked in); null while at least one crew member is not checked in or no crew is known"
+        laps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamLapDto'
+          description: "split times from RaceClocker, in mark order; empty when the race records none"
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTeamNoteDto'
+          description: "referee notes on this boat, oldest first - communication between referees, not scoring; only part of this internal poll, never of the public endpoints"
+
+    MatchTeamNoteDto:
+      type: object
+      description: "A referee note on a boat in a match ('touched a buoy'). Append-only: entries are immutable, a correction is delete plus re-add."
+      required:
+        - id
+        - note
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        author:
+          type: string
+          nullable: true
+          description: "display name of the author; null when the account was deleted"
+
+    MatchTeamNoteRequest:
+      type: object
+      required:
+        - note
+      properties:
+        note:
+          type: string
+          description: "must not be blank"
 
     LiveDashboardTeamDetailDto:
       type: object
@@ -15460,6 +16304,8 @@ components:
             $ref: '#/components/schemas/PendingSlotDto'
         chainProgressionMode:
           $ref: '#/components/schemas/ChainProgressionMode'
+        notice:
+          $ref: '#/components/schemas/EventNoticeDto'
 
     CheckType:
       type: string
@@ -15761,12 +16607,14 @@ components:
         - PLUS_MINUTES
         - SET_TIME
         - COMPRESS_TO_TARGET
+        - PLUS_MINUTES_RANGE
 
     ShiftScheduleRequest:
       type: object
       description: >-
         Field combination depends on mode: PLUS_MINUTES needs only minutes, SET_TIME only newTime,
-        COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two.
+        COMPRESS_TO_TARGET needs targetSlotId plus exactly one of the two, PLUS_MINUTES_RANGE needs
+        minutes plus targetSlotId (the upper bound of the shifted range).
       required:
         - fromSlotId
         - mode

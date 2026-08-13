@@ -1,5 +1,6 @@
 import {Fragment, useCallback, useEffect, useState} from 'react'
 import {Alert, Box, Button, Stack, Typography} from '@mui/material'
+import QrCode2Icon from '@mui/icons-material/QrCode2'
 import {useTranslation} from 'react-i18next'
 import {getMyEvent} from '@api/sdk.gen.ts'
 import {MyEventDto} from '@api/types.gen.ts'
@@ -16,6 +17,7 @@ import {blockOrder, MyEventBlock, nothingToShow} from './myEventOrder.ts'
 import {MyEventMatchList, MyEventResultList, MyEventUnscheduledList} from './MyEventMatchList.tsx'
 import {MyEventPersonSwitcher} from './MyEventPersonSwitcher.tsx'
 import {MyEventRequirements} from './MyEventRequirements.tsx'
+import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 
 const FALLBACK_INTERVAL_SECONDS = 15
 // Wie beim Athleten-Board: erst ein tatsächlich fehlgeschlagener Abruf macht aus einem
@@ -129,7 +131,7 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
                 return data.results.length > 0 ? (
                     <Box>
                         <BlockHeading title={t('myEvent.results')} />
-                        <MyEventResultList results={data.results} />
+                        <MyEventResultList results={data.results} eventId={eventId} />
                     </Box>
                 ) : null
             case 'unscheduled':
@@ -151,6 +153,9 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
 
     return (
         <Stack gap={2}>
+            {/* Der veranstaltungsweite Hinweis (z.B. Wetterwarnung) kommt eingebettet mit dem
+                ohnehin laufenden Poll — ganz oben, noch vor dem eigenen Namen. */}
+            <EventNoticeBanner notice={data.notice} />
             <Stack
                 direction="row"
                 justifyContent="space-between"
@@ -244,8 +249,21 @@ export const MyEventPanel = ({eventId}: {eventId: string}) => {
 
     if (activeQrCode === null) {
         // Der Reiter erscheint auch ohne hinterlegten Code — sonst erfährt niemand von der
-        // Funktion, und die Bänder erklären sich nicht von selbst.
-        return <Alert severity="info">{t('myEvent.hint')}</Alert>
+        // Funktion, und die Bänder erklären sich nicht von selbst. Statt einer knappen
+        // Warnleiste steht hier ein freundlicher Leerzustand, der den einzigen echten Weg
+        // beschreibt: den QR-Code auf dem Teilnehmerband scannen. Eine manuelle Code-Eingabe
+        // gibt es bewusst nicht, also verspricht der Text auch keine.
+        return (
+            <Stack alignItems="center" textAlign="center" gap={1} sx={{py: 6, px: 2}}>
+                <QrCode2Icon sx={{fontSize: 56, color: 'text.secondary'}} />
+                <Typography variant="h6" sx={{fontWeight: 700}}>
+                    {t('myEvent.emptyTitle')}
+                </Typography>
+                <Typography color="text.secondary" sx={{maxWidth: 420}}>
+                    {t('myEvent.emptyHint')}
+                </Typography>
+            </Stack>
+        )
     }
 
     return (

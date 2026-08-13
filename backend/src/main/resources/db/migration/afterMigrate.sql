@@ -578,6 +578,8 @@ select e.id,
        e.public_results_visibility,
        e.execution_auto_refresh,
        e.execution_auto_refresh_seconds,
+       e.notice_text,
+       e.notice_severity,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        max(cpcc.end_at)                                                                 as challenge_end,
        err.event is not null                                                            as registrations_finalized
@@ -863,6 +865,14 @@ select cm.competition_setup_match,
        cm.raceclocker_poll_error,
        cm.raceclocker_auto_paused_at,
        cm.pairings_recalculated_at,
+       -- Freilos "muss gefahren werden" (V202608111800): funktional abhängig vom Primärschlüssel
+       -- cm.competition_setup_match, deshalb ohne eigenen group-by-Eintrag zulässig.
+       cm.bye_must_race,
+       -- Materialisierter Freilos-Name (V202608121300), ebenfalls funktional abhängig vom
+       -- Primärschlüssel. Bewusst roh statt als coalesce mit dem Setup-Namen: Der Setup-Lauf hängt
+       -- nicht an dieser View, die Kotlin-Konsumenten (Durchführungs-DTO, Startlisten-Plan,
+       -- Siegerehrungsbogen) haben ihn ohnehin daneben und koaleszieren dort.
+       cm.bye_name,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams,
        cmtwr.mixed_team_term                                                as mixed_team_term
 from competition_match cm
@@ -995,7 +1005,12 @@ group by cmt.id, cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, 
 
 create view startlist_view as
 select csm.id,
-       csm.name,
+       -- Der Anzeigename des Laufs: ein Freilos trägt seinen materialisierten Namen ("Freilos 1",
+       -- V202608121300), alle anderen den Setup-Namen. Die View speist Startlisten-PDF/-CSV samt
+       -- Dateiname und den Wellennamen des RaceClocker-Exports (buildCsv) - die Abruf-Seite
+       -- (RaceClockerPollRepo, CompetitionMatchRepo.getForRaceClockerPull) koalesziert identisch,
+       -- sonst fände der Wellennamen-Abgleich seine eigene Welle nicht wieder.
+       coalesce(cm.bye_name, csm.name) as name,
        csm.execution_order,
        csm.start_time_offset,
        csr.name                                                                        as round_name,

@@ -20,7 +20,13 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
+import de.lambda9.ready2race.backend.app.eventExportBundle.control.EventExportBundleItemRepo
+import de.lambda9.ready2race.backend.app.eventExportBundle.entity.EventExportBundleItemKind
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
 import de.lambda9.ready2race.backend.app.eventSchedule.boundary.ScheduleChainService
@@ -90,12 +96,18 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.apache.pdfbox.Loader
+import org.apache.pdfbox.multipdf.PDFMergerUtility
+import org.apache.pdfbox.pdmodel.PDDocument
 import java.awt.Color
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.collections.sortedBy
 import de.lambda9.ready2race.backend.validation.fold
 
@@ -139,6 +151,12 @@ object CompetitionExecutionService {
 
             // Number of teams placed into the round being created - used to resolve the bracket size N below.
             var justPlacedCount = 0
+
+            // Setzungszahlen der fahrenden (nicht `out`) Boote je erzeugtem Setup-Lauf — die
+            // Grundlage der Freilos-Benennung unten ([byeNumbersForRound]). Beide Pfade erheben
+            // sie, weil die Setzung einmal aus der Setzliste kommt (erste Runde) und einmal aus
+            // dem Setup-Platz (Folgerunde).
+            var racingSeedsByMatch: Map<UUID, List<Int?>> = emptyMap()
 
             // Die Setup-Lauf-Ids der Runde, die dieser Durchlauf erzeugt - Grundlage des Vermerks
             // unten. `createdSetupMatchIds` sammelt über alle Durchläufe hinweg und taugt dafür nicht.
@@ -205,6 +223,14 @@ object CompetitionExecutionService {
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
                 justPlacedCount = newTeamRecords.count { !it.out!! }
+
+                // Die Setzung eines Boots der ersten Runde ist seine Position in der Setzliste
+                // (index + 1: aktive Meldungen nach teamNumber, Abmeldungen dahinter) —
+                // newTeamRecords ist parallel zu sortedRegistrations gebaut, der Index passt.
+                racingSeedsByMatch = newTeamRecords
+                    .mapIndexed { index, record -> record to index + 1 }
+                    .filter { (record, _) -> !record.out!! }
+                    .groupBy({ (record, _) -> record.competitionMatch!! }, { (_, seed) -> seed as Int? })
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
@@ -291,6 +317,13 @@ object CompetitionExecutionService {
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
                 justPlacedCount = newTeamRecords.count { !it.out!! }
 
+                // In einer Folgerunde ist die Setzung der `seed` des Setup-Platzes, den das Boot
+                // besetzt — genau die Zahl, die MatchByeRepo später über ranking == startNumber
+                // zurückliest ("Freilos 1" auf Karte und Chip meint dann dieselbe Zahl wie hier).
+                racingSeedsByMatch = currentTeamsToParticipantId
+                    .filter { (prevTeam, _) -> !prevTeam.deregistered && !prevTeam.out && !prevTeam.failed }
+                    .groupBy({ it.second!!.competitionSetupMatch!! }, { it.second!!.seed })
+
                 // Carry over all substitutions to the new round
                 val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
                 val substitutionsRelevantForNextRound = currentRoundSubstitutions.map { record ->
@@ -331,6 +364,24 @@ object CompetitionExecutionService {
                 }
             }
 
+            // Freilos-Namen materialisieren (Anforderung vom 12.08.2026) - NACH der unveränderten
+            // Benennungs-Anwendung oben und an der LAUF-INSTANZ statt der Setup-Vorlage: Ein Lauf,
+            // in dem nur ein Boot fährt, heißt überall "Freilos <Setzungszahl>" (gelesen als
+            // coalesce(competition_match.bye_name, competition_setup_match.name), V202608121300),
+            // statt einen Pseudo-Namen aus Satz oder Vorlage zu zeigen. Weil die Instanz mit der
+            // Runde stirbt, heilt Löschen und Neu-Erzeugen - der Arbeitsfluss bei jeder (auch
+            // zurückgenommenen) An- oder Abmeldung - den Namen von selbst; die Benennungs-Logik
+            // selbst bleibt vollständig unberührt. Der Text ist bewusst deutsch und unübersetzt:
+            // ein Datum wie die Satz-Namen ("VF1") selbst, die Oberflächen übersetzen den
+            // Freilos-Chip daneben weiterhin je Sprache.
+            if (nextRound != null && createdThisRound.isNotEmpty()) {
+                val byeNames = byeNumbersForRound(nextRound, racingSeedsByMatch)
+                    .mapValues { (_, number) -> "Freilos $number" }
+                if (byeNames.isNotEmpty()) {
+                    !CompetitionMatchRepo.setByeNames(byeNames).orDie()
+                }
+            }
+
             // Stand die Runde schon einmal, sind diese Paarungen eine Neuberechnung - und die
             // Orga-Ansichten sollen das sehen. Dass es sie schon einmal gab, weiß nur die
             // Setup-Runde: Sie überlebt das Löschen der Runde, die Läufe tun es nicht
@@ -350,6 +401,9 @@ object CompetitionExecutionService {
         // … und die wartende Kette wieder anstoßen: wenn nichts läuft, aktiviert sich der nächste
         // fällige Slot jetzt selbst — das ist der zweite Auslöser des wartenden Breakpoints.
         !ScheduleChainService.resumeIfParked(eventId, userId)
+
+        // Neue Läufe erscheinen im Block „nächste Läufe" der öffentlichen Anzeigen.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -452,6 +506,41 @@ object CompetitionExecutionService {
         ).orDie().onNullFail { CompetitionError.CompetitionNotFound }
 
         noData
+    }
+
+    /**
+     * Die Freilos-Nummern der soeben erzeugten Läufe einer Runde: Setup-Lauf-Id -> Nummer.
+     *
+     * Ein Freilos ist ein Lauf, in dem genau ein Boot fährt, in einer nicht verpflichtenden
+     * Runde - dieselbe Regel, nach der [MatchStatusLogic.deriveBye] die Anzeigen speist und nach
+     * der `automaticFirstPlace` in [createNewRound] den automatischen ersten Platz vergibt.
+     * [racingSeedsByMatch] trägt je erzeugtem Setup-Lauf die Setzungszahlen seiner fahrenden
+     * Boote; nicht erzeugte Läufe (weniger Meldungen als Läufe) fehlen in der Karte und bekommen
+     * keine Nummer.
+     *
+     * Die Nummer ist bevorzugt die Setzungszahl des fahrenden Boots: "Freilos 1" ist das Freilos
+     * des bestgesetzten Boots - dieselbe Zahl, die `MatchByeDto.seed` auf Chip und Freilos-Satz
+     * zeigt. Fehlt eine Setzung oder käme eine Nummer doppelt vor (defensiv - bei der Erzeugung
+     * ist die Setzung auf beiden Pfaden bekannt und je Runde eindeutig), werden stattdessen ALLE
+     * Freilose der Runde fortlaufend 1..k in weighting-Reihenfolge nummeriert: lieber lückenlos
+     * und deterministisch als halb Setzung, halb geraten.
+     */
+    internal fun byeNumbersForRound(
+        round: CompetitionSetupRoundWithMatches,
+        racingSeedsByMatch: Map<UUID, List<Int?>>,
+    ): Map<UUID, Int> {
+        if (round.required) return emptyMap()
+
+        val byes = round.setupMatches
+            .sortedBy { it.weighting }
+            .filter { racingSeedsByMatch[it.id]?.size == 1 }
+
+        val seeds = byes.map { racingSeedsByMatch.getValue(it.id!!).single() }
+        val allSeedsUsable = seeds.all { it != null } && seeds.distinct().size == seeds.size
+
+        return byes.mapIndexed { index, setupMatch ->
+            setupMatch.id!! to if (allSeedsUsable) seeds[index]!! else index + 1
+        }.toMap()
     }
 
     fun sortRounds(
@@ -595,6 +684,9 @@ object CompetitionExecutionService {
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
         }
 
+        // Bahnentausch und Startzeit stehen auf den öffentlichen Anzeigen.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -638,7 +730,9 @@ object CompetitionExecutionService {
         val match = currentRound.matches.find { it.competitionSetupMatch == matchId }
             ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
 
-        !KIO.failOn(!currentRound.required && match.teams.size == 1) { byeError }
+        // Ein Freilos mit "muss gefahren werden" nimmt Ergebnisse an wie jeder Lauf - die Zeit
+        // wird genommen (und "außer Konkurrenz" gezeigt), nur das Weiterkommen hängt nicht an ihr.
+        !KIO.failOn(!currentRound.required && match.teams.size == 1 && !match.byeMustRace) { byeError }
 
 
         KIO.ok(match)
@@ -771,6 +865,9 @@ object CompetitionExecutionService {
         // dann ist das Ergebnis der letzte fehlende Baustein der Runde.
         !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
 
+        // Handeingaben sind genau die Korrekturen, die sofort auf die Anzeigen sollen.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -813,6 +910,9 @@ object CompetitionExecutionService {
         !applyRaceClockerRows(match, matchId, target, rows, userId)
 
         !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
+
+        // Datei-Import ist ein Ergebnis-Schreiber wie die Handeingabe.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -997,6 +1097,9 @@ object CompetitionExecutionService {
         // dann ist das Ergebnis der letzte fehlende Baustein der Runde.
         !AutoRoundProgressionService.progressIfRoundComplete(eventId, competitionId, userId)
 
+        // Datei-Import ist ein Ergebnis-Schreiber wie die Handeingabe.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -1103,22 +1206,19 @@ object CompetitionExecutionService {
         val target = !CompetitionMatchRepo.getForRaceClockerPull(matchId).orDie()
             .onNullFail { CompetitionExecutionError.MatchNotFound }
 
-        val urls = target.candidateUrls
-        if (urls.isEmpty()) return KIO.fail(RaceClockerError.UrlMissing)
+        // Genau ein Rennen je Wettkampf (11.08.2026) - gibt es keines, gibt es nichts zu holen.
+        val rawUrl = target.resultsUrl ?: return KIO.fail(RaceClockerError.UrlMissing)
 
-        val teams = match.teams.filter { !it.deregistered }
+        val url = !RaceClockerFeed.normalizeUrl(rawUrl)
+        val rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
 
-        // The round type only decides which race to look into *first*. Is a round timed as a time trial
-        // without being marked as a qualification round (or the other way around), the match is simply
-        // found in the other race instead of failing with a misleading error.
-        var rows: List<RaceClockerFeedRow> = emptyList()
-        for (rawUrl in urls) {
-            val url = !RaceClockerFeed.normalizeUrl(rawUrl)
-            rows = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
-            if (assignFeedRows(rows, teams, target.waveName).isNotEmpty()) break
-        }
+        val response = !applyRaceClockerRows(match, matchId, target, rows, userId)
 
-        return applyRaceClockerRows(match, matchId, target, rows, userId)
+        // Der manuelle Pull schreibt denselben Stand wie die Automatik — und soll ihn genauso
+        // sofort auf den Anzeigen zeigen.
+        EventChangeMarker.bump(eventId)
+
+        return KIO.ok(response)
     }
 
     /**
@@ -1149,6 +1249,8 @@ object CompetitionExecutionService {
         // drückt, will genau das Gegenteil: den nächsten Takt voll durchlaufen sehen.
         RaceClockerPollService.forget(matchId)
 
+        // Bewusst kein EventChangeMarker.bump: Pause-Vermerk und Fehlerspalte zeigt kein
+        // öffentliches Board, und der nächste Takt bumpt selbst, sobald er wirklich schreibt.
         noData
     }
 
@@ -1569,6 +1671,38 @@ object CompetitionExecutionService {
             updatedAt = LocalDateTime.now()
         }.orDie()
 
+        // „Läuft" soll sofort auf den Anzeigen stehen, nicht erst nach Ablauf der Cache-TTL.
+        EventChangeMarker.bump(eventId)
+
+        noData
+    }
+
+    /**
+     * Beendet den Lauf von der Durchführungsseite aus — in JEDEM chainProgressionMode, genau wie
+     * der Zeitplan-Weg
+     * ([de.lambda9.ready2race.backend.app.eventSchedule.boundary.EventScheduleService.finishSlot]).
+     *
+     * Das Beenden des Schiedsrichter-Dashboards ist im REGATTABUERO-Modus gesperrt
+     * ([LiveDashboardService.finishMatch]) — die Durchführungsseite ist aber gerade das Werkzeug
+     * des Regattabüros, und der Hinweistext der Einstellung verspricht ihm das Eingreifen
+     * unabhängig vom Modus. Bis zum 12.08.2026 hatte diese Seite gar keinen eigenen Beenden-Weg
+     * (Nutzer-Feedback aus dem Veranstaltungs-Modus): Ohne verknüpften Zeitplan-Slot blieb nur
+     * das Dashboard, und das lehnt im REGATTABUERO-Modus ab. Kette, offene Ergebnisse und
+     * Change-Marker übernimmt der gemeinsame Trichter
+     * [LiveDashboardService.finishMatchInternal].
+     */
+    fun finishMatch(
+        eventId: UUID,
+        matchId: UUID,
+        userId: UUID,
+        openResults: OpenResultHandling? = null,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        !LiveDashboardService.finishMatchInternal(eventId, matchId, userId, openResults, mode)
+
         noData
     }
 
@@ -1612,6 +1746,117 @@ object CompetitionExecutionService {
 
         logger.info { "Beenden von Lauf $matchId zurückgenommen." }
 
+        // Der Lauf wandert auf den Anzeigen aus den Ergebnissen zurück.
+        EventChangeMarker.bump(eventId)
+
+        noData
+    }
+
+    /**
+     * Setzt einen einzelnen Lauf in den Zustand „nie gefahren" zurück, ohne seine Zeilen zu
+     * löschen - die Alternative zum Löschen der ganzen Runde, wenn nur EIN Lauf neu gefahren
+     * werden muss.
+     *
+     * Der Punkt ist der Erhalt der UUIDs: `deleteCurrentRound` legt beim Neuerstellen neue
+     * `competition_match_team`-Zeilen an, und deren Kennungen stecken in RaceClocker-Extra-infos,
+     * exportierten Startlisten und allen Verweisen darauf. Dieser Weg behält die Zeilen und leert
+     * nur, was aus dem gefahrenen Rennen stammt.
+     *
+     * Geleert wird der Ausführungszustand:
+     * - `competition_match`: `activated_at`, `started_at`, `finished_at` und
+     *   `raceclocker_poll_error`. `raceclocker_auto_paused_at` wird dagegen GESETZT statt geleert
+     *   - der Reset pausiert den automatischen Abruf (Begründung unten am Update).
+     *   `raceclocker_polled_at` bleibt: es beschreibt den Job, nicht den Lauf.
+     * - `competition_match_team`: Platz, Ausscheidung ([CompetitionMatchTeamRecord.failed] samt
+     *   Grund), Zeit (Timecode-Zeile wird gelöscht), Strafzeit, Boot-Start und alle Rundenzeiten -
+     *   genau die Felder, die [updateMatchResult] und [applyParsedTeamResults] schreiben.
+     *
+     * Stehen bleibt die Struktur: Aufstellung, Bahnen (`start_number`), geplante Startzeit und
+     * `pairings_recalculated_at`. Auch [CompetitionMatchTeamRecord.out] bleibt - es markiert das
+     * Ausscheiden aus einer FRÜHEREN Runde (gesetzt bei der Rundenerzeugung aus
+     * `deregistered || out || failed` der Vorrunde), ist also kein Ergebnis dieses Laufs.
+     *
+     * Erlaubt nur, solange die Folgerunde noch keine erzeugten Läufe hat - dieselbe Stromrichtung
+     * wie [deleteCurrentRound]. Danach hat das Ergebnis die nächste Runde gesät, und der Weg führt
+     * wie bei jeder Korrektur über das Löschen der Folgerunde ([ResetBlockedByNextRound]).
+     *
+     * Bewusst ohne [checkUpdateMatchResult]: Das würde Freilose abweisen (wie bei [reopenMatch]),
+     * und auch ein versehentlich quittiertes Freilos soll sich zurücksetzen lassen.
+     */
+    fun resetMatch(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }.none { it.id == matchId }) {
+            CompetitionExecutionError.MatchNotFound
+        }
+
+        val currentRound = getCurrentAndNextRound(setupRounds).first
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
+        currentRound.matches.find { it.competitionSetupMatch == matchId }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.ResetBlockedByNextRound)
+
+        val now = LocalDateTime.now()
+        val teams = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+
+        !teams.traverse { team ->
+            KIO.comprehension {
+                // Der Fremdschlüssel steht auf `on delete set null`; die Spalte wird unten trotzdem
+                // ausdrücklich geleert - dasselbe Muster wie in [resetRaceClockerResults].
+                !TimecodeRepo.delete(team.id).orDie()
+                !CompetitionMatchTeamLapRepo.deleteByTeam(team.id).orDie()
+
+                !CompetitionMatchTeamRepo.update(team) {
+                    place = null
+                    placesCalculated = false
+                    failed = false
+                    failedReason = null
+                    timecode = null
+                    penaltySeconds = null
+                    penaltyNote = null
+                    startedAt = null
+                    updatedBy = userId
+                    updatedAt = now
+                }.orDie()
+
+                unit
+            }
+        }
+
+        !CompetitionMatchRepo.update(matchId) {
+            activatedAt = null
+            startedAt = null
+            finishedAt = null
+            // GESETZT statt geleert: Solange RaceClocker den alten Stand noch führt, würde der
+            // nächste Poll-Takt die soeben gelöschten Ergebnisse sofort wieder einspielen - der
+            // Reset höbe sich selbst auf (Nutzer-Beobachtung 12.08.2026). Die Kette ist dieselbe
+            // wie beim Deaktivieren eines Laufs (getCandidates filtert pausierte Läufe bereits):
+            // Reset → Abruf pausiert → Schiedsrichter räumt den Lauf in RaceClocker auf →
+            // bewusstes Fortsetzen über den bestehenden Knopf ([resumeRaceClockerAutoPull]).
+            raceclockerAutoPausedAt = now
+            raceclockerPollError = null
+            updatedBy = userId
+            updatedAt = now
+        }.orDie()
+
+        // Der Job merkt sich je Lauf den zuletzt geschriebenen Stand und schreibt nichts, solange
+        // der Feed unverändert ist. Nach dem Reset beschreibt dieser Merkposten nicht mehr, was in
+        // der Datenbank steht - ohne das Vergessen bliebe der Lauf NACH dem bewussten Fortsetzen
+        // leer, bis sich in RaceClocker irgendwann eine Zeile ändert (gleiche Falle wie bei
+        // [resumeRaceClockerAutoPull]). Vor dem Fortsetzen greift es nicht: pausierte Läufe
+        // erreicht der Job gar nicht erst.
+        RaceClockerPollService.forget(matchId)
+
+        logger.info { "Lauf $matchId zurückgesetzt - Ausführungszustand geleert, Aufstellung und Kennungen bleiben." }
+
+        // Zeiten und Zustand des Laufs verschwinden von den Anzeigen.
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -1626,6 +1871,10 @@ object CompetitionExecutionService {
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
         !setMatchActivation(matchId, request.activated, userId)
+
+        // setMatchActivation selbst kennt die Veranstaltung nicht — beide Aufrufer (hier und
+        // LiveDashboardService.setMatchActivated) bumpen deshalb selbst.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -1705,6 +1954,8 @@ object CompetitionExecutionService {
         if (deleted < 1) {
             KIO.fail(CompetitionExecutionError.RoundNotFound)
         } else {
+            // Die gelöschten Läufe verschwinden aus „nächste Läufe" der Anzeigen.
+            EventChangeMarker.bump(eventId)
             noData
         }
     }
@@ -2166,14 +2417,41 @@ object CompetitionExecutionService {
     }
 
     /**
+     * Hängt die Startlisten-Zeilen EINES Laufs an eine Sammel-CSV an - der gemeinsame Baustein von
+     * [downloadRoundStartlist] (eine Runde) und [buildEventStartlists] (die ganze Veranstaltung).
+     *
+     * Ein Lauf ohne Mannschaften wird übersprungen (Ergebnis null) statt den Export zu reißen; ein
+     * Lauf ohne geplante Startzeit reißt ihn dagegen wie beim Einzel-Export - ohne Zeit gibt es
+     * keinen brauchbaren Wellennamen. Die Kopfzeile schreibt nur der erste Lauf einer Datei
+     * ([writeHeader]), und auch nur, wenn das Spalten-Preset sie nicht abbestellt hat.
+     */
+    private fun appendMatchCsv(
+        setupMatchId: UUID,
+        out: ByteArrayOutputStream,
+        writeHeader: Boolean,
+    ): App<ServiceError, String?> = KIO.comprehension {
+        val record = !CompetitionMatchRepo.getForStartList(setupMatchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
+        if (record.teams!!.isEmpty()) return@comprehension KIO.ok(null)
+        !KIO.failOn(record.startTime == null) { CompetitionExecutionError.StartTimeNotSet }
+
+        val data = !CompetitionMatchData.fromPersisted(record)
+
+        val target = !CompetitionMatchRepo.getStartListConfigTarget(setupMatchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
+        val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
+        val config = !StartListConfigRepo.get(configId).orDie()
+            .onNullFail { StartListConfigError.NotFound }
+
+        out.write(buildCsv(data, config, includeHeader = writeHeader && config.noHeader != true))
+        KIO.ok(data.competition.identifier)
+    }
+
+    /**
      * Die Startliste einer GANZEN Runde als eine CSV - ein Schwung für den Import ins
      * Zeitnahme-System statt Lauf für Lauf. Die Wellen unterscheidet RaceClocker über die
      * Wellenname-Spalte, die jede Zeile ohnehin trägt; die Kopfzeile schreibt nur die erste
      * Partie. Bewusst nur CSV: Die PDF-Startliste ist ein Aushang je Lauf, kein Importformat.
-     *
-     * Läufe ohne Mannschaften werden übersprungen statt den Export zu reißen; ein Lauf ohne
-     * geplante Startzeit reißt ihn dagegen wie beim Einzel-Export - ohne Zeit gibt es keinen
-     * brauchbaren Wellennamen.
      */
     fun downloadRoundStartlist(
         eventId: UUID,
@@ -2189,28 +2467,27 @@ object CompetitionExecutionService {
         val matches = round.matches.sortedBy { it.startTime }
         !KIO.failOn(matches.isEmpty()) { CompetitionExecutionError.MatchNotFound }
 
+        // Freilose fahren nicht und tauchen im RaceClocker nie auf - sie gehören nicht in den
+        // Sammelexport der Runde (Wunsch vom 11.08.2026). Ein einzelnes Freilos-Boot als Startliste
+        // zu exportieren, hieße dem Zeitnahme-System einen Lauf anzukündigen, den es nie sieht.
+        // Ausnahme "muss gefahren werden" (bye_must_race): Dieses Freilos wird gefahren und braucht
+        // seine Welle im Zeitnahme-System wie jeder Lauf.
+        val byeByMatch = !MatchByeService.byeByMatch(eventId, competitionId)
+
         val out = ByteArrayOutputStream()
         var first = true
         var identifier = ""
 
         !matches.traverse { m ->
             KIO.comprehension {
-                val record = !CompetitionMatchRepo.getForStartList(m.competitionSetupMatch).orDie()
-                    .onNullFail { CompetitionExecutionError.MatchNotFound }
-                if (record.teams!!.isEmpty()) return@comprehension unit
-                !KIO.failOn(record.startTime == null) { CompetitionExecutionError.StartTimeNotSet }
+                val bye = byeByMatch[m.competitionSetupMatch]
+                if (bye != null && !bye.mustRace) return@comprehension unit
 
-                val data = !CompetitionMatchData.fromPersisted(record)
-                identifier = data.competition.identifier
-
-                val target = !CompetitionMatchRepo.getStartListConfigTarget(m.competitionSetupMatch).orDie()
-                    .onNullFail { CompetitionExecutionError.MatchNotFound }
-                val configId = !KIO.failOnNull(target.configId) { StartListConfigError.NotConfigured }
-                val config = !StartListConfigRepo.get(configId).orDie()
-                    .onNullFail { StartListConfigError.NotFound }
-
-                out.write(buildCsv(data, config, includeHeader = first && config.noHeader != true))
-                first = false
+                val appended = !appendMatchCsv(m.competitionSetupMatch, out, writeHeader = first)
+                if (appended != null) {
+                    identifier = appended
+                    first = false
+                }
 
                 unit
             }
@@ -2222,6 +2499,627 @@ object CompetitionExecutionService {
                 bytes = out.toByteArray(),
             )
         )
+    }
+
+    /**
+     * Der Plan des Startlisten-Sammelexports (Zeitplan-Tab): je Wettkampf die zu exportierenden
+     * Läufe, ohne schon CSV zu bauen - so bleibt der Delta-Abgleich dazwischenschaltbar.
+     *
+     * [allRounds] = false ist der initiale Fall: je Wettkampf die ERSTE gesetzte Runde - das, was
+     * vor dem ersten Start ins Zeitnahme-System importiert wird. true (Delta) nimmt alle bereits
+     * gesetzten Runden; welche davon exportiert werden, entscheidet danach der Feed-Abgleich.
+     *
+     * [skipByes] lässt Freilose weg - außer denen mit "muss gefahren werden" (bye_must_race), die
+     * IMMER exportiert werden: Sie werden gefahren und brauchen ihre Welle im Zeitnahme-System.
+     *
+     * [raceclockerRaceId] schränkt auf die Wettkämpfe ein, deren angewähltes RaceClocker-Rennen
+     * (competition.raceclocker_race, seit dem Ein-Rennen-Modell eindeutig) das übergebene ist -
+     * für den Import Rennen für Rennen statt immer über die ganze Veranstaltung. null = alle.
+     */
+    fun eventStartlistPlan(
+        eventId: UUID,
+        allRounds: Boolean,
+        skipByes: Boolean,
+        raceclockerRaceId: UUID? = null,
+    ): App<ServiceError, List<BulkStartlistCompetition>> = KIO.comprehension {
+        val competitions = !CompetitionMatchRepo.getForBulkStartlistExport(eventId).orDie()
+        val byeByMatch = !MatchByeService.byeByMatch(eventId)
+
+        competitions
+            .filter { raceclockerRaceId == null || it.raceId == raceclockerRaceId }
+            .traverse { row ->
+            KIO.comprehension {
+                val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(row.competitionId)
+                val sorted = sortRounds(setupRounds).filter { it.matches.isNotEmpty() }
+                val rounds = if (allRounds) sorted else listOfNotNull(sorted.firstOrNull())
+
+                // Nach Startzeit sortiert: `round.matches` kommt aus einem array_agg ohne
+                // Ordnung - ohne die Sortierung wäre die Reihenfolge des Plans dem Zufall der
+                // Aggregation überlassen.
+                val matches = rounds.flatMap { round ->
+                    round.matches
+                        .filter { match ->
+                            val bye = byeByMatch[match.competitionSetupMatch]
+                            bye == null || bye.mustRace || !skipByes
+                        }
+                        .map { match ->
+                            BulkStartlistMatch(
+                                setupMatchId = match.competitionSetupMatch,
+                                startTime = match.startTime,
+                                roundName = round.setupRoundName,
+                                // Der Anzeigename für Vorschau und Fehlermeldungen: ein Freilos
+                                // trägt seinen materialisierten Namen (V202608121300), sonst den
+                                // am Setup-Lauf nachgeschlagenen.
+                                matchName = match.byeName ?: round.setupMatches
+                                    .find { it.id == match.competitionSetupMatch }?.name,
+                                matchTeamIds = match.teams.map { it.id },
+                            )
+                        }
+                }.sortedWith(compareBy(nullsLast()) { it.startTime })
+
+                KIO.ok(
+                    BulkStartlistCompetition(
+                        competitionId = row.competitionId,
+                        identifier = row.identifier,
+                        shortName = row.shortName,
+                        name = row.name,
+                        raceUrl = row.raceUrl,
+                        matches = matches,
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Schränkt den Plan auf die übergebenen Läufe ein - die Schnittmenge, niemals mehr:
+     * Eine mitgeschickte Id, die der Plan nicht hergibt (fremder Wettkampf, andere Veranstaltung,
+     * per Freilos-/Rennen-Filter ausgeschlossen), wird stillschweigend ignoriert. Der Parameter
+     * kann die Plan-Auswahl also nur VERKLEINERN, nie erweitern - sonst wäre `matchIds` ein Weg,
+     * an allen Filtern (und an der Veranstaltungszugehörigkeit) vorbei zu exportieren.
+     *
+     * null = keine Einschränkung (der Normalfall ohne Vorschau-Abwahl).
+     */
+    fun restrictPlanToMatches(
+        plan: List<BulkStartlistCompetition>,
+        matchIds: Set<UUID>?,
+    ): List<BulkStartlistCompetition> =
+        if (matchIds == null) plan
+        else plan.map { competition ->
+            competition.copy(matches = competition.matches.filter { it.setupMatchId in matchIds })
+        }
+
+    /**
+     * Der Delta-Abgleich als eigene Funktion - die EINE Stelle, die entscheidet, welche Läufe
+     * „in RaceClocker fehlen": Export ([buildEventStartlists]) und Vorschau
+     * ([buildEventStartlistPreview]) konsumieren sie beide, damit die Vorschau nie etwas anderes
+     * verspricht, als der Export liefert.
+     *
+     * [feedsByUrl] == null heißt kein Delta: der Plan bleibt unangetastet. Sonst bleibt je
+     * Wettkampf nur, was im Feed seines Rennens fehlt ([RaceClockerAssignmentLogic.matchInFeed]);
+     * ein Wettkampf ohne angewähltes Rennen fällt komplett heraus - es gibt kein Rennen, in dem
+     * seine Wellen fehlen könnten, und keins, in das sie importiert würden.
+     */
+    fun filterPlanAgainstFeeds(
+        plan: List<BulkStartlistCompetition>,
+        feedsByUrl: Map<String, List<RaceClockerFeedRow>>?,
+    ): List<BulkStartlistCompetition> =
+        if (feedsByUrl == null) plan
+        else plan.map { competition ->
+            val rows = competition.raceUrl?.let { feedsByUrl[it] }
+            if (rows == null) {
+                competition.copy(matches = emptyList())
+            } else {
+                competition.copy(
+                    matches = competition.matches.filter {
+                        !RaceClockerAssignmentLogic.matchInFeed(rows, it.matchTeamIds)
+                    }
+                )
+            }
+        }
+
+    /**
+     * Die Vorschau des Sammelexports: exakt die Läufe, die [buildEventStartlists] mit demselben
+     * Plan und denselben Feeds exportieren würde - gleiche Bausteine ([filterPlanAgainstFeeds]),
+     * keine zweite Auswahl-Logik.
+     *
+     * Das Flag `missingInRaceClocker` wird auch OHNE Delta-Modus korrekt berechnet, wenn Feeds
+     * vorliegen - im Delta ist es trivialerweise überall true, ohne trägt es die Information,
+     * welche Läufe schon drüben sind. Läufe ohne geplante Startzeit stehen mit `startTime = null`
+     * in der Liste: Die Oberfläche weist sie als nicht exportierbar aus, der Export lehnt sie mit
+     * [CompetitionExecutionError.StartlistMatchesWithoutStartTime] ab.
+     */
+    fun buildEventStartlistPreview(
+        plan: List<BulkStartlistCompetition>,
+        feedsByUrl: Map<String, List<RaceClockerFeedRow>>?,
+        onlyMissingInRaceClocker: Boolean,
+    ): List<EventStartlistPreviewMatchDto> {
+        val effective = if (onlyMissingInRaceClocker) filterPlanAgainstFeeds(plan, feedsByUrl) else plan
+
+        return effective.flatMap { competition ->
+            competition.matches.map { match ->
+                EventStartlistPreviewMatchDto(
+                    matchId = match.setupMatchId,
+                    competitionId = competition.competitionId,
+                    competitionIdentifier = competition.identifier,
+                    competitionShortName = competition.shortName,
+                    competitionName = competition.name,
+                    roundName = match.roundName,
+                    matchName = match.matchName,
+                    startTime = match.startTime,
+                    missingInRaceClocker = competition.raceUrl
+                        ?.let { feedsByUrl?.get(it) }
+                        ?.let { rows -> !RaceClockerAssignmentLogic.matchInFeed(rows, match.matchTeamIds) },
+                )
+            }
+        // Dieselbe Reihenfolge wie die große CSV: nach Startzeit über alle Wettkämpfe, Läufe ohne
+        // Startzeit ans Ende - dort sammelt die Oberfläche sie ohnehin in einem eigenen Abschnitt.
+        }.sortedWith(compareBy(nullsLast()) { it.startTime })
+    }
+
+    /**
+     * Baut aus dem Plan die Download-Datei.
+     *
+     * [feedsByUrl] != null ist der Delta-Modus: je Rennen die bereits geholten Feed-Zeilen -
+     * exportiert wird nur, was dort fehlt ([RaceClockerAssignmentLogic.matchInFeed]). Ein
+     * Wettkampf ohne angewähltes Rennen fällt im Delta komplett heraus: Es gibt kein Rennen, in
+     * dem seine Wellen fehlen könnten, und keins, in das sie importiert würden.
+     *
+     * Getrennt vom Holen ([downloadEventStartlists]), damit der Bau gegen Fixture-Feeds prüfbar
+     * ist - dasselbe Muster wie applyRaceClockerRows gegenüber updateMatchResultFromRaceClocker.
+     */
+    fun buildEventStartlists(
+        plan: List<BulkStartlistCompetition>,
+        fileType: EventStartlistFileType,
+        feedsByUrl: Map<String, List<RaceClockerFeedRow>>? = null,
+        // Nur für PDF: die zugewiesene START_LIST-Vorlage der Veranstaltung - wie die Feeds vom
+        // Aufrufer geholt (downloadEventStartlists), damit der Bau gegen Fixtures prüfbar bleibt.
+        // null rendert die vorlagenlose Standard-Startliste, exakt wie der Einzel-Lauf-Export.
+        startListTemplate: PageTemplate? = null,
+        // Nur für PDF: "Amtspapier mitdrucken" - false lässt das Vorlagen-Design weg (Druck auf
+        // vorgedrucktes Papier), Format und Rand der Vorlage bleiben. Mappen-Dokumente sind davon
+        // unberührt, die werden IMMER unverändert übernommen.
+        withBackground: Boolean = true,
+        // Nur für PDF: die Regatta-Mappe in Reihenfolge - Dokumente als fertige Bytes, die
+        // generierten Startlisten als Platzhalter-Teil. null = nur die generierten Startlisten
+        // (das bisherige Verhalten ohne Mappe).
+        bundleParts: List<StartlistBundlePart>? = null,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        val filtered = filterPlanAgainstFeeds(plan, feedsByUrl)
+
+        // Die effektive Mappen-Reihenfolge des PDF-Baus: ohne Mappe genau der generierte Teil.
+        val parts = bundleParts ?: listOf(StartlistBundlePart.GeneratedStartlists)
+        // Ist der Startlisten-Platzhalter abgewählt (Mappe ohne GeneratedStartlists), wird kein
+        // Lauf gerendert - dann darf auch keiner den Export blockieren.
+        val includesGenerated = fileType != EventStartlistFileType.PDF ||
+            parts.any { it is StartlistBundlePart.GeneratedStartlists }
+
+        // Startzeit-Wächter über ALLE Läufe statt Abbruch beim ersten (appendMatchCsv bliebe als
+        // Rückhalt): Ein nacktes "StartTime not set" ohne Laufbezug ist am Renntag unbrauchbar
+        // (HAR-Beleg 12.08.2026). Der Export blockiert weiterhin laut, statt die Läufe still
+        // wegzulassen - eine unbemerkt unvollständige Startliste wäre gefährlicher als ein
+        // Fehler. Wer sie bewusst weglassen will, wählt sie in der Vorschau ab (matchIds).
+        // Läufe ohne Mannschaften zählen nicht: die überspringt der Bau ohnehin kommentarlos.
+        val withoutStartTime = filtered.flatMap { competition ->
+            competition.matches
+                .filter { it.startTime == null && it.matchTeamIds.isNotEmpty() }
+                .map { match ->
+                    CompetitionExecutionError.StartlistMatchWithoutStartTime(
+                        matchId = match.setupMatchId,
+                        competitionIdentifier = competition.identifier,
+                        competitionShortName = competition.shortName,
+                        competitionName = competition.name,
+                        roundName = match.roundName,
+                        matchName = match.matchName,
+                    )
+                }
+        // Deterministisch sortiert: Ohne Startzeit gibt der Plan keine Ordnung her (array_agg),
+        // und eine Fehlermeldung, die ihre Läufe bei jedem Aufruf anders reiht, liest sich wie
+        // eine andere Meldung.
+        }.sortedWith(compareBy({ it.competitionIdentifier }, { it.roundName }, { it.matchName ?: "" }))
+        !KIO.failOn(includesGenerated && withoutStartTime.isNotEmpty()) {
+            CompetitionExecutionError.StartlistMatchesWithoutStartTime(withoutStartTime)
+        }
+
+        val fileNameDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+
+        when (fileType) {
+            EventStartlistFileType.CSV -> {
+                // Eine große Datei: nach Startzeit über alle Wettkämpfe sortiert - die Reihenfolge,
+                // in der die Wellen gefahren werden. Kopfzeile nur einmal, wie beim Runden-Export.
+                val out = ByteArrayOutputStream()
+                var first = true
+                !filtered.flatMap { it.matches }
+                    .sortedWith(compareBy(nullsLast()) { it.startTime })
+                    .traverse { m ->
+                        KIO.comprehension {
+                            val appended = !appendMatchCsv(m.setupMatchId, out, writeHeader = first)
+                            if (appended != null) first = false
+                            unit
+                        }
+                    }
+
+                KIO.ok(
+                    ApiResponse.File(
+                        name = "startLists-$fileNameDate.csv",
+                        bytes = out.toByteArray(),
+                    )
+                )
+            }
+
+            EventStartlistFileType.ZIP -> {
+                // Eine CSV je Wettkampf, Dateinamen wie beim Runden-Export. Spannt ein Wettkampf im
+                // Delta mehrere Runden auf, bleibt nur die Kennung - ein Rundenname wäre gelogen.
+                val zipBytes = ByteArrayOutputStream()
+                val zip = ZipOutputStream(zipBytes)
+
+                !filtered.traverse { competition ->
+                    KIO.comprehension {
+                        val out = ByteArrayOutputStream()
+                        var first = true
+                        val exportedRounds = mutableSetOf<String>()
+                        !competition.matches
+                            .sortedWith(compareBy(nullsLast()) { it.startTime })
+                            .traverse { m ->
+                                KIO.comprehension {
+                                    val appended = !appendMatchCsv(m.setupMatchId, out, writeHeader = first)
+                                    if (appended != null) {
+                                        first = false
+                                        exportedRounds += m.roundName
+                                    }
+                                    unit
+                                }
+                            }
+                        // Wettkämpfe ohne exportierten Lauf (keine Runde gesetzt, alles Freilose,
+                        // im Delta vollständig vorhanden) bekommen keinen leeren ZIP-Eintrag.
+                        if (exportedRounds.isEmpty()) return@comprehension unit
+
+                        val entryName = exportedRounds.singleOrNull()
+                            ?.let { "startList-${competition.identifier}-$it.csv" }
+                            ?: "startList-${competition.identifier}.csv"
+                        zip.putNextEntry(ZipEntry(entryName))
+                        zip.write(out.toByteArray())
+                        zip.closeEntry()
+                        unit
+                    }
+                }
+
+                zip.finish()
+                KIO.ok(
+                    ApiResponse.File(
+                        name = "startLists-$fileNameDate.zip",
+                        bytes = zipBytes.toByteArray(),
+                    )
+                )
+            }
+
+            EventStartlistFileType.PDF -> {
+                // Eine Datei für Aushang bzw. (geändertes) Meldeergebnis: die Mappen-Teile in
+                // Reihenfolge - Dokumente unverändert, an der Platzhalter-Position je Lauf die
+                // bekannte Einzel-Startlisten-PDF ([buildPdf], mit der zugewiesenen Vorlage), in
+                // Startzeit-Reihenfolge über alle Wettkämpfe - dieselbe Reihenfolge wie die
+                // große CSV. Läufe ohne Mannschaften werden wie dort kommentarlos übersprungen.
+                // Bewusst NICHT "meldeergebnis" im Dateinamen: REGISTRATION_REPORT ist ein
+                // eigener Dokumenttyp, der Name bliebe zweideutig.
+                val merged = PDDocument()
+                val merger = PDFMergerUtility()
+                !parts.traverse { bundlePart ->
+                    when (bundlePart) {
+                        is StartlistBundlePart.Document -> KIO.comprehension {
+                            // Tolerant: Ein Nicht-PDF (die Tabelle kennt keinen Content-Type)
+                            // wird übersprungen statt den ganzen Export zu reißen - die
+                            // Oberfläche bietet ohnehin nur .pdf-Dateien zur Mappe an und weist
+                            // andere Namen im Dialog aus.
+                            val partDoc = try {
+                                Loader.loadPDF(bundlePart.bytes)
+                            } catch (e: IOException) {
+                                logger.warn {
+                                    "Export-Mappe: Dokument '${bundlePart.name}' ist kein lesbares PDF und wird übersprungen."
+                                }
+                                null
+                            }
+                            if (partDoc != null) {
+                                // appendDocument kopiert die Seiten in das Sammeldokument - das
+                                // Teilstück kann danach zu, erst das Ganze wird gespeichert.
+                                merger.appendDocument(merged, partDoc)
+                                partDoc.close()
+                            }
+                            unit
+                        }
+
+                        StartlistBundlePart.GeneratedStartlists ->
+                            filtered.flatMap { it.matches }
+                                .sortedWith(compareBy(nullsLast()) { it.startTime })
+                                .traverse { m ->
+                                    KIO.comprehension {
+                                        val record =
+                                            !CompetitionMatchRepo.getForStartList(m.setupMatchId).orDie()
+                                                .onNullFail { CompetitionExecutionError.MatchNotFound }
+                                        if (record.teams!!.isEmpty()) return@comprehension unit
+
+                                        val data = !CompetitionMatchData.fromPersisted(record)
+                                        val part = Loader.loadPDF(
+                                            buildPdf(data, startListTemplate, withBackground)
+                                        )
+                                        merger.appendDocument(merged, part)
+                                        part.close()
+                                        unit
+                                    }
+                                }.map { }
+                    }
+                }
+
+                val out = ByteArrayOutputStream()
+                merged.save(out)
+                merged.close()
+                KIO.ok(
+                    ApiResponse.File(
+                        // Mit Mappe ist die Datei mehr als Startlisten - der Name sagt das.
+                        name = if (bundleParts != null) {
+                            "exportBundle-$fileNameDate.pdf"
+                        } else {
+                            "startLists-$fileNameDate.pdf"
+                        },
+                        bytes = out.toByteArray(),
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Startlisten-Sammelexport am Zeitplan-Tab: alles, was ins Zeitnahme-System importiert werden
+     * muss, in einem Download - statt Wettkampf für Wettkampf über die Durchführungsseite.
+     *
+     * Das Holen der Feeds steht hier, der Bau in [buildEventStartlists] (Begründung dort). Im
+     * Delta-Modus wird je angewähltem Rennen genau einmal geholt - dieselbe Fetch-Maschinerie wie
+     * beim automatischen Abruf, samt Host-Allowlist. Ein nicht erreichbares Rennen reißt den
+     * GANZEN Export mit einem strukturierten Fehler ([RaceClockerError.Unreachable]): Ein
+     * Teilexport ohne Hinweis würde fehlende Wellen verschweigen, und verschwiegen fehlt am
+     * Renntag genau die eine, auf die es ankommt.
+     */
+    suspend fun CallComprehensionScope.downloadEventStartlists(
+        eventId: UUID,
+        fileType: EventStartlistFileType,
+        skipByes: Boolean,
+        onlyMissingInRaceClocker: Boolean,
+        // Nur Wettkämpfe dieses RaceClocker-Rennens (null = alle) - wirkt für Voll- UND
+        // Delta-Export; im Delta wird dann auch nur noch der Feed dieses Rennens geholt.
+        raceclockerRaceId: UUID? = null,
+        // Schnittmenge mit dem Plan, nie mehr (Sicherheitsregel in [restrictPlanToMatches]) -
+        // die Abwahl aus der Export-Vorschau. null = alles, was der Plan hergibt.
+        matchIds: Set<UUID>? = null,
+        // Nur für PDF: "Amtspapier mitdrucken" - false lässt das Vorlagen-Design der generierten
+        // Startlisten weg (Druck auf vorgedrucktes Papier). Mappen-Dokumente bleiben unberührt.
+        withBackground: Boolean = true,
+        // Nur für PDF: die Export-Mappe der Veranstaltung anhängen - Dokumente und generierte
+        // Startlisten in Mappen-Reihenfolge statt nur der Startlisten.
+        includeBundleDocuments: Boolean = false,
+        // Abgewählte Mappen-Einträge (event_export_bundle_item.id) - auch der
+        // Startlisten-Platzhalter ist abwählbar. Fremde Ids treffen nichts und stören nicht.
+        excludedBundleItems: Set<UUID>? = null,
+    ): App<ServiceError, ApiResponse.File> {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val plan = !eventStartlistPlan(
+            eventId,
+            allRounds = onlyMissingInRaceClocker,
+            skipByes = skipByes,
+            raceclockerRaceId = raceclockerRaceId,
+        )
+        val restricted = restrictPlanToMatches(plan, matchIds)
+
+        // Erst nach der Einschränkung geholt: Ein Wettkampf, dessen Läufe alle abgewählt sind,
+        // braucht keinen Feed mehr - und sein nicht erreichbares Rennen soll den Export dann
+        // auch nicht mehr abbrechen.
+        val feeds = if (onlyMissingInRaceClocker) {
+            !fetchFeedsFor(restricted)
+        } else {
+            null
+        }
+
+        // Nur für PDF gebraucht und deshalb nur dort geholt. Keine Zuweisung (null) ist KEIN
+        // Fehler: buildPdf rendert dann die vorlagenlose Standard-Startliste - exakt das
+        // Verhalten des Einzel-Lauf-Exports, der Sammelexport ist nicht strenger.
+        val startListTemplate = if (fileType == EventStartlistFileType.PDF) {
+            !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, eventId).orDie()
+                .andThenNotNull { it.toPdfTemplate() }
+        } else {
+            null
+        }
+
+        // Die Mappe wird HIER aufgelöst (Bytes aus dem Dokumentenspeicher), der Bau bekommt
+        // fertige Teile - dieselbe Trennung wie bei den Feeds, der Bau bleibt Fixture-prüfbar.
+        val bundleParts = if (fileType == EventStartlistFileType.PDF && includeBundleDocuments) {
+            !resolveBundleParts(eventId, excludedBundleItems ?: emptySet())
+        } else {
+            null
+        }
+
+        return buildEventStartlists(
+            restricted,
+            fileType,
+            feeds,
+            startListTemplate,
+            withBackground = withBackground,
+            bundleParts = bundleParts,
+        )
+    }
+
+    /**
+     * Löst die Export-Mappe der Veranstaltung in Bau-Teile auf: je nicht abgewähltem
+     * Dokument-Eintrag die Datei-Bytes aus dem Dokumentenspeicher, an der Platzhalter-Position
+     * die generierten Startlisten. Wurde die Mappe nie geöffnet (kein Platzhalter-Datensatz),
+     * stehen die Startlisten am Default-Platz ganz hinten - ohne dass der Export etwas schreiben
+     * müsste. Ein Dokument-Eintrag, dessen Datei fehlt, wird mit Log-Hinweis übersprungen.
+     *
+     * Öffentlich wie [restrictPlanToMatches]: Die Abwahl-Logik der Mappe ist damit gegen eine
+     * gesäte Mappe prüfbar, ohne den HTTP-Weg zu brauchen.
+     */
+    fun resolveBundleParts(
+        eventId: UUID,
+        excludedBundleItems: Set<UUID>,
+    ): App<ServiceError, List<StartlistBundlePart>> = KIO.comprehension {
+        val items = !EventExportBundleItemRepo.allForEvent(eventId).orDie()
+        val downloads = !EventDocumentRepo.getDownloadsByEvent(eventId).orDie()
+            .map { records -> records.associateBy { it.id } }
+
+        val parts = items
+            .filter { it.id !in excludedBundleItems }
+            .mapNotNull { item ->
+                when (EventExportBundleItemKind.valueOf(item.kind)) {
+                    EventExportBundleItemKind.GENERATED_STARTLISTS ->
+                        StartlistBundlePart.GeneratedStartlists
+
+                    EventExportBundleItemKind.DOCUMENT -> {
+                        val download = downloads[item.document]
+                        if (download?.data == null) {
+                            logger.warn {
+                                "Export-Mappe: Zu Eintrag ${item.id} fehlt die Dokumentdatei - übersprungen."
+                            }
+                            null
+                        } else {
+                            StartlistBundlePart.Document(
+                                name = download.name ?: item.document.toString(),
+                                bytes = download.data!!,
+                            )
+                        }
+                    }
+                }
+            }
+
+        // Kein Platzhalter-Datensatz heißt: Die Mappe wurde nie umsortiert - die Startlisten
+        // stehen am Default-Platz ganz hinten. Ein VORHANDENER, aber abgewählter Platzhalter
+        // fällt dagegen bewusst weg (items trägt ihn, der Filter oben hat ihn entfernt).
+        val placeholderExists = items.any {
+            EventExportBundleItemKind.valueOf(it.kind) == EventExportBundleItemKind.GENERATED_STARTLISTS
+        }
+        KIO.ok(
+            if (placeholderExists) parts
+            else parts + StartlistBundlePart.GeneratedStartlists
+        )
+    }
+
+    /**
+     * Die Vorschau zum Sammelexport: dieselben Parameter (ohne fileType - eine Datei entsteht
+     * nicht), dieselbe Plan-Logik, dieselben Feeds - geliefert wird die Liste der Läufe, die der
+     * Export exportieren würde, samt `missingInRaceClocker`-Flag ([buildEventStartlistPreview]).
+     *
+     * Die Feeds werden auch OHNE Delta-Modus geholt, sobald der (ggf. per Rennen-Filter
+     * verkleinerte) Plan Wettkämpfe mit angewähltem Rennen enthält - nur so trägt das Flag auch
+     * dort Information. Ein nicht erreichbares Rennen bricht die Vorschau wie den Export mit
+     * [RaceClockerError.Unreachable] ab: eine Vorschau, die still so tut, als fehle alles, würde
+     * denselben Schaden anrichten wie ein stiller Teilexport.
+     */
+    suspend fun CallComprehensionScope.previewEventStartlists(
+        eventId: UUID,
+        skipByes: Boolean,
+        onlyMissingInRaceClocker: Boolean,
+        raceclockerRaceId: UUID? = null,
+    ): App<ServiceError, ApiResponse.ListDto<EventStartlistPreviewMatchDto>> {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val plan = !eventStartlistPlan(
+            eventId,
+            allRounds = onlyMissingInRaceClocker,
+            skipByes = skipByes,
+            raceclockerRaceId = raceclockerRaceId,
+        )
+        val feeds = !fetchFeedsFor(plan)
+
+        return KIO.ok(
+            ApiResponse.ListDto(buildEventStartlistPreview(plan, feeds, onlyMissingInRaceClocker))
+        )
+    }
+
+    /**
+     * Holt je angewähltem Rennen des Plans genau einmal den Feed - dieselbe Fetch-Maschinerie wie
+     * der automatische Abruf, samt Host-Allowlist. Wettkämpfe ohne verbleibende Läufe werden
+     * übersprungen: Für sie wird nichts verglichen, ihr Rennen muss also auch nicht erreichbar
+     * sein.
+     */
+    private suspend fun CallComprehensionScope.fetchFeedsFor(
+        plan: List<BulkStartlistCompetition>,
+    ): App<ServiceError, Map<String, List<RaceClockerFeedRow>>> {
+        val fetched = mutableMapOf<String, List<RaceClockerFeedRow>>()
+        for (rawUrl in plan.filter { it.matches.isNotEmpty() }.mapNotNull { it.raceUrl }.distinct()) {
+            val url = !RaceClockerFeed.normalizeUrl(rawUrl)
+            fetched[rawUrl] = !RaceClockerFeed.fetch(RaceClockerFeed.feedUrl(url))
+        }
+        return KIO.ok(fetched)
+    }
+
+    /**
+     * Schaltet "muss gefahren werden" an einem Freilos-Lauf um (competition_match.bye_must_race).
+     *
+     * Der Lauf gilt danach operativ als echtes Rennen: Startlisten-Exporte nehmen ihn mit, der
+     * RaceClocker-Abruf und die Ergebniseingabe behandeln ihn normal, und Folgerunden-Automatik
+     * wie Kette warten auf sein Beenden. Das Weiterkommen bleibt Freilos-Semantik - die eine
+     * fahrende Mannschaft steigt unabhängig von Zeit und Platz auf. Das trägt die Auslosung
+     * selbst: `createNewRound` setzt über die Plätze INNERHALB des Laufs, und in einem Lauf mit
+     * genau einer fahrenden Mannschaft kann jedes Ergebnis nur Platz 1 ergeben - die gemessene
+     * Zeit kann die Setzung also nicht verändern, sie läuft "außer Konkurrenz" in die Anzeige.
+     *
+     * Beim Einschalten wird ein bereits vergebener AUTOMATISCHER erster Platz zurückgenommen
+     * (erkennbar an Platz ohne Zeit und ohne Ausscheidung): Mit gesetztem Platz wäre der Lauf für
+     * Kette und Automatik schon "durch" (match_open = false), bevor er gefahren ist. Beim
+     * Ausschalten wird er unter denselben Bedingungen wieder vergeben - ein Freilos der ersten
+     * Runde, das durch eine Abmeldung entstand und nie einen automatischen Platz hatte, wird durch
+     * das Hin- und Herschalten damit auf den Normalzustand mit automatischem Platz 1 gehoben
+     * (bewusste Vereinfachung: der Unterschied ist dort nicht mehr rekonstruierbar).
+     */
+    fun updateByeMustRace(
+        eventId: UUID,
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateMatchByeMustRaceRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        val round = setupRounds.find { r -> r.matches.any { it.competitionSetupMatch == matchId } }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchNotFound)
+        val match = round.matches.first { it.competitionSetupMatch == matchId }
+
+        // Nur ein Freilos kann "muss gefahren werden" - dieselbe Regel wie MatchStatusLogic.deriveBye:
+        // nicht verpflichtende Runde, genau eine nicht als `out` mitgeführte Mannschaft.
+        !KIO.failOn(round.required || match.teams.count { !it.out } != 1) { CompetitionExecutionError.MatchIsNoBye }
+
+        // Ein beendeter Lauf ist entschieden - erst das Beenden zurücknehmen, dann umschalten.
+        !KIO.failOn(match.finishedAt != null) { CompetitionExecutionError.MatchResultsLocked }
+
+        val racingTeam = match.teams.single { !it.out }
+        // Ein Platz ohne Zeit und ohne Ausscheidung ist der automatisch vergebene erste Platz -
+        // ein gemessenes oder von Hand eingetragenes Ergebnis wird hier nie angefasst.
+        val automaticPlaceOnly =
+            racingTeam.timeString == null && !racingTeam.failed && racingTeam.penaltySeconds == null
+
+        !CompetitionMatchRepo.update(matchId) {
+            byeMustRace = request.mustRace
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        if (request.mustRace && racingTeam.place != null && automaticPlaceOnly) {
+            !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, racingTeam.competitionRegistration) {
+                place = null
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
+        if (!request.mustRace && racingTeam.place == null && automaticPlaceOnly && match.startedAt == null) {
+            !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, racingTeam.competitionRegistration) {
+                place = 1
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie()
+        }
+
+        // Freilos-Zustand und automatischer Platz stehen in der Freilos-Anzeige der Boards.
+        EventChangeMarker.bump(eventId)
+
+        noData
     }
 
     fun getCompetitionPlaceCSV(
@@ -2288,8 +3186,11 @@ object CompetitionExecutionService {
     fun buildPdf(
         data: CompetitionMatchData,
         template: PageTemplate?,
+        // "Amtspapier mitdrucken": false lässt das Vorlagen-Design weg (Druck auf vorgedrucktes
+        // Papier), Format und Rand der Vorlage bleiben - siehe document(pageTemplate, ...).
+        withBackground: Boolean = true,
     ): ByteArray {
-        val doc = document(template) {
+        val doc = document(template, withBackground) {
             page {
                 block(
                     padding = Padding(bottom = 25f),

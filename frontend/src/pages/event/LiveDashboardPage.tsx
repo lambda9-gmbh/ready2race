@@ -5,6 +5,7 @@ import {
     BottomNavigation,
     BottomNavigationAction,
     Box,
+    Chip,
     CircularProgress,
     IconButton,
     Paper,
@@ -15,10 +16,12 @@ import {
 } from '@mui/material'
 import LiveTvIcon from '@mui/icons-material/LiveTv'
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered'
-import {ShortText, Subject} from '@mui/icons-material'
+import {ArrowBack} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {
+    addLiveDashboardTeamNote,
+    deleteLiveDashboardTeamNote,
     finishLiveDashboardMatch,
     getEventTimingConfig,
     getLiveDashboard,
@@ -33,8 +36,24 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {updateLiveDashboardGlobal} from '@authorization/privileges.ts'
 import LiveDashboardTeamDialog from '@components/event/liveDashboard/LiveDashboardTeamDialog.tsx'
+import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
 import RefreshCountdown from '@components/event/liveDashboard/RefreshCountdown.tsx'
+import DashboardSettingsPopover from '@components/event/liveDashboard/DashboardSettingsPopover.tsx'
 import {useShortLabels} from '@components/event/shortLabels.ts'
+import {
+    DASHBOARD_COMPACT_KEY,
+    DASHBOARD_SHOW_CHECKS_KEY,
+    DASHBOARD_FOLLOW_CURRENT_KEY,
+    DASHBOARD_FONT_SCALE_KEY,
+    DASHBOARD_HIDE_FINISHED_KEY,
+    DASHBOARD_NOTE_PREVIEW_KEY,
+    DASHBOARD_ONLY_TODAY_KEY,
+    DASHBOARD_SHOW_CREW_KEY,
+    dashboardCompetitionFilterKey,
+    useDeviceChoice,
+    useDeviceFlag,
+    useDeviceList,
+} from '@components/event/deviceSettings.ts'
 import {
     LiveColumn,
     LiveDashboardActions,
@@ -42,12 +61,24 @@ import {
 } from '@components/event/liveDashboard/LiveDashboardColumns.tsx'
 import {
     buildLiveDashboardTimeline,
+    centeredScrollTop,
+    DASHBOARD_FONT_SCALES,
+    dashboardCompetitionOptions,
     dashboardCrew,
+    dashboardEntryDomId,
     dashboardEntryDomIdCandidates,
     dashboardScope,
+    dashboardTypographySizes,
+    filterMatchesByCompetitions,
+    filterPendingSlotsByCompetitions,
+    filterTimelineEntriesForDay,
+    FOLLOW_MANUAL_IDLE_MS,
+    followTargetMatchId,
+    hideFinishedTimelineEntries,
     LiveDashboardTab,
     liveMatches,
     nextUpEntry,
+    scrollContainerOf,
     storedPollInterval,
 } from '@components/event/liveDashboard/common.ts'
 import ScheduleTimelineIndicator from '@components/event/schedule/ScheduleTimelineIndicator.tsx'
@@ -88,6 +119,36 @@ const useCrewRequested = (): boolean => {
     return requested
 }
 
+/**
+ * Fährt eine Karte sanft in die Mitte ihrer Spalte — geteilt zwischen dem Klick auf den
+ * Zeitstrahl und „Folge dem aktuellen Lauf". Breit scrollt gezielt nur die Spalte (siehe
+ * scrollContainerOf in common.ts und den Scroll-Sprung-Fix dort), schmal ist das Fenster der
+ * einzige Scroller und scrollIntoView tut genau das Gewollte.
+ */
+const centerCardInColumn = (el: HTMLElement): void => {
+    const container = scrollContainerOf(el)
+    if (container) {
+        // Nur die Spalte scrollen: scrollIntoView nähme alle scrollbaren Vorfahren mit, also
+        // auch das Fenster — Kopfzeile und Zeitstrahl rutschten dabei aus dem Bild (der
+        // gemeldete Sprung des Zeitplans nach dem Klick). Deshalb die Mitte selbst rechnen
+        // und gezielt einen einzigen Container fahren.
+        const elementTop =
+            el.getBoundingClientRect().top -
+            container.getBoundingClientRect().top +
+            container.scrollTop
+        container.scrollTo({
+            top: centeredScrollTop(
+                elementTop,
+                el.offsetHeight,
+                container.clientHeight,
+                container.scrollHeight,
+            ),
+            behavior: 'smooth',
+        })
+    } else {
+        el.scrollIntoView({behavior: 'smooth', block: 'center'})
+    }
+}
 export type LiveDashboardPageProps = {
     eventId: string
     /**
@@ -98,9 +159,16 @@ export type LiveDashboardPageProps = {
      * der Spezifikation stützt sich ausdrücklich auf den Betrieb am Steg.
      */
     cacheReads?: boolean
+    /**
+     * Zeigt links in der Kopfzeile einen Zurück-Pfeil. Nur die Helfer-App setzt das: in der
+     * installierten PWA (standalone, ohne Browser-Leiste) fehlt der Browser-Zurück-Knopf,
+     * ohne den Pfeil säße man im Dashboard fest (beobachtet am 10.08.2026). Ohne `onBack`
+     * (Verwaltungsoberfläche) bleibt die Kopfzeile unverändert.
+     */
+    onBack?: () => void
 }
 
-const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps) => {
+const LiveDashboardPage = ({eventId, cacheReads = false, onBack}: LiveDashboardPageProps) => {
     const {t} = useTranslation()
     useDocumentTitle(t('event.liveDashboard.title'))
     const feedback = useFeedback()
@@ -117,6 +185,25 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
     const [pollIntervalMs, setPollIntervalMs] = useState(storedPollInterval)
     // Geteilt mit dem Zeitplan-Tab (siehe shortLabels.ts); hier startet es in der Kurzform.
     const [shortLabels, toggleShortLabels] = useShortLabels(true)
+    // Geräte-lokal (siehe deviceSettings.ts): dichtere Karten und kleinere Schrift — eine dezente
+    // CSS-Stufe für kleine Bildschirme am Steg, umgeschaltet im Einstellungs-Popover.
+    const [compact, setCompact] = useDeviceFlag(DASHBOARD_COMPACT_KEY)
+    // Die Fokus-Einstellungen (12.08.2026): dieselben Schlüssel schreibt das Popover, das
+    // Fenster-Ereignis der deviceSettings hält beide Seiten synchron. Voreinstellungen wie dort.
+    const [competitionFilter] = useDeviceList(dashboardCompetitionFilterKey(eventId))
+    const [onlyToday] = useDeviceFlag(DASHBOARD_ONLY_TODAY_KEY, true)
+    const [hideFinished] = useDeviceFlag(DASHBOARD_HIDE_FINISHED_KEY, false)
+    const [followCurrent] = useDeviceFlag(DASHBOARD_FOLLOW_CURRENT_KEY, false)
+    // Der Detailgrad der Bootszeilen — als Bündel an die Karten durchgereicht.
+    const [notePreview] = useDeviceFlag(DASHBOARD_NOTE_PREVIEW_KEY, true)
+    const [showCrewDetails] = useDeviceFlag(DASHBOARD_SHOW_CREW_KEY, true)
+    const [showChecks] = useDeviceFlag(DASHBOARD_SHOW_CHECKS_KEY, true)
+    const detail = {notePreview, showCrew: showCrewDetails, showChecks}
+    // Lesbarkeit: dreistufige Schriftgröße NEBEN dem Kompaktmodus — beide landen im selben
+    // Karten-Wrapper und verrechnen sich dort (siehe dashboardTypographySizes).
+    const [fontScale] = useDeviceChoice(DASHBOARD_FONT_SCALE_KEY, 'normal', DASHBOARD_FONT_SCALES)
+    // Das Popover wird von außen gesteuert, damit auch der Filter-Chip es öffnen kann.
+    const [settingsOpen, setSettingsOpen] = useState(false)
     const cacheUserId = user.loggedIn ? user.id : ''
     // Einmal lesen, dreifach verwenden: Der Startwert aller drei Zustände kommt aus demselben
     // Eintrag, und der useState-Initialisierer läuft nur beim ersten Rendern.
@@ -249,29 +336,49 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
         timingConfigData.data?.autoPull === true &&
         timingConfigData.data.timingSystem === 'RACECLOCKER'
 
+    // Der Wettkampf-Filter (leer = alle) wirkt auf BEIDE Spalten und auf den Zeitstrahl — was er
+    // versteckt, soll nirgends anklickbar bleiben. Die Optionen fürs Popover kommen dagegen aus
+    // den UNgefilterten Läufen, sonst ließe sich eine getroffene Wahl nie wieder erweitern.
+    const allMatches = dashboard?.matches ?? []
+    const allPendingSlots = dashboard?.pendingSlots ?? []
+    const filteredMatches = filterMatchesByCompetitions(allMatches, competitionFilter)
+    const pendingSlots = filterPendingSlotsByCompetitions(
+        allPendingSlots,
+        allMatches,
+        competitionFilter,
+    )
+    const competitionOptions = dashboardCompetitionOptions(
+        allMatches,
+        shortLabels ? 'short' : 'full',
+    )
+
     // Der Live-Tab zeigt, was jetzt eine Handlung verlangt: die laufenden Läufe UND die, die
     // vollständig gewertet auf ihr Beenden warten (siehe liveMatches / selectForScope im Backend).
-    const currentMatches = liveMatches(dashboard?.matches ?? [])
-    const nextUpcoming = dashboard?.matches.find(m => m.state === 'UPCOMING')
-    const scheduledMatches = dashboard?.matches.filter(m => m.state !== 'UNSCHEDULED') ?? []
-    const unscheduledMatches = dashboard?.matches.filter(m => m.state === 'UNSCHEDULED') ?? []
-    const pendingSlots = dashboard?.pendingSlots ?? []
+    const currentMatches = liveMatches(filteredMatches)
+    const nextUpcoming = filteredMatches.find(m => m.state === 'UPCOMING')
+    const scheduledMatches = filteredMatches.filter(m => m.state !== 'UNSCHEDULED')
+    const unscheduledMatches = filteredMatches.filter(m => m.state === 'UNSCHEDULED')
     // "Als Nächstes" ist das chronologisch nächste Ding überhaupt — das kann auch ein noch nicht
     // gesetzter Slot vor dem nächsten echten Lauf sein, solange dessen Startzeit nicht längst
     // vorbei ist (siehe nextUpEntry).
     const nextEntry = nextUpEntry(nextUpcoming, pendingSlots, now)
-    // Zeitplan-Ansicht: geplante/laufende/beendete Läufe und wartende Slots gemeinsam nach
-    // Startzeit, damit ein Platzhalter genau zwischen seinen Nachbarn auftaucht.
-    const scheduledTimeline = buildLiveDashboardTimeline(scheduledMatches, pendingSlots)
 
     // Kompakter "wo stehen wir gerade"-Balken über den Listen: ein Tag, ausgewählt über den
     // ersten laufenden bzw. nächsten anstehenden Eintrag (Fallback: heute).
-    const indicatorDay = resolveDashboardDay(dashboard?.matches ?? [], pendingSlots, now)
-    const indicatorEntries = dashboardEntriesForDay(
-        dashboard?.matches ?? [],
-        pendingSlots,
-        indicatorDay,
-    )
+    const indicatorDay = resolveDashboardDay(filteredMatches, pendingSlots, now)
+    const indicatorEntries = dashboardEntriesForDay(filteredMatches, pendingSlots, indicatorDay)
+
+    // Zeitplan-Ansicht: geplante/laufende/beendete Läufe und wartende Slots gemeinsam nach
+    // Startzeit, damit ein Platzhalter genau zwischen seinen Nachbarn auftaucht. Darüber die
+    // beiden Fokus-Filter der Läufe-Spalte: „Nur heute" beschneidet auf den Tag des
+    // Zeitstrahl-Indikators (nicht wörtlich auf heute — am Vorabend einer Regatta wäre die
+    // Spalte sonst leer, obwohl der Indikator schon den Renntag zeigt), „Beendete ausblenden"
+    // behält die zwei jüngsten als Kontext.
+    const fullTimeline = buildLiveDashboardTimeline(scheduledMatches, pendingSlots)
+    const dayTimeline = onlyToday
+        ? filterTimelineEntriesForDay(fullTimeline, indicatorDay)
+        : fullTimeline
+    const scheduledTimeline = hideFinished ? hideFinishedTimelineEntries(dayTimeline) : dayTimeline
 
     const scrollToTimelineEntry = (id: string) => {
         const el = dashboardEntryDomIdCandidates(id)
@@ -280,12 +387,44 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
         if (!el) {
             return
         }
-        el.scrollIntoView({behavior: 'smooth', block: 'center'})
+        centerCardInColumn(el)
         el.animate(
             [{backgroundColor: theme.palette.action.selected}, {backgroundColor: 'transparent'}],
             {duration: 1200, easing: 'ease-out'},
         )
     }
+
+    // --- „Folge dem aktuellen Lauf" (12.08.2026) -----------------------------------------------
+    // Exakt das Muster der Tagesprogramm-Kachel (BoardMatchListElement): sanft nachführen, aber
+    // 30 Sekunden Ruhe nach jeder Hand-Interaktion — wer gerade selbst liest, soll nicht vom
+    // nächsten Datenupdate weggezogen werden. Interaktion wird über Eingabe-Events erkannt, nicht
+    // über das scroll-Event, das auch unser eigenes programmatisches Scrollen feuern würde.
+    const lastManualScrollRef = useRef(0)
+    const markManualScroll = () => {
+        lastManualScrollRef.current = Date.now()
+    }
+    // Gefolgt wird dem, was in der Läufe-Spalte tatsächlich steht (nach allen Filtern):
+    // der laufende Lauf, sonst der nächste anstehende.
+    const followTargetId = followCurrent
+        ? followTargetMatchId(scheduledTimeline.flatMap(e => (e.kind === 'match' ? [e.match] : [])))
+        : null
+    useEffect(() => {
+        if (followTargetId == null) {
+            return
+        }
+        if (Date.now() - lastManualScrollRef.current < FOLLOW_MANUAL_IDLE_MS) {
+            return
+        }
+        // Nur die Läufe-Spalte: breit ist die Live-Spalte ohnehin dauerhaft im Blick, schmal
+        // existiert die Karte nur im Läufe-Tab — fehlt sie (Live-Tab), passiert schlicht nichts.
+        const el = document.getElementById(dashboardEntryDomId(followTargetId, 'list'))
+        if (el) {
+            centerCardInColumn(el)
+        }
+        // lastUpdated gehört bewusst in die Abhängigkeiten: „bei Datenupdates" nachführen heißt,
+        // auch nach einem Update ohne Zielwechsel wieder zu zentrieren (etwa wenn oberhalb Karten
+        // gewachsen sind) — die 30-Sekunden-Pause schützt die lesende Hand.
+    }, [followTargetId, lastUpdated])
 
     const selectedTeam = selectedTeamRef
         ? (dashboard?.matches
@@ -357,6 +496,32 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
         dashboardData.reload()
     }
 
+    /**
+     * Notiz an ein Boot hängen - Kommunikation zwischen Schiedsrichtern, keine Wertung. Der
+     * Dialog wartet auf das Promise, bevor er sein Eingabefeld leert; der anschließende Reload
+     * bringt die neue Notiz über den Poll in team.notes.
+     */
+    const handleAddNote = async (matchId: string, teamId: string, note: string) => {
+        const {error} = await addLiveDashboardTeamNote({
+            path: {eventId, matchId, teamId},
+            body: {note},
+        })
+        if (error) {
+            feedback.error(t('event.liveDashboard.notes.error'))
+        }
+        dashboardData.reload()
+    }
+
+    const handleDeleteNote = async (matchId: string, teamId: string, noteId: string) => {
+        const {error} = await deleteLiveDashboardTeamNote({
+            path: {eventId, matchId, teamId, noteId},
+        })
+        if (error) {
+            feedback.error(t('event.liveDashboard.notes.deleteError'))
+        }
+        dashboardData.reload()
+    }
+
     const handleSkipSlot = (slotId: string, label: string, time: string) => {
         confirmAction(
             async () => {
@@ -374,6 +539,8 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
     }
 
     const staleState = describeStale(lastUpdated?.getTime() ?? null, stale, now.getTime())
+    // Null im Normalzustand — der Wrapper unten spannt dann gar keine CSS-Regeln auf.
+    const typographySizes = dashboardTypographySizes(compact, fontScale)
 
     const actions: LiveDashboardActions = {
         onTeamClick: handleTeamClick,
@@ -397,17 +564,23 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
             loaded={dashboard !== null}
             actions={actions}
             shortLabels={shortLabels}
+            detail={detail}
         />
     )
     const matchListColumn = (
         <MatchListColumn
             scheduledTimeline={scheduledTimeline}
             unscheduledMatches={unscheduledMatches}
+            // Bewusst gegen die UNgefilterten Daten: „Keine Läufe vorhanden" ist eine Aussage
+            // über die Veranstaltung — eine leere Ansicht wegen Filtern erklärt der Chip oben.
             empty={
-                dashboard !== null && dashboard.matches.length === 0 && pendingSlots.length === 0
+                dashboard !== null &&
+                dashboard.matches.length === 0 &&
+                allPendingSlots.length === 0
             }
             actions={actions}
             shortLabels={shortLabels}
+            detail={detail}
         />
     )
 
@@ -432,43 +605,75 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                     justifyContent="space-between"
                     alignItems="baseline"
                     spacing={1}>
-                    <Typography
-                        variant="subtitle1"
-                        fontWeight={700}
-                        sx={{minWidth: 0, lineHeight: 1.2}}>
-                        {t('event.liveDashboard.title')}
-                    </Typography>
+                    {/* Ohne onBack bleibt die Kopfzeile exakt wie bisher — der Wrapper existiert
+                        nur, damit Pfeil und Titel zusammen als ein Flex-Kind links stehen. */}
+                    {onBack ? (
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={0.5}
+                            sx={{minWidth: 0}}>
+                            <IconButton
+                                size="small"
+                                onClick={onBack}
+                                aria-label={t('common.back')}
+                                sx={{flexShrink: 0}}>
+                                <ArrowBack fontSize="small" />
+                            </IconButton>
+                            <Typography
+                                variant="subtitle1"
+                                fontWeight={700}
+                                sx={{minWidth: 0, lineHeight: 1.2}}>
+                                {t('event.liveDashboard.title')}
+                            </Typography>
+                        </Stack>
+                    ) : (
+                        <Typography
+                            variant="subtitle1"
+                            fontWeight={700}
+                            sx={{minWidth: 0, lineHeight: 1.2}}>
+                            {t('event.liveDashboard.title')}
+                        </Typography>
+                    )}
                     <Stack direction="row" spacing={0.5} alignItems="center" flexShrink={0}>
-                        {/* Dieselbe Wahl wie am Spaltenkopf "Slot" im Zeitplan-Tab: wer die Rennen
-                            am Kürzel liest, liest sie hier genauso. */}
-                        <IconButton
-                            size="small"
-                            onClick={toggleShortLabels}
-                            color={shortLabels ? 'primary' : 'default'}
-                            aria-pressed={shortLabels}
-                            title={t(
-                                shortLabels
-                                    ? 'event.schedule.showFullNames'
-                                    : 'event.schedule.showShortNames',
-                            )}>
-                            {shortLabels ? (
-                                <Subject fontSize="small" />
-                            ) : (
-                                <ShortText fontSize="small" />
-                            )}
-                        </IconButton>
+                        {/* Die gefilterte Ansicht muss erkennbar sein, damit am Renntag niemand
+                            Läufe „verliert": Solange der Wettkampf-Filter greift, steht das hier
+                            als Chip in der Kopfzeile — der Klick führt direkt ins Popover. */}
+                        {competitionFilter.length > 0 && (
+                            <Chip
+                                size="small"
+                                color="info"
+                                variant="outlined"
+                                label={t('event.liveDashboard.settings.competitionFilter.chip', {
+                                    count: competitionFilter.length,
+                                })}
+                                onClick={() => setSettingsOpen(true)}
+                            />
+                        )}
                         {lastUpdated && (
                             <Typography variant="caption" noWrap sx={{color: 'grey.700'}}>
                                 {format(lastUpdated, t('format.timeWithSeconds'))}
                             </Typography>
                         )}
-                        <RefreshCountdown
-                            intervalMs={pollIntervalMs}
-                            lastUpdated={lastUpdated}
-                            onIntervalChange={setPollIntervalMs}
+                        {/* Nur noch Anzeige — den Takt wählt das Einstellungs-Popover daneben. */}
+                        <RefreshCountdown intervalMs={pollIntervalMs} lastUpdated={lastUpdated} />
+                        <DashboardSettingsPopover
+                            eventId={eventId}
+                            competitionOptions={competitionOptions}
+                            open={settingsOpen}
+                            onOpenChange={setSettingsOpen}
+                            shortLabels={shortLabels}
+                            toggleShortLabels={toggleShortLabels}
+                            pollIntervalMs={pollIntervalMs}
+                            onPollIntervalChange={setPollIntervalMs}
+                            compact={compact}
+                            setCompact={setCompact}
                         />
                     </Stack>
                 </Stack>
+                {/* Der veranstaltungsweite Hinweis (z.B. Wetterwarnung) — er hängt am selben
+                    Poll wie das Dashboard und erscheint damit ohne Neuladen. */}
+                <EventNoticeBanner notice={dashboard?.notice} />
                 {staleState.show && dashboard && (
                     <Alert severity="warning">
                         {staleState.fromCache && lastUpdated
@@ -491,70 +696,108 @@ const LiveDashboardPage = ({eventId, cacheReads = false}: LiveDashboardPageProps
                         entries={indicatorEntries}
                         now={now}
                         onEntryClick={scrollToTimelineEntry}
+                        // Kompakt: über den Karten ist der Zeitstrahl Orientierung, nicht
+                        // Hauptfläche — flachere Spuren, keine Block-Kürzel (siehe Props).
+                        density={'compact'}
                     />
                 )}
-                {wide ? (
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-                            gap: 2,
-                            alignItems: 'start',
-                        }}>
-                        {/* Der laufende Lauf bleibt im Blick, während nebenan durch die
-                            Gesamtliste gescrollt wird. */}
-                        <Stack
-                            spacing={2}
+                {/* Kompakt und Schriftgröße sind eine reine CSS-Stufe über den Karten: Kompakt
+                    verdichtet das Karten-Padding, und die Schriftgrößen der drei Typography-
+                    Varianten kommen fertig verrechnet aus dashboardTypographySizes — Kompakt
+                    liefert die kleineren Basen, die Schriftstufe den Faktor darauf, „kompakt +
+                    groß" funktioniert also zusammen statt sich auszuschließen. Die Karten selbst
+                    wissen davon nichts — ihre Zeilenlogik (Container-Queries, Spalten) bleibt
+                    unangetastet.
+                    Die drei Eingabe-Events pausieren das automatische Nachführen („Folge dem
+                    aktuellen Lauf") — jedes Wischen, Scrollen oder Antippen in den Listen zählt
+                    als „hier liest gerade jemand selbst". */}
+                <Box
+                    onWheel={markManualScroll}
+                    onTouchStart={markManualScroll}
+                    onPointerDown={markManualScroll}
+                    sx={{
+                        ...(compact
+                            ? {'& .MuiCardContent-root': {p: 0.75, '&:last-child': {pb: 0.5}}}
+                            : undefined),
+                        ...(typographySizes
+                            ? {
+                                  '& .MuiTypography-subtitle1': {
+                                      fontSize: typographySizes.subtitle1,
+                                  },
+                                  '& .MuiTypography-body2': {fontSize: typographySizes.body2},
+                                  '& .MuiTypography-caption': {fontSize: typographySizes.caption},
+                              }
+                            : undefined),
+                    }}>
+                    {wide ? (
+                        <Box
                             sx={{
-                                minWidth: 0,
-                                position: 'sticky',
-                                top: 16,
-                                maxHeight: 'calc(100vh - 32px)',
-                                overflowY: 'auto',
+                                display: 'grid',
+                                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+                                gap: 2,
+                                alignItems: 'start',
                             }}>
-                            <Typography variant="subtitle1" fontWeight={700}>
-                                {t('event.liveDashboard.tabs.live')}
-                            </Typography>
-                            {liveColumn}
-                        </Stack>
-                        {/* „Läufe" scrollt in sich selbst, statt die ganze Seite in die Länge zu
+                            {/* Der laufende Lauf bleibt im Blick, während nebenan durch die
+                            Gesamtliste gescrollt wird. */}
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    minWidth: 0,
+                                    position: 'sticky',
+                                    top: 16,
+                                    maxHeight: 'calc(100vh - 32px)',
+                                    overflowY: 'auto',
+                                }}>
+                                <Typography variant="subtitle1" fontWeight={700}>
+                                    {t('event.liveDashboard.tabs.live')}
+                                </Typography>
+                                {liveColumn}
+                            </Stack>
+                            {/* „Läufe" scrollt in sich selbst, statt die ganze Seite in die Länge zu
                             ziehen (Rückmeldung vom 10.08.2026) - der Überlauf greift erst, wenn die
                             Liste höher ist als das Fenster, kurze Listen stehen also ruhig. Die
                             Kopfzeile bleibt beim Scrollen oben. */}
-                        <Stack
-                            spacing={2}
-                            sx={{
-                                minWidth: 0,
-                                position: 'sticky',
-                                top: 16,
-                                maxHeight: 'calc(100vh - 32px)',
-                                overflowY: 'auto',
-                            }}>
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight={700}
+                            <Stack
+                                spacing={2}
                                 sx={{
+                                    minWidth: 0,
                                     position: 'sticky',
-                                    top: 0,
-                                    bgcolor: 'background.default',
-                                    zIndex: 1,
+                                    top: 16,
+                                    maxHeight: 'calc(100vh - 32px)',
+                                    overflowY: 'auto',
                                 }}>
-                                {t('event.liveDashboard.tabs.matches')}
-                            </Typography>
-                            {matchListColumn}
-                        </Stack>
-                    </Box>
-                ) : tab === 'live' ? (
-                    liveColumn
-                ) : (
-                    matchListColumn
-                )}
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight={700}
+                                    sx={{
+                                        position: 'sticky',
+                                        top: 0,
+                                        bgcolor: 'background.default',
+                                        zIndex: 1,
+                                    }}>
+                                    {t('event.liveDashboard.tabs.matches')}
+                                </Typography>
+                                {matchListColumn}
+                            </Stack>
+                        </Box>
+                    ) : tab === 'live' ? (
+                        liveColumn
+                    ) : (
+                        matchListColumn
+                    )}
+                </Box>
             </Stack>
             <LiveDashboardTeamDialog
                 team={selectedTeam}
                 matchId={selectedTeamRef?.matchId ?? null}
                 eventId={eventId}
                 onClose={() => setSelectedTeamRef(null)}
+                // Dasselbe Muster wie die fünf Schreibaktionen oben: bei veraltetem Stand
+                // entfallen die Handler, und der Dialog zeigt die Notizen nur noch an.
+                onAddNote={mayControl && !staleState.actionsLocked ? handleAddNote : undefined}
+                onDeleteNote={
+                    mayControl && !staleState.actionsLocked ? handleDeleteNote : undefined
+                }
             />
             {/* Nur schmal: breit stehen beide Ansichten nebeneinander, eine über die ganze
                 Fensterbreite geklebte Telefonleiste hätte dort nichts zu schalten. */}

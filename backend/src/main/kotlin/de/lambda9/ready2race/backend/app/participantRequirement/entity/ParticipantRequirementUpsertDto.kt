@@ -9,6 +9,9 @@ import de.lambda9.ready2race.backend.validation.validators.StringValidators.notB
 data class ParticipantRequirementUpsertDto(
     val name: String,
     val description: String?,
+    // Athletengerechter, öffentlicher Text für "Mein Event" — getrennt von der internen
+    // Arbeitsanweisung in description, siehe Migration V202608111600.
+    val publicNote: String?,
     val optional: Boolean?,
     val checkInApp: Boolean?,
     val publiclyVisible: Boolean?,
@@ -33,6 +36,7 @@ data class ParticipantRequirementUpsertDto(
             get() = ParticipantRequirementUpsertDto(
                 name = "Name",
                 description = "Description",
+                publicNote = "Public note",
                 optional = false,
                 checkInApp = false,
                 publiclyVisible = false,

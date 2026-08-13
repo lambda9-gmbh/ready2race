@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.liveDashboard.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.LiveDashboardScope
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.MatchTeamNoteRequest
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.app.liveDashboard.entity.UpdateCheckSeverityRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -34,15 +35,49 @@ fun Route.liveDashboard() {
             }
         }
 
-        // Personendaten einer Mannschaft; bewusst nicht Teil des Polls.
-        get("/match/{matchId}/team/{teamId}") {
-            call.respondComprehension {
-                !authenticate(Privilege.ReadLiveDashboardGlobal)
-                val eventId = !pathParam("eventId", uuid)
-                val matchId = !pathParam("matchId", uuid)
-                val teamId = !pathParam("teamId", uuid)
+        route("/match/{matchId}/team/{teamId}") {
+            // Personendaten einer Mannschaft; bewusst nicht Teil des Polls.
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadLiveDashboardGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val matchId = !pathParam("matchId", uuid)
+                    val teamId = !pathParam("teamId", uuid)
 
-                LiveDashboardService.getTeamDetail(eventId, matchId, teamId)
+                    LiveDashboardService.getTeamDetail(eventId, matchId, teamId)
+                }
+            }
+
+            // Schiedsrichter-Notizen zu diesem Boot - Kommunikation, keine Wertung. Dasselbe
+            // Schreibrecht wie die übrigen Schiedsrichter-Aktionen (/finish, /start, /activation):
+            // Notizen schreibt, wer den Ablauf steuern darf.
+            route("/note") {
+                post {
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.UpdateLiveDashboardGlobal)
+                        val eventId = !pathParam("eventId", uuid)
+                        val matchId = !pathParam("matchId", uuid)
+                        val teamId = !pathParam("teamId", uuid)
+                        val body = !receiveKIO(MatchTeamNoteRequest.example)
+
+                        LiveDashboardService.createTeamNote(eventId, matchId, teamId, user.id!!, body)
+                    }
+                }
+
+                // Löschen dürfen alle mit demselben Schreibrecht, nicht nur die Autorin: die
+                // Notizen sind ein Werkzeug für den internen Austausch, und eine falsche Notiz
+                // muss auch entfernbar sein, wenn die Autorin gerade auf dem Wasser ist.
+                delete("/{noteId}") {
+                    call.respondComprehension {
+                        !authenticate(Privilege.UpdateLiveDashboardGlobal)
+                        val eventId = !pathParam("eventId", uuid)
+                        val matchId = !pathParam("matchId", uuid)
+                        val teamId = !pathParam("teamId", uuid)
+                        val noteId = !pathParam("noteId", uuid)
+
+                        LiveDashboardService.deleteTeamNote(eventId, matchId, teamId, noteId)
+                    }
+                }
             }
         }
 

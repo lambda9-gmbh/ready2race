@@ -95,7 +95,8 @@ object MyEventRepo {
             COMPETITION_MATCH.STARTED_AT,
             COMPETITION_MATCH.FINISHED_AT,
             COMPETITION_MATCH.ACTIVATED_AT,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_PROPERTIES.NAME.`as`("competition_name"),
             COMPETITION_CATEGORY.NAME.`as`("category_name"),
@@ -279,6 +280,64 @@ object MyEventRepo {
             .where(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.EVENT.eq(eventId))
             .and(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT.eq(participantId))
             .fetch { it.value1()!! }
+    }
+
+    /**
+     * Batch-Fassung von [findFulfilledRequirementIds] für die Sprecher-Kachel der Boards: alle
+     * Personen eines Laufs in einer Abfrage statt einer je Person (die Boards fragen im
+     * Sekundentakt ab). Dieselbe Vorsicht wie dort: nur Kennungen, die `note`-Spalte wird gar
+     * nicht erst geladen.
+     */
+    fun findFulfilledRequirementIdsByParticipant(
+        eventId: UUID,
+        participantIds: Collection<UUID>,
+    ): JIO<Map<UUID, Set<UUID>>> = Jooq.query {
+        if (participantIds.isEmpty()) emptyMap()
+        else select(
+            PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT,
+            PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT,
+        )
+            .from(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT)
+            .where(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.EVENT.eq(eventId))
+            .and(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT.`in`(participantIds))
+            .fetch()
+            .groupBy({ it.value1()!! }, { it.value2()!! })
+            .mapValues { (_, ids) -> ids.toSet() }
+    }
+
+    /**
+     * Batch-Fassung von [findNamedParticipantIdsForParticipant] — dieselben beiden Zweige
+     * (Meldungen und Einwechslungen, siehe die Begründung dort), nur für viele Personen auf
+     * einmal und mit der Person im Ergebnis, damit sich die Rollen zuordnen lassen.
+     */
+    fun findNamedParticipantIdsByParticipant(
+        eventId: UUID,
+        participantIds: Collection<UUID>,
+    ): JIO<Map<UUID, Set<UUID>>> = Jooq.query {
+        if (participantIds.isEmpty()) emptyMap()
+        else selectDistinct(
+            COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT,
+            COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT,
+        )
+            .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
+            .join(COMPETITION_REGISTRATION)
+            .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            .join(COMPETITION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.`in`(participantIds))
+            .union(
+                selectDistinct(SUBSTITUTION.PARTICIPANT_IN, SUBSTITUTION.NAMED_PARTICIPANT)
+                    .from(SUBSTITUTION)
+                    .join(COMPETITION_REGISTRATION)
+                    .on(SUBSTITUTION.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                    .join(COMPETITION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION.ID))
+                    .where(COMPETITION.EVENT.eq(eventId))
+                    .and(SUBSTITUTION.PARTICIPANT_IN.`in`(participantIds))
+                    .and(SUBSTITUTION.NAMED_PARTICIPANT.isNotNull)
+            )
+            .fetch()
+            .groupBy({ it.value1()!! }, { it.value2()!! })
+            .mapValues { (_, roles) -> roles.toSet() }
     }
 
     /**

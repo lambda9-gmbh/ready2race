@@ -6,6 +6,7 @@ data class ParticipantRequirementDto(
     val id: UUID,
     val name: String,
     val description: String?,
+    val publicNote: String?,
     val optional: Boolean,
     val checkInApp: Boolean,
     val publiclyVisible: Boolean,

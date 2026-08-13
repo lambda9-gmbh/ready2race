@@ -1,4 +1,6 @@
-import {Box, Card, CardContent, Chip, Stack, Typography} from '@mui/material'
+import {useState} from 'react'
+import {Box, Card, CardContent, Chip, Collapse, Stack, Typography} from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {useTranslation} from 'react-i18next'
 import {
     MyEventMatchDto,
@@ -8,7 +10,9 @@ import {
 } from '@api/types.gen.ts'
 import AthleteBoardPenaltyNote from '@components/event/info/athleteBoard/AthleteBoardPenaltyNote.tsx'
 import {formatClockTime, formatRemaining} from '@components/event/info/athleteBoard/common.ts'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {useServerClock} from '@components/event/info/athleteBoard/useServerClock.ts'
+import {MyEventResultField} from './MyEventResultField.tsx'
 
 type MyEventMatchListProps = {
     matches: MyEventMatchDto[]
@@ -23,7 +27,11 @@ type MyEventMatchListProps = {
     highlightedMatchId?: string
 }
 
-type MyEventResultListProps = {results: MyEventResultDto[]}
+type MyEventResultListProps = {
+    results: MyEventResultDto[]
+    // Für das Nachladen des kompletten Feldes beim Antippen eines Ergebnisses.
+    eventId: string
+}
 
 type MyEventUnscheduledListProps = {registrations: MyEventRegistrationDto[]}
 
@@ -291,8 +299,11 @@ export const MyEventMatchList = ({
     )
 }
 
-export const MyEventResultList = ({results}: MyEventResultListProps) => {
+export const MyEventResultList = ({results, eventId}: MyEventResultListProps) => {
     const {t} = useTranslation()
+    // Genau ein aufgeklapptes Feld: wer das nächste öffnet, schließt das vorige. Das hält
+    // die Liste auf dem Telefon kurz und spart die Abrufe gleichzeitig offener Felder.
+    const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null)
 
     if (results.length === 0) {
         return null
@@ -302,66 +313,94 @@ export const MyEventResultList = ({results}: MyEventResultListProps) => {
         <Stack divider={<Box sx={{height: '1px', bgcolor: 'divider'}} />}>
             {results.map(result => {
                 const subtitle = competitionSubtitle(result)
+                const expanded = expandedMatchId === result.matchId
                 return (
-                    <Stack
-                        key={result.matchId}
-                        direction="row"
-                        gap={1.5}
-                        alignItems="center"
-                        sx={{py: 1}}>
-                        {/* Der Platz trägt die Zeile; ohne Wertung bleibt der Strich stehen,
-                            damit die Zeilen untereinander nicht verspringen. */}
-                        <Typography
-                            sx={{
-                                fontSize: '1.6rem',
-                                fontWeight: 800,
-                                lineHeight: 1,
-                                minWidth: '1.8em',
-                                textAlign: 'center',
-                            }}
-                            color={result.place != null ? 'text.primary' : 'text.secondary'}>
-                            {result.place ?? '–'}
-                        </Typography>
-                        <Box sx={{flex: 1, minWidth: 0}}>
-                            <Typography sx={{fontWeight: 600}}>{result.competitionName}</Typography>
-                            {subtitle && (
-                                <Typography variant="body2" color="text.secondary">
-                                    {subtitle}
-                                </Typography>
-                            )}
-                            {result.startTime && (
-                                <Typography variant="body2" color="text.secondary">
-                                    {formatClockTime(result.startTime)}
-                                </Typography>
-                            )}
-                        </Box>
-                        <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '50%'}}>
+                    <Box key={result.matchId}>
+                        <Stack
+                            direction="row"
+                            gap={1.5}
+                            alignItems="center"
+                            role="button"
+                            aria-expanded={expanded}
+                            onClick={() =>
+                                setExpandedMatchId(current =>
+                                    current === result.matchId ? null : result.matchId,
+                                )
+                            }
+                            sx={{py: 1, cursor: 'pointer'}}>
+                            {/* Der Platz trägt die Zeile; ohne Wertung bleibt der Strich stehen,
+                                damit die Zeilen untereinander nicht verspringen. */}
                             <Typography
-                                sx={{fontWeight: 600, textAlign: 'right'}}
-                                color={
-                                    result.failed || result.deregistered
-                                        ? 'text.secondary'
-                                        : 'text.primary'
-                                }>
-                                {result.deregistered
-                                    ? [
-                                          t('event.info.athleteBoard.deregistered'),
-                                          result.deregisteredReason,
-                                      ]
-                                          .filter(Boolean)
-                                          .join(' · ')
-                                    : result.failed
-                                      ? (result.failedReason ?? t('event.info.athleteBoard.failed'))
-                                      : (result.timeString ?? '')}
+                                sx={{
+                                    fontSize: '1.6rem',
+                                    fontWeight: 800,
+                                    lineHeight: 1,
+                                    minWidth: '1.8em',
+                                    textAlign: 'center',
+                                }}
+                                color={result.place != null ? 'text.primary' : 'text.secondary'}>
+                                {result.place != null ? <PlaceOrdinal place={result.place} /> : '–'}
                             </Typography>
-                            {!result.deregistered && (
-                                <AthleteBoardPenaltyNote
-                                    penaltySeconds={result.penaltySeconds}
-                                    penaltyNote={result.penaltyNote}
-                                />
-                            )}
+                            <Box sx={{flex: 1, minWidth: 0}}>
+                                <Typography sx={{fontWeight: 600}}>
+                                    {result.competitionName}
+                                </Typography>
+                                {subtitle && (
+                                    <Typography variant="body2" color="text.secondary">
+                                        {subtitle}
+                                    </Typography>
+                                )}
+                                {result.startTime && (
+                                    <Typography variant="body2" color="text.secondary">
+                                        {formatClockTime(result.startTime)}
+                                    </Typography>
+                                )}
+                            </Box>
+                            <Stack alignItems="flex-end" sx={{flexShrink: 0, maxWidth: '50%'}}>
+                                <Typography
+                                    sx={{fontWeight: 600, textAlign: 'right'}}
+                                    color={
+                                        result.failed || result.deregistered
+                                            ? 'text.secondary'
+                                            : 'text.primary'
+                                    }>
+                                    {result.deregistered
+                                        ? [
+                                              t('event.info.athleteBoard.deregistered'),
+                                              result.deregisteredReason,
+                                          ]
+                                              .filter(Boolean)
+                                              .join(' · ')
+                                        : result.failed
+                                          ? (result.failedReason ??
+                                            t('event.info.athleteBoard.failed'))
+                                          : (result.timeString ?? '')}
+                                </Typography>
+                                {!result.deregistered && (
+                                    <AthleteBoardPenaltyNote
+                                        penaltySeconds={result.penaltySeconds}
+                                        penaltyNote={result.penaltyNote}
+                                    />
+                                )}
+                            </Stack>
+                            {/* Der gedrehte Pfeil ist die einzige Einladung zum Antippen —
+                                die Zeile selbst sieht aus wie zuvor. */}
+                            <ExpandMoreIcon
+                                fontSize="small"
+                                sx={{
+                                    color: 'text.secondary',
+                                    flexShrink: 0,
+                                    transform: expanded ? 'rotate(180deg)' : 'none',
+                                    transition: 'transform 150ms',
+                                }}
+                            />
                         </Stack>
-                    </Stack>
+                        {/* unmountOnExit: erst das Aufklappen löst den einmaligen Abruf des
+                            Feldes aus, und Zuklappen wirft ihn wieder weg. */}
+                        <Collapse in={expanded} unmountOnExit>
+                            <MyEventResultField eventId={eventId} result={result} />
+                        </Collapse>
+                    </Box>
                 )
             })}
         </Stack>

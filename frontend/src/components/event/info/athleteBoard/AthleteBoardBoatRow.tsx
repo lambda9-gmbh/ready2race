@@ -1,6 +1,7 @@
 import {ReactNode} from 'react'
 import {Box, Stack, Typography} from '@mui/material'
-import {scaled} from './common'
+import {MatchTeamLapDto} from '@api/types.gen'
+import {compactLapLabel, scaled} from './common'
 
 /**
  * Die Bootszeile der Athleten-Anzeige, geteilt von Lauf- und Ergebnis-Karte.
@@ -58,11 +59,20 @@ export const AthleteBoardBoatList = ({rows, children}: AthleteBoardBoatListProps
     )
 }
 
-/** Die Überschrift eines Wertungskategorie-Abschnitts innerhalb der Liste. */
+/**
+ * Die Überschrift eines Wertungskategorie-Abschnitts innerhalb der Liste. Das Polster oben
+ * gibt dem Abschnitt Luft zur vorigen Bootszeile (statt des früheren `alignSelf: 'end'`,
+ * das noch aus den 1fr-verteilten Zeilen stammte und seit den natürlichen Zeilenhöhen
+ * nichts mehr tat) — die Abschnitte wirkten sonst gedrängt (Rückmeldung vom 12.08.2026).
+ */
 export const AthleteBoardSectionHeading = ({children}: {children: ReactNode}) => (
     <Typography
         noWrap
-        sx={{fontSize: scaled('0.8rem', '1.3vw', '1.8rem'), fontWeight: 700, alignSelf: 'end'}}
+        sx={{
+            fontSize: scaled('0.8rem', '1.3vw', '1.8rem'),
+            fontWeight: 700,
+            pt: scaled('0.45rem', '0.7vw', '1rem'),
+        }}
         color="text.secondary">
         {children}
     </Typography>
@@ -144,6 +154,61 @@ export const AthleteBoardBoatStatus = ({label, muted = false}: AthleteBoardBoatS
         {label}
     </Typography>
 )
+
+/**
+ * Die Rundenzeiten rechts am Boot, direkt unter der großen Gesamt-/Zwischenzeit — geteilt
+ * von Lauf-, Ergebnis-Karte und Sprecher-Kachel. Bis zum 12.08.2026 hingen sie als
+ * Crew-Subline links unter den Namen und waren aus Anzeigetafel-Entfernung unlesbar.
+ *
+ * Form: kompakt beschriftete Werte („R1 0:05.0  R2 0:16.9") auf einer Zeile. Jede Zeit
+ * steht in einer Zelle fester Mindestbreite mit Tabellenziffern und rechtsbündigem Wert:
+ * so teilen sich die Boote eines Laufs dieselben Spaltenkanten (die Runden kommen für
+ * alle Boote aus denselben RaceClocker-Marken), und die Zeile bleibt auf der Anzeigetafel
+ * tabellarisch ruhig statt je Boot anders zu flattern. Der Schriftgrad liegt bewusst
+ * zwischen Crew-Subline und Gesamtzeit und läuft über scaled() mit der Dichte mit.
+ *
+ * Ohne Rundenzeiten rendert die Komponente nichts — keine leere Zeile, kein Versatz.
+ */
+export const AthleteBoardLapTimes = ({laps}: {laps?: MatchTeamLapDto[] | null}) =>
+    laps && laps.length > 0 ? (
+        <Stack
+            direction="row"
+            justifyContent="flex-end"
+            flexWrap="wrap"
+            columnGap={scaled('0.5rem', '0.8vw', '1.1rem')}
+            sx={{maxWidth: '100%'}}>
+            {laps.map((lap, index) => (
+                <Stack
+                    key={index}
+                    direction="row"
+                    alignItems="baseline"
+                    gap={scaled('0.15rem', '0.25vw', '0.4rem')}>
+                    <Typography
+                        component="span"
+                        sx={{fontSize: scaled('0.65rem', '1.05vw', '1.4rem'), fontWeight: 600}}
+                        color="text.secondary">
+                        {compactLapLabel(lap.name)}
+                    </Typography>
+                    <Typography
+                        component="span"
+                        sx={{
+                            fontSize: scaled('0.8rem', '1.35vw', '1.9rem'),
+                            fontWeight: 700,
+                            lineHeight: 1.2,
+                            // Tabellenziffern + feste Mindestbreite: gleiche Spaltenkanten
+                            // über alle Boote, solange die Zeiten einstellig in Minuten
+                            // bleiben („0:05.0" = 6 Zeichen); längere Zeiten wachsen
+                            // rechtsbündig nach links, ohne die Nachbarn zu verschieben.
+                            fontVariantNumeric: 'tabular-nums',
+                            minWidth: '5.5ch',
+                            textAlign: 'right',
+                        }}>
+                        {lap.timeString}
+                    </Typography>
+                </Stack>
+            ))}
+        </Stack>
+    ) : null
 
 /** Die kleine Zeile unter der Vereinskette: Crew im Lauf, Startnummer im Ergebnis. */
 export const AthleteBoardBoatSubline = ({children}: {children: ReactNode}) => (

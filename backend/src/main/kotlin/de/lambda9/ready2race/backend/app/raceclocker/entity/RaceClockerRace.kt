@@ -6,21 +6,10 @@ import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import java.util.UUID
 
-/**
- * Wie ein RaceClocker-Rennen gestartet wird.
- *
- * Nur [INDIVIDUAL] hat in RaceClocker einen echten Countdown; [WAVE] ist der Modus, in den ein
- * Rennen selbsttätig kippt, sobald beim Import eine Spalte auf „Lauf" gemappt wird. Der Unterschied
- * steht hier, weil der Bediener in ihm denkt — und weil sich daran künftig prüfen lässt, ob das
- * gewählte Startlisten-Preset zum Rennen passt.
- */
-enum class RaceClockerStartMode { INDIVIDUAL, WAVE }
-
 data class RaceClockerRaceDto(
     val id: UUID,
     val name: String,
     val resultsUrl: String,
-    val startMode: RaceClockerStartMode,
     val capturesLaps: Boolean,
     val position: Int,
 )
@@ -40,7 +29,6 @@ data class RaceClockerRaceRef(
 data class RaceClockerRaceRequest(
     val name: String,
     val resultsUrl: String,
-    val startMode: RaceClockerStartMode,
     val capturesLaps: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
@@ -53,7 +41,6 @@ data class RaceClockerRaceRequest(
             get() = RaceClockerRaceRequest(
                 name = "Kurzstrecke",
                 resultsUrl = "https://www.raceclocker.com/7c854955",
-                startMode = RaceClockerStartMode.WAVE,
                 capturesLaps = false,
             )
     }

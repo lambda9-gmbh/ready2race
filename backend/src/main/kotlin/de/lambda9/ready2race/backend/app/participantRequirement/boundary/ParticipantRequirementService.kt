@@ -196,6 +196,7 @@ object ParticipantRequirementService {
             !ParticipantForEventRepo.getByEvent(eventId, clubId = null, scope = Privilege.Scope.GLOBAL).orDie()
         val roleNames = !OpenRequirementExportRepo.getNamedParticipantNames().orDie()
         val competitions = !OpenRequirementExportRepo.getCompetitionsByParticipant(eventId).orDie()
+        val registrantEmails = !OpenRequirementExportRepo.getRegistrantEmailByClub(eventId).orDie()
 
         val rows = participants.mapNotNull { p ->
             val roles = p.namedParticipantIds?.filterNotNull() ?: emptyList()
@@ -211,6 +212,10 @@ object ParticipantRequirementService {
                 year = p.year,
                 roles = roles.mapNotNull { roleNames[it] },
                 email = p.email,
+                // Der Meldende hängt an clubId - im View `participant_for_event` ist das der
+                // Verein der Meldung (event_registration), auch bei Gaststartern, deren
+                // Anzeigename oben aus externalClubName kommt.
+                registrantEmail = p.clubId?.let { registrantEmails[it] },
                 competitions = competitions[p.id] ?: emptyList(),
                 openRequirements = open.map { it.name },
             )
@@ -330,6 +335,7 @@ object ParticipantRequirementService {
         ParticipantRequirementRepo.update(participantRequirementId) {
             name = request.name
             description = request.description
+            publicNote = request.publicNote
             optional = request.optional ?: false
             checkInApp = request.checkInApp ?: false
             publiclyVisible = request.publiclyVisible ?: false

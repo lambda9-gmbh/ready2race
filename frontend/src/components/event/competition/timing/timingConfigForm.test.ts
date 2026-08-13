@@ -8,11 +8,9 @@ import {
     timingConfigWarnings,
 } from './timingConfigForm.ts'
 
-const qualificationPreset = '11111111-1111-1111-1111-111111111111'
-const timeTrialRace = '55555555-5555-5555-5555-555555555555'
-const shortCourseRace = '66666666-6666-6666-6666-666666666666'
-const roundsPreset = '22222222-2222-2222-2222-222222222222'
+const startlistPreset = '22222222-2222-2222-2222-222222222222'
 const importPreset = '33333333-3333-3333-3333-333333333333'
+const shortCourseRace = '66666666-6666-6666-6666-666666666666'
 
 describe('mapDtoToTimingForm', () => {
     it('setzt ein fehlendes Zeitnahme-System auf NONE', () => {
@@ -30,19 +28,13 @@ describe('mapDtoToTimingForm', () => {
     it('übernimmt die Zeitnahme-Voreinstellung der Veranstaltung', () => {
         const form = mapDtoToTimingForm({
             eventTimingSystem: 'RACECLOCKER',
-            eventStartlistConfigRounds: roundsPreset,
+            eventStartlistConfig: startlistPreset,
         })
 
         expect(form.eventTimingSystem).toBe('RACECLOCKER')
-        expect(form.eventStartlistConfigRounds).toBe(roundsPreset)
+        expect(form.eventStartlistConfig).toBe(startlistPreset)
         // Ein alter Server ohne die Felder darf nicht als „erbt etwas" gelesen werden.
         expect(mapDtoToTimingForm({}).eventTimingSystem).toBe('NONE')
-    })
-
-    it('übernimmt die Qualifikationsrunde des Ablaufs', () => {
-        expect(mapDtoToTimingForm({hasQualificationRound: true}).hasQualificationRound).toBe(true)
-        // Ein alter Server ohne das Feld darf keine Warnung ausloesen.
-        expect(mapDtoToTimingForm({}).hasQualificationRound).toBe(false)
     })
 })
 
@@ -58,39 +50,23 @@ describe('mapTimingFormToRequest', () => {
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'WEBSCORER',
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
+            race: {id: shortCourseRace, label: 'Kurzstrecke'},
         })
 
-        expect(request.raceRounds).toBeNull()
+        expect(request.race).toBeNull()
     })
 
-    it('verwirft das Qualifikations-Preset, wenn nicht RaceClocker gewählt ist', () => {
-        // Webscorer kennt die Zweiteilung nicht und zeigt nur ein Preset-Feld.
-        const request = mapTimingFormToRequest({
-            ...emptyTimingForm,
-            timingSystem: 'WEBSCORER',
-            startlistConfigQualification: {id: qualificationPreset, label: 'Zeitfahren'},
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
-        })
-
-        expect(request.startlistConfigQualification).toBeNull()
-        expect(request.startlistConfigRounds).toBe(roundsPreset)
-    })
-
-    it('übernimmt bei RaceClocker beide Presets und das Import-Preset', () => {
+    it('übernimmt bei RaceClocker Rennen, Preset und Import-Preset', () => {
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            raceQualification: {id: timeTrialRace, label: 'Timetrials'},
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
-            startlistConfigQualification: {id: qualificationPreset, label: 'Zeitfahren'},
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            race: {id: shortCourseRace, label: 'Kurzstrecke'},
+            startlistConfig: {id: startlistPreset, label: 'Läufe'},
             resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
-            hasQualificationRound: true,
         })
 
-        expect(request.startlistConfigQualification).toBe(qualificationPreset)
-        expect(request.startlistConfigRounds).toBe(roundsPreset)
+        expect(request.race).toBe(shortCourseRace)
+        expect(request.startlistConfig).toBe(startlistPreset)
         expect(request.resultImportConfig).toBe(importPreset)
     })
 
@@ -101,14 +77,14 @@ describe('mapTimingFormToRequest', () => {
             ...emptyTimingForm,
             timingSystem: 'NONE',
             eventTimingSystem: 'RACECLOCKER',
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            race: {id: shortCourseRace, label: 'Kurzstrecke'},
+            startlistConfig: {id: startlistPreset, label: 'Läufe'},
             resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
         })
 
         expect(request.timingSystem).toBeNull()
-        expect(request.raceRounds).toBe(shortCourseRace)
-        expect(request.startlistConfigRounds).toBe(roundsPreset)
+        expect(request.race).toBe(shortCourseRace)
+        expect(request.startlistConfig).toBe(startlistPreset)
         expect(request.resultImportConfig).toBe(importPreset)
     })
 
@@ -116,10 +92,10 @@ describe('mapTimingFormToRequest', () => {
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            raceQualification: null,
+            race: null,
         })
 
-        expect(request.raceQualification).toBeNull()
+        expect(request.race).toBeNull()
     })
 
     it('verwirft alle Presets, wenn kein System gesetzt ist', () => {
@@ -129,11 +105,11 @@ describe('mapTimingFormToRequest', () => {
         const request = mapTimingFormToRequest({
             ...emptyTimingForm,
             timingSystem: 'NONE',
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            startlistConfig: {id: startlistPreset, label: 'Läufe'},
             resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
         })
 
-        expect(request.startlistConfigRounds).toBeNull()
+        expect(request.startlistConfig).toBeNull()
         expect(request.resultImportConfig).toBeNull()
     })
 })
@@ -163,16 +139,19 @@ describe('overridesTiming', () => {
         ).toBe(false)
     })
 
-    it('zählt auch eine einzelne eigene Rennen-Anwahl als Abweichung', () => {
-        // Teil-Override: System geerbt, aber ein eigenes Läufe-Rennen. Der Schalter im Tab muss
-        // dafür an sein, sonst würde die Anwahl beim nächsten Speichern still verschwinden.
+    it('zählt eine Rennen-Anwahl NICHT als Abweichung', () => {
+        // Rennen werden seit dem 11.08.2026 immer pro Wettkampf zugewiesen - es gibt keine
+        // Veranstaltungs-Voreinstellung mehr, von der sie abweichen könnten. Zählte die Anwahl hier
+        // als Abweichung, stünde der Schalter bei JEDEM zugeordneten Wettkampf an; wer ihn dann
+        // ausschaltet, löscht die Zuordnung, die am Rennen vergeben wurde (genau der Fehler vom
+        // 11.08.2026 abends: acht Wettkämpfe verloren so ihr Zeitfahren-Rennen).
         expect(
             overridesTiming({
                 ...emptyTimingForm,
                 eventTimingSystem: 'RACECLOCKER',
-                raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
+                race: {id: shortCourseRace, label: 'Kurzstrecke'},
             }),
-        ).toBe(true)
+        ).toBe(false)
     })
 
     it('zählt ein eigenes Dateiformat als Abweichung', () => {
@@ -182,7 +161,7 @@ describe('overridesTiming', () => {
             overridesTiming({
                 ...emptyTimingForm,
                 eventTimingSystem: 'RACECLOCKER',
-                startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+                startlistConfig: {id: startlistPreset, label: 'Läufe'},
             }),
         ).toBe(true)
     })
@@ -193,14 +172,14 @@ describe('timingConfigWarnings', () => {
         expect(timingConfigWarnings(emptyTimingForm)).toEqual([])
     })
 
-    it('mahnt bei RaceClocker das Läufe-Rennen an', () => {
+    it('mahnt bei RaceClocker das Rennen an', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             timingSystem: 'RACECLOCKER',
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            startlistConfig: {id: startlistPreset, label: 'Läufe'},
         })
 
-        expect(warnings).toEqual(['raceRounds'])
+        expect(warnings).toEqual(['race'])
     })
 
     it('mahnt bei geerbtem RaceClocker ohne Anwahl trotzdem an', () => {
@@ -209,10 +188,10 @@ describe('timingConfigWarnings', () => {
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             eventTimingSystem: 'RACECLOCKER',
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
+            startlistConfig: {id: startlistPreset, label: 'Läufe'},
         })
 
-        expect(warnings).toEqual(['raceRounds'])
+        expect(warnings).toEqual(['race'])
     })
 
     it('mahnt einen Startlisten Export nicht an, der von der Veranstaltung kommt', () => {
@@ -220,23 +199,8 @@ describe('timingConfigWarnings', () => {
             ...emptyTimingForm,
             eventTimingSystem: 'RACECLOCKER',
             // Rennen ist Pflicht pro Wettkampf; der Startlisten-Export erbt von der Veranstaltung.
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
-            eventStartlistConfigRounds: roundsPreset,
-        })
-
-        expect(warnings).toEqual([])
-    })
-
-    it('mahnt bei einer Qualifikation den geerbten Quali-Export nicht an', () => {
-        const warnings = timingConfigWarnings({
-            ...emptyTimingForm,
-            eventTimingSystem: 'RACECLOCKER',
-            // Rennen werden pro Wettkampf zugewiesen, die Formate erbt der Wettkampf.
-            raceQualification: {id: timeTrialRace, label: 'Timetrials'},
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
-            eventStartlistConfigQualification: qualificationPreset,
-            eventStartlistConfigRounds: roundsPreset,
-            hasQualificationRound: true,
+            race: {id: shortCourseRace, label: 'Kurzstrecke'},
+            eventStartlistConfig: startlistPreset,
         })
 
         expect(warnings).toEqual([])
@@ -245,57 +209,28 @@ describe('timingConfigWarnings', () => {
     it('mahnt das Startlisten-Preset an, auch bei Webscorer', () => {
         const warnings = timingConfigWarnings({...emptyTimingForm, timingSystem: 'WEBSCORER'})
 
-        expect(warnings).toEqual(['startlistRounds'])
+        expect(warnings).toEqual(['startlist'])
     })
 
-    it('mahnt das Zeitfahren-Rennen nicht an, solange der Wettkampf keine Qualifikation hat', () => {
-        const warnings = timingConfigWarnings({
-            ...emptyTimingForm,
-            timingSystem: 'RACECLOCKER',
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
-        })
-
-        expect(warnings).toEqual([])
-    })
-
-    it('mahnt bei einer Qualifikationsrunde das Zeitfahren-Rennen und sein Preset an', () => {
-        // Genau der stille Fall: ohne Quali-Preset antwortet der Startlisten-Export mit
-        // STARTLIST_CONFIG_NOT_CONFIGURED, und das faellt sonst erst am Renntag auf.
-        const warnings = timingConfigWarnings({
-            ...emptyTimingForm,
-            timingSystem: 'RACECLOCKER',
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
-            hasQualificationRound: true,
-        })
-
-        expect(warnings).toEqual(['raceQualification', 'startlistQualification'])
-    })
-
-    it('schweigt, wenn die Qualifikation vollstaendig eingerichtet ist', () => {
-        const warnings = timingConfigWarnings({
-            ...emptyTimingForm,
-            timingSystem: 'RACECLOCKER',
-            raceQualification: {id: timeTrialRace, label: 'Timetrials'},
-            raceRounds: {id: shortCourseRace, label: 'Kurzstrecke'},
-            startlistConfigQualification: {id: qualificationPreset, label: 'Zeitfahren'},
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
-            resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
-            hasQualificationRound: true,
-        })
-
-        expect(warnings).toEqual([])
-    })
-
-    it('mahnt die Quali-Felder bei Webscorer nicht an', () => {
-        // Webscorer kennt die Zweiteilung nicht: es hat keine zweite URL, und die Qualifikation
-        // faellt serverseitig auf das Runden-Preset zurueck.
+    it('mahnt das Rennen bei Webscorer nicht an', () => {
+        // Webscorer hat keinen Feed, den man abrufen könnte - ein RaceClocker-Rennen wird dort
+        // nie gebraucht.
         const warnings = timingConfigWarnings({
             ...emptyTimingForm,
             timingSystem: 'WEBSCORER',
-            startlistConfigRounds: {id: roundsPreset, label: 'Läufe'},
-            hasQualificationRound: true,
+            startlistConfig: {id: startlistPreset, label: 'Läufe'},
+        })
+
+        expect(warnings).toEqual([])
+    })
+
+    it('schweigt, wenn alles eingerichtet ist', () => {
+        const warnings = timingConfigWarnings({
+            ...emptyTimingForm,
+            timingSystem: 'RACECLOCKER',
+            race: {id: shortCourseRace, label: 'Kurzstrecke'},
+            startlistConfig: {id: startlistPreset, label: 'Läufe'},
+            resultImportConfig: {id: importPreset, label: 'Webscorer xlsx'},
         })
 
         expect(warnings).toEqual([])

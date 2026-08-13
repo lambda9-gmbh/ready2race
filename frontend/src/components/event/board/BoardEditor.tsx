@@ -15,6 +15,7 @@ import {
     TextField,
     ToggleButton,
     ToggleButtonGroup,
+    Tooltip,
     Typography,
 } from '@mui/material'
 import {
@@ -33,16 +34,18 @@ import {
     BoardElementType,
     BoardListMode,
     BoardRequest,
+    BoardScheduleMode,
     BoardTile,
 } from '@api/types.gen'
-import {gridPlacement} from './boardView'
+import {boardColumns, gridPlacement, hasMatchDetail, rowSizes, tileColor} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
 const MIN_ROTATION_SECONDS = 3
 const MIN_REFRESH_SECONDS = 3
 const MAX_COLUMNS = 4
-const MAX_TILES = 12
+// 16, damit ein volles 4×4-Raster aus 1×1-Kacheln möglich ist (wie BoardLimits.MAX_TILES).
+const MAX_TILES = 16
 const MAX_ROW_SPAN = 3
 
 const defaultElement = (): BoardElement => ({
@@ -67,10 +70,16 @@ const elementForType = (type: BoardElementType): BoardElement => {
     switch (type) {
         case 'MATCH':
             return defaultElement()
+        case 'MATCH_DETAIL':
+            // Sprecher-Kachel: nur die Slot-Wahl — alle Details sind dort immer an.
+            return {type, offset: 0}
         case 'MATCH_LIST':
             return {type, listMode: 'UPCOMING', limit: 10, useShortNames: false}
         case 'CLOCK':
             return {type, showEventName: true}
+        case 'DELAY':
+            // Die Verspätung rechnet der Server — das Element hat keine Optionen.
+            return {type}
         case 'TEXT':
             return {type, text: ''}
         case 'AWARD_CEREMONY':
@@ -82,7 +91,11 @@ const elementForType = (type: BoardElementType): BoardElement => {
 interface BoardEditorProps {
     eventId: string
     board: BoardDto | null
-    onSubmit: (request: BoardRequest) => void
+    /**
+     * [stay] = true speichert, lässt den Editor aber offen — für den Blick auf den
+     * zweiten Bildschirm nebenan; false ist das bisherige Speichern-und-Schließen.
+     */
+    onSubmit: (request: BoardRequest, stay: boolean) => void
     onCancel: () => void
 }
 
@@ -111,7 +124,12 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
         },
     )
 
-    const columns = config.columns ?? 3
+    // Wirksame Spaltenzahl wie auf der Bühne (boardColumns): ein Sprecher-Board rendert
+    // immer 1×1-vollflächig. `config.columns` bleibt dabei bewusst UNVERÄNDERT stehen —
+    // das Rendering ignoriert es ohnehin, und wer die Sprecher-Kachel wieder entfernt,
+    // bekommt seine alte Spaltenwahl zurück.
+    const detailFullscreen = config.tiles.length === 1 && hasMatchDetail(config.tiles)
+    const columns = boardColumns(config)
 
     const changeColumns = (value: number) =>
         setConfig({
@@ -218,7 +236,16 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
     const renderElement = (tileIndex: number, elementIndex: number, element: BoardElement) => (
         <Box
             key={elementIndex}
-            sx={{border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5}}>
+            sx={{
+                // Die Vorschau der Färbung — derselbe Helfer wie auf der Bühne
+                // (tileColor), damit Editor und Anzeige dasselbe zeigen: Fläche als
+                // Hintergrund, Rand als dickere Umrandung anstelle der grauen.
+                border: tileColor(element.borderColor) ? '3px solid' : '1px solid',
+                borderColor: tileColor(element.borderColor) ?? 'divider',
+                borderRadius: 1,
+                p: 1.5,
+                backgroundColor: tileColor(element.backgroundColor),
+            }}>
             <Stack direction="row" alignItems="center" gap={1} sx={{mb: 1}}>
                 <TextField
                     select
@@ -234,10 +261,19 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         )
                     }>
                     <MenuItem value="MATCH">{t('event.boards.element.type.match')}</MenuItem>
+                    {/* Die Sprecher-Kachel gilt nur als einzige Kachel des Boards
+                        (Backend-Validierung) — mit Nachbarn taucht sie gar nicht erst
+                        in der Auswahl auf. */}
+                    {(config.tiles.length === 1 || element.type === 'MATCH_DETAIL') && (
+                        <MenuItem value="MATCH_DETAIL">
+                            {t('event.boards.element.type.matchDetail')}
+                        </MenuItem>
+                    )}
                     <MenuItem value="MATCH_LIST">
                         {t('event.boards.element.type.matchList')}
                     </MenuItem>
                     <MenuItem value="CLOCK">{t('event.boards.element.type.clock')}</MenuItem>
+                    <MenuItem value="DELAY">{t('event.boards.element.type.delay')}</MenuItem>
                     <MenuItem value="TEXT">{t('event.boards.element.type.text')}</MenuItem>
                     <MenuItem value="AWARD_CEREMONY">
                         {t('event.boards.element.type.awardCeremony')}
@@ -316,6 +352,30 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                 </Stack>
             )}
 
+            {element.type === 'MATCH_DETAIL' && (
+                // Nur die Slot-Wahl wie bei MATCH — die Sprecher-Kachel kennt keine
+                // Abschalt-Optionen, sie zeigt immer die volle Detailtiefe.
+                <TextField
+                    select
+                    size="small"
+                    label={t('event.boards.element.offset')}
+                    value={element.offset ?? 0}
+                    onChange={e =>
+                        updateElement(tileIndex, elementIndex, {
+                            ...element,
+                            offset: Number(e.target.value),
+                        })
+                    }>
+                    {Array.from({length: MAX_OFFSET * 2 + 1}, (_, i) => i - MAX_OFFSET).map(
+                        offset => (
+                            <MenuItem key={offset} value={offset}>
+                                {offsetLabel(offset)}
+                            </MenuItem>
+                        ),
+                    )}
+                </TextField>
+            )}
+
             {element.type === 'MATCH_LIST' && (
                 <Stack gap={1}>
                     <TextField
@@ -327,6 +387,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             updateElement(tileIndex, elementIndex, {
                                 ...element,
                                 listMode: e.target.value as BoardListMode,
+                                // scheduleMode gehört nur zum Tagesprogramm — beim Wechsel
+                                // auf eine andere Liste abräumen, sonst lehnt die
+                                // Backend-Validierung die Konfiguration ab.
+                                scheduleMode:
+                                    e.target.value === 'SCHEDULE' ? element.scheduleMode : undefined,
                             })
                         }>
                         <MenuItem value="UPCOMING">
@@ -342,6 +407,29 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             {t('event.boards.element.listMode.schedule')}
                         </MenuItem>
                     </TextField>
+                    {/* Nur das Tagesprogramm hat zwei Zuschnitt-Modi: mitlaufendes Fenster
+                        um „jetzt" (FOLLOW, Default und Alt-Verhalten) oder der ganze Tag,
+                        wobei die Kachel scrollt (FULL). */}
+                    {element.listMode === 'SCHEDULE' && (
+                        <TextField
+                            select
+                            size="small"
+                            label={t('event.boards.element.scheduleMode.label')}
+                            value={element.scheduleMode ?? 'FOLLOW'}
+                            onChange={e =>
+                                updateElement(tileIndex, elementIndex, {
+                                    ...element,
+                                    scheduleMode: e.target.value as BoardScheduleMode,
+                                })
+                            }>
+                            <MenuItem value="FOLLOW">
+                                {t('event.boards.element.scheduleMode.follow')}
+                            </MenuItem>
+                            <MenuItem value="FULL">
+                                {t('event.boards.element.scheduleMode.full')}
+                            </MenuItem>
+                        </TextField>
+                    )}
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -357,23 +445,28 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         }
                         label={t('event.boards.element.useShortNames')}
                     />
-                    <Box>
-                        <Typography variant="caption" color="text.secondary">
-                            {t('event.boards.element.limit')}: {element.limit ?? 10}
-                        </Typography>
-                        <Slider
-                            size="small"
-                            value={element.limit ?? 10}
-                            min={1}
-                            max={20}
-                            onChange={(_, value) =>
-                                updateElement(tileIndex, elementIndex, {
-                                    ...element,
-                                    limit: value as number,
-                                })
-                            }
-                        />
-                    </Box>
+                    {/* Bei FULL wird das Limit ausgeblendet statt genullt: der Wert bleibt
+                        gespeichert (das Backend verlangt ihn ohnehin) und gilt wieder,
+                        sobald jemand auf FOLLOW zurückwechselt. */}
+                    {!(element.listMode === 'SCHEDULE' && element.scheduleMode === 'FULL') && (
+                        <Box>
+                            <Typography variant="caption" color="text.secondary">
+                                {t('event.boards.element.limit')}: {element.limit ?? 10}
+                            </Typography>
+                            <Slider
+                                size="small"
+                                value={element.limit ?? 10}
+                                min={1}
+                                max={20}
+                                onChange={(_, value) =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        limit: value as number,
+                                    })
+                                }
+                            />
+                        </Box>
+                    )}
                 </Stack>
             )}
 
@@ -451,6 +544,73 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     }
                 />
             )}
+
+            {/* Signalfarben der Kachel — für jeden Elementtyp erlaubt (z. B. rot für
+                „Letztes Ergebnis", grün für „Im Rennen"). Fläche und Rand unabhängig
+                voneinander; native Farbwahl in MUI-Verpackung, ohne Farbe bleibt das
+                bisherige Aussehen. */}
+            <Stack gap={0.5} sx={{mt: 1.5}}>
+                <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+                    <TextField
+                        type="color"
+                        size="small"
+                        sx={{width: 110}}
+                        label={t('event.boards.element.backgroundColor')}
+                        // Der native Farbwähler kennt nur die #RRGGBB-Langform; ohne
+                        // gesetzte Farbe zeigt er Weiß, gespeichert wird erst die Wahl.
+                        value={element.backgroundColor ?? '#ffffff'}
+                        onChange={e =>
+                            updateElement(tileIndex, elementIndex, {
+                                ...element,
+                                backgroundColor: e.target.value,
+                            })
+                        }
+                    />
+                    {element.backgroundColor != null && (
+                        <Button
+                            size="small"
+                            onClick={() =>
+                                updateElement(tileIndex, elementIndex, {
+                                    ...element,
+                                    backgroundColor: undefined,
+                                })
+                            }>
+                            {t('event.boards.element.colorRemove')}
+                        </Button>
+                    )}
+                    <TextField
+                        type="color"
+                        size="small"
+                        sx={{width: 110}}
+                        label={t('event.boards.element.borderColor')}
+                        value={element.borderColor ?? '#ffffff'}
+                        onChange={e =>
+                            updateElement(tileIndex, elementIndex, {
+                                ...element,
+                                borderColor: e.target.value,
+                            })
+                        }
+                    />
+                    {element.borderColor != null && (
+                        <Button
+                            size="small"
+                            onClick={() =>
+                                updateElement(tileIndex, elementIndex, {
+                                    ...element,
+                                    borderColor: undefined,
+                                })
+                            }>
+                            {t('event.boards.element.colorRemove')}
+                        </Button>
+                    )}
+                </Stack>
+                {/* Bewusst nur ein Hinweis statt einer Kontrast-Automatik. */}
+                {element.backgroundColor != null && (
+                    <Typography variant="caption" color="text.secondary" component="div">
+                        {t('event.boards.element.backgroundColorHint')}
+                    </Typography>
+                )}
+            </Stack>
         </Box>
     )
 
@@ -470,20 +630,26 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     />
 
                     <Stack direction="row" gap={4} alignItems="center" flexWrap="wrap">
-                        <Box>
-                            <Typography gutterBottom>{t('event.boards.columns')}</Typography>
-                            <ToggleButtonGroup
-                                exclusive
-                                size="small"
-                                value={columns}
-                                onChange={(_, value) => value && changeColumns(value as number)}>
-                                {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
-                                    <ToggleButton key={n} value={n}>
-                                        {n}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
-                        </Box>
+                        {/* Solange die Sprecher-Kachel das Board füllt, ist die Spaltenwahl
+                            wirkungslos — deaktiviert mit Erklärung statt stiller Falle
+                            (3 Spalten + Sprecher-Kachel quetschte die Kachel in eine Spalte). */}
+                        <Tooltip
+                            title={detailFullscreen ? t('event.boards.matchDetailFullscreen') : ''}>
+                            <Box>
+                                <Typography gutterBottom>{t('event.boards.columns')}</Typography>
+                                <ToggleButtonGroup
+                                    exclusive
+                                    size="small"
+                                    value={columns}
+                                    onChange={(_, value) => value && changeColumns(value as number)}>
+                                    {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
+                                        <ToggleButton key={n} value={n} disabled={detailFullscreen}>
+                                            {n}
+                                        </ToggleButton>
+                                    ))}
+                                </ToggleButtonGroup>
+                            </Box>
+                        </Tooltip>
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -513,15 +679,22 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                     </Stack>
 
                     {/* Die Kacheln im selben Raster wie auf dem Bildschirm — der Editor
-                        ist damit zugleich die Vorschau der Anordnung. */}
+                        ist damit zugleich die Vorschau der Anordnung. Wie die Bühne gilt
+                        das Raster auf jeder Viewportbreite, ohne Breakpoint-Fallback. */}
                     <Box
                         sx={{
                             display: 'grid',
                             gap: 2,
-                            gridTemplateColumns: {
-                                xs: '1fr',
-                                md: `repeat(${columns}, minmax(0, 1fr))`,
-                            },
+                            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                            // Dieselbe Zeilen-Einstufung wie die Bühne (rowSizes): kompakte
+                            // Zeilen 'auto', Inhalts-Zeilen anteilig. Der Editor hat keine
+                            // feste Höhe — die fr-Zeilen gleichen sich hier nur untereinander
+                            // auf die höchste Karte an; als Untergrenze min-content statt 0,
+                            // denn die Karten sind Formulare und dürfen nie unter ihren
+                            // Inhalt schrumpfen (die Bühnen-Zellen scrollen stattdessen innen).
+                            gridTemplateRows: rowSizes(config.tiles, placement.positions, placement.rows)
+                                .map(size => (size === '1fr' ? 'minmax(min-content, 1fr)' : 'auto'))
+                                .join(' '),
                         }}>
                         {config.tiles.map((tile, tileIndex) => {
                             const position = placement.positions[tileIndex]
@@ -531,14 +704,8 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                     variant="outlined"
                                     sx={{
                                         p: 1.5,
-                                        gridColumn: {
-                                            xs: 'auto',
-                                            md: `${position.column} / span ${position.colSpan}`,
-                                        },
-                                        gridRow: {
-                                            xs: 'auto',
-                                            md: `${position.row} / span ${position.rowSpan}`,
-                                        },
+                                        gridColumn: `${position.column} / span ${position.colSpan}`,
+                                        gridRow: `${position.row} / span ${position.rowSpan}`,
                                     }}>
                                     <Stack gap={1.5}>
                                         <Stack direction="row" alignItems="center" gap={1}>
@@ -567,49 +734,62 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                             </IconButton>
                                         </Stack>
 
-                                        <Stack direction="row" gap={1}>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                sx={{flex: 1}}
-                                                label={t('event.boards.tile.width')}
-                                                value={Math.min(tile.colSpan ?? 1, columns)}
-                                                onChange={e =>
-                                                    updateTile(tileIndex, {
-                                                        ...tile,
-                                                        colSpan: Number(e.target.value),
-                                                    })
-                                                }>
-                                                {Array.from({length: columns}, (_, i) => i + 1).map(
-                                                    n => (
+                                        {/* Spannweiten sind auf einem Sprecher-Board ebenso
+                                            wirkungslos wie die Spaltenwahl — gleiche Sperre,
+                                            gleiche Erklärung. */}
+                                        <Tooltip
+                                            title={
+                                                detailFullscreen
+                                                    ? t('event.boards.matchDetailFullscreen')
+                                                    : ''
+                                            }>
+                                            <Stack direction="row" gap={1}>
+                                                <TextField
+                                                    select
+                                                    size="small"
+                                                    sx={{flex: 1}}
+                                                    disabled={detailFullscreen}
+                                                    label={t('event.boards.tile.width')}
+                                                    value={Math.min(tile.colSpan ?? 1, columns)}
+                                                    onChange={e =>
+                                                        updateTile(tileIndex, {
+                                                            ...tile,
+                                                            colSpan: Number(e.target.value),
+                                                        })
+                                                    }>
+                                                    {Array.from(
+                                                        {length: columns},
+                                                        (_, i) => i + 1,
+                                                    ).map(n => (
                                                         <MenuItem key={n} value={n}>
                                                             {n}
                                                         </MenuItem>
-                                                    ),
-                                                )}
-                                            </TextField>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                sx={{flex: 1}}
-                                                label={t('event.boards.tile.height')}
-                                                value={tile.rowSpan ?? 1}
-                                                onChange={e =>
-                                                    updateTile(tileIndex, {
-                                                        ...tile,
-                                                        rowSpan: Number(e.target.value),
-                                                    })
-                                                }>
-                                                {Array.from(
-                                                    {length: MAX_ROW_SPAN},
-                                                    (_, i) => i + 1,
-                                                ).map(n => (
-                                                    <MenuItem key={n} value={n}>
-                                                        {n}
-                                                    </MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </Stack>
+                                                    ))}
+                                                </TextField>
+                                                <TextField
+                                                    select
+                                                    size="small"
+                                                    sx={{flex: 1}}
+                                                    disabled={detailFullscreen}
+                                                    label={t('event.boards.tile.height')}
+                                                    value={tile.rowSpan ?? 1}
+                                                    onChange={e =>
+                                                        updateTile(tileIndex, {
+                                                            ...tile,
+                                                            rowSpan: Number(e.target.value),
+                                                        })
+                                                    }>
+                                                    {Array.from(
+                                                        {length: MAX_ROW_SPAN},
+                                                        (_, i) => i + 1,
+                                                    ).map(n => (
+                                                        <MenuItem key={n} value={n}>
+                                                            {n}
+                                                        </MenuItem>
+                                                    ))}
+                                                </TextField>
+                                            </Stack>
+                                        </Tooltip>
 
                                         {tile.elements.map((element, elementIndex) =>
                                             renderElement(tileIndex, elementIndex, element),
@@ -654,21 +834,45 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         })}
                     </Box>
 
-                    <Button
-                        startIcon={<AddIcon />}
-                        disabled={config.tiles.length >= MAX_TILES}
-                        onClick={() => setConfig({...config, tiles: [...config.tiles, defaultTile()]})}>
-                        {t('event.boards.tile.add')}
-                    </Button>
+                    {/* Solange eine Sprecher-Kachel existiert, gibt es keine zweite Kachel —
+                        der Tooltip erklärt das, statt den Knopf wortlos zu sperren. Das span
+                        ist nötig, weil ein disabled-Button keine Hover-Events feuert. */}
+                    <Tooltip
+                        title={
+                            hasMatchDetail(config.tiles)
+                                ? t('event.boards.tile.addDisabledMatchDetail')
+                                : ''
+                        }>
+                        <span>
+                            <Button
+                                startIcon={<AddIcon />}
+                                disabled={
+                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles)
+                                }
+                                onClick={() =>
+                                    setConfig({...config, tiles: [...config.tiles, defaultTile()]})
+                                }>
+                                {t('event.boards.tile.add')}
+                            </Button>
+                        </span>
+                    </Tooltip>
                 </Stack>
             </DialogContent>
             <DialogActions>
                 <Button onClick={onCancel}>{t('common.cancel')}</Button>
+                {/* Speichern ohne Schließen: das Board im zweiten Tab zieht die Änderung
+                    mit seinem Poll binnen Sekunden nach, hier wird weiter justiert. */}
+                <Button
+                    variant="outlined"
+                    disabled={name.trim() === '' || hasBlankText}
+                    onClick={() => onSubmit({name: name.trim(), config}, true)}>
+                    {t('common.save')}
+                </Button>
                 <Button
                     variant="contained"
                     disabled={name.trim() === '' || hasBlankText}
-                    onClick={() => onSubmit({name: name.trim(), config})}>
-                    {board ? t('common.update') : t('common.create')}
+                    onClick={() => onSubmit({name: name.trim(), config}, false)}>
+                    {t('event.boards.saveAndClose')}
                 </Button>
             </DialogActions>
         </>

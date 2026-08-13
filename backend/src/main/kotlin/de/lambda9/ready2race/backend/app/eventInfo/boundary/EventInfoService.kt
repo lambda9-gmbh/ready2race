@@ -4,8 +4,10 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.boundary.ClubComposition
 import de.lambda9.ready2race.backend.app.club.boundary.ClubShortNameSettings
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamLapRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardMatch
 import de.lambda9.ready2race.backend.app.eventInfo.control.toAthleteBoardResult
 import de.lambda9.ready2race.backend.app.eventInfo.control.toLiveMatchInfo
@@ -36,7 +38,13 @@ object EventInfoService {
     // getShowBreaksOnPublicBoards und EventScheduleRepo.getSlots. Der Schlüssel trägt [limit]
     // mit, weil verschiedene Aufrufer (künftig oder heute schon mit abweichender Seitengröße)
     // sonst den falsch bemessenen Stand eines anderen bekämen.
-    private data class CachedLiveMatches(val builtAt: LocalDateTime, val dto: ApiResponse.ListDto<LiveMatchInfo>)
+    // [marker] ist der [EventChangeMarker]-Stand beim Bau: jede Schreibaktion an der
+    // Veranstaltung entwertet den Eintrag sofort, die TTL deckelt nur den Nichts-passiert-Fall.
+    private data class CachedLiveMatches(
+        val builtAt: LocalDateTime,
+        val marker: Long,
+        val dto: ApiResponse.Dto<LiveMatchesDto>,
+    )
 
     private val liveMatchesCache = ConcurrentHashMap<Pair<UUID, Int>, CachedLiveMatches>()
 
@@ -57,8 +65,12 @@ object EventInfoService {
         eventId: UUID,
         limit: Int = 10,
         competitionId: UUID?,
+        // "Mein Event" holt das Feld GENAU EINES Laufs. Derselbe Endpoint, dieselbe
+        // Sichtbarkeitsregel: ein Lauf, den die Ergebnisseite nicht zeigt, kommt auch hier
+        // als leere Liste zurück.
+        matchId: UUID? = null,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
-        getLatestMatchResults(eventId, limit, competitionId, !clubShortNames())
+        getLatestMatchResults(eventId, limit, competitionId, !clubShortNames(), matchId)
     }
 
     internal fun getLatestMatchResults(
@@ -66,10 +78,22 @@ object EventInfoService {
         limit: Int,
         competitionId: UUID?,
         clubShortNames: ClubShortNameSettings,
+        matchId: UUID? = null,
+        // Nur für die Kachel-Boards (BoardService): deren „Letztes Ergebnis"-Kachel zeigt
+        // ausschließlich beendete Läufe, unabhängig vom Sichtbarkeitsmodus der Veranstaltung.
+        // Ein voll gewerteter, unbeendeter Lauf läuft dort noch in der „Im Rennen"-Kachel mit
+        // Live-Zeiten mit — erst die Schiedsrichter-Entscheidung verschiebt ihn herüber, sonst
+        // doppeln sich die beiden Kacheln (Nutzerwunsch vom 11.08.2026). Alle anderen Aufrufer
+        // (öffentliche Ergebnisseite, Kiosk) behalten die Visibility-Weiche unverändert.
+        confirmedOnly: Boolean = false,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
 
-        val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
-        val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility).orDie()
+        // FINISHED_ONLY ist in CompetitionMatchRepo.getMatchResults exakt „finished_at gesetzt" —
+        // das Erzwingen dieser Stufe IST die Nur-Bestätigt-Auswahl, ohne zweite Repo-Weiche.
+        val visibility =
+            if (confirmedOnly) PublicResultsVisibility.FINISHED_ONLY
+            else !EventRepo.getPublicResultsVisibility(eventId).orDie()
+        val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit, visibility, matchId).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
@@ -91,7 +115,7 @@ object EventInfoService {
             )
         }
 
-        KIO.ok(ApiResponse.ListDto(result))
+        KIO.ok(ApiResponse.ListDto(!attachLaps(result, { it.matchId }, { it.teams }, { m, t -> m.copy(teams = t) }, { it.teamId }, { t, l -> t.copy(laps = l) })))
     }
 
     fun getUpcomingCompetitionMatches(
@@ -244,9 +268,20 @@ object EventInfoService {
                     skipped = r[EVENT_SCHEDULE_SLOT.SKIPPED_AT] != null,
                 )
             }
-            AthleteBoardLogic.placeholdersFromFreeSlots(freeSlots)
+            val candidates = AthleteBoardLogic.placeholdersFromFreeSlots(freeSlots)
                 .filterNot { it.matchId in realMatchIds }
                 .stillUpcoming()
+            // Programm-Reihenfolgen-Regel (BoardLogic.freeSlotPassed): ein Programmpunkt gilt
+            // als vorbei, sobald ein im Programm SPÄTERER Lauf gestartet/beendet ist — sonst
+            // hängt die 15-Uhr-Besprechung bei Verspätung ewig in „Als Nächstes", während
+            // längst die Nachmittagsläufe fahren (Prod-Screenshot vom 11.08.2026). Der Filter
+            // sitzt bewusst HIER, vor dem take(limit) am Ende: ein überholter Punkt darf den
+            // Block gar nicht erst besetzen. Läufe selbst regeln sich über ihre Zustände.
+            if (candidates.isEmpty()) candidates
+            else {
+                val latestProgress = !CompetitionMatchRepo.getLatestProgressStartTime(eventId).orDie()
+                candidates.filterNot { BoardLogic.freeSlotPassed(it.scheduledStartTime, latestProgress) }
+            }
         } else {
             emptyList()
         }
@@ -332,7 +367,28 @@ object EventInfoService {
             )
         }
 
-        KIO.ok(ApiResponse.ListDto(result))
+        KIO.ok(ApiResponse.ListDto(!attachLaps(result, { it.matchId }, { it.teams }, { m, t -> m.copy(teams = t) }, { it.teamId }, { t, l -> t.copy(laps = l) })))
+    }
+
+    /**
+     * Zwischenzeiten je Boot nachtragen, in einer Abfrage für alle sichtbaren Läufe. Die
+     * Anzeigeobjekte führen ihre Boote über (Lauf, Meldung) - genau der Schlüssel, unter dem
+     * [CompetitionMatchTeamLapRepo.getByMatches] die Laps bündelt. Generisch gehalten, weil laufende
+     * Läufe und Ergebnisse dieselbe Zuordnung brauchen, nur über andere Typen.
+     */
+    private fun <M, T> attachLaps(
+        matches: List<M>,
+        matchId: (M) -> UUID,
+        teamsOf: (M) -> List<T>,
+        withTeams: (M, List<T>) -> M,
+        teamId: (T) -> UUID,
+        withLaps: (T, List<de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto>) -> T,
+    ): App<Nothing, List<M>> = KIO.comprehension {
+        val laps = !CompetitionMatchTeamLapRepo.getByMatches(matches.map(matchId).toSet()).orDie()
+        if (laps.isEmpty()) return@comprehension KIO.ok(matches)
+        KIO.ok(matches.map { m ->
+            withTeams(m, teamsOf(m).map { t -> withLaps(t, laps[matchId(m) to teamId(t)] ?: emptyList()) })
+        })
     }
 
     /**
@@ -363,14 +419,18 @@ object EventInfoService {
     fun getLiveMatches(
         eventId: UUID,
         limit: Int,
-    ): App<Nothing, ApiResponse.ListDto<LiveMatchInfo>> = KIO.comprehension {
+    ): App<Nothing, ApiResponse.Dto<LiveMatchesDto>> = KIO.comprehension {
         val now = LocalDateTime.now()
         val key = eventId to limit
+
+        // Markerstand VOR dem Bau lesen (siehe BoardService.getBoardView): ein Schreibzugriff
+        // mitten im Bau macht den Eintrag dann sofort wieder alt statt ihn TTL-lang zu halten.
+        val marker = EventChangeMarker.current(eventId)
 
         // Anders als beim Athleten-Board gibt es hier kein je Antwort frisches Feld wie
         // serverTime - der zwischengespeicherte Stand kann unverändert zurückgehen.
         val cached = liveMatchesCache[key]
-            ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
+            ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) && it.marker == marker }
 
         if (cached != null) {
             KIO.ok(cached.dto)
@@ -382,17 +442,24 @@ object EventInfoService {
             val activated = !getRunningMatches(eventId, limit, clubShortNames)
             val upcoming = !getUpcomingMatchesForBoard(eventId, limit, clubShortNames)
 
-            val dto = ApiResponse.ListDto(
-                LiveMatchesLogic.merge(
-                    activated = activated.data.map { it.toLiveMatchInfo() },
-                    upcoming = upcoming.data.map { it.toLiveMatchInfo() },
-                    limit = limit,
+            // Der Hinweis liegt mit im Zwischenspeicher - sein PUT bumpt den EventChangeMarker,
+            // die Änderung kommt also mit dem nächsten Poll.
+            val notice = !EventRepo.getNotice(eventId).orDie()
+
+            val dto = ApiResponse.Dto(
+                LiveMatchesDto(
+                    notice = notice,
+                    matches = LiveMatchesLogic.merge(
+                        activated = activated.data.map { it.toLiveMatchInfo() },
+                        upcoming = upcoming.data.map { it.toLiveMatchInfo() },
+                        limit = limit,
+                    ),
                 )
             )
 
             // Laufen mehrere Abrufe gleichzeitig in dieses Fenster, rechnen sie doppelt und der
             // letzte gewinnt - bei Millisekunden Rechenzeit je Eintrag kein Grund für ein Lock.
-            liveMatchesCache[key] = CachedLiveMatches(now, dto)
+            liveMatchesCache[key] = CachedLiveMatches(now, marker, dto)
 
             KIO.ok(dto)
         }

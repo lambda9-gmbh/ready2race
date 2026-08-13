@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
+import de.lambda9.ready2race.backend.data.Timecode
 import java.util.UUID
 
 data class CompetitionMatchTeamDto(
@@ -32,4 +33,18 @@ data class CompetitionMatchTeamDto(
 data class MatchTeamLapDto(
     val name: String,
     val timeString: String,
+)
+
+/**
+ * Kumulierte Lap-Millisekunden in denselben Anzeige-Text falten, den die Durchführungsseite zeigt:
+ * über einer Stunde mit Stundenstelle, darunter m:ss, eine Nachkommastelle. Zentral, weil jetzt
+ * mehrere Anzeigen (Durchführung, Schiedsrichter-Dashboard, Boards) dieselben Zwischenzeiten zeigen.
+ */
+fun matchTeamLapDto(name: String, lapMillis: Long) = MatchTeamLapDto(
+    name = name,
+    timeString = Timecode(
+        millis = lapMillis,
+        baseUnit = if (lapMillis >= 3_600_000) Timecode.BaseUnit.HOURS else Timecode.BaseUnit.MINUTES,
+        millisecondPrecision = Timecode.MillisecondPrecision.ONE,
+    ).toString(),
 )

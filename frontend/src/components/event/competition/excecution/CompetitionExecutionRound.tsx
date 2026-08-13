@@ -11,12 +11,14 @@ import {
     Card,
     Divider,
     Stack,
+    Switch,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
+    Tooltip,
     Typography,
     useTheme,
 } from '@mui/material'
@@ -29,13 +31,20 @@ import {teamNameSuffix} from '@utils/helpers.ts'
 import {Dispatch, Fragment, SetStateAction, SyntheticEvent, useRef} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
+    finishMatchFromExecution,
     markMatchStartedFromExecution,
     reopenMatch,
+    resetMatch,
     skipScheduleRound,
     updateMatchActivation,
+    updateMatchByeMustRace,
 } from '@api/sdk.gen.ts'
+import {matchErrorText} from '@components/event/competition/excecution/executionError.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {competitionRoute, eventRoute} from '@routes'
+import {
+    CompetitionScopeProps,
+    useCompetitionScope,
+} from '@components/event/competition/excecution/competitionScope.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
 import {failedLabel} from '@utils/matchResultStatus.ts'
@@ -54,9 +63,18 @@ import {
 import StatusChip from '@components/event/match/StatusChip.tsx'
 import {useNow} from '@components/event/match/useNow.ts'
 
-type Props = {
+/**
+ * DOM-Id der Lauf-Karte — Ankerpunkt für den Sprung aus dem Zeitplan (Veranstaltungs-Modus):
+ * Der Klick auf eine Lauf-Zeile lädt den Wettkampf rechts und scrollt dann zu genau dieser
+ * Karte. Dasselbe Prinzip wie die Karten-Ids der „Läufe"-Spalte des Schiedsrichter-Boards.
+ */
+export const executionMatchDomId = (matchId: string): string => `execution-match-${matchId}`
+
+type Props = CompetitionScopeProps & {
     round: CompetitionRoundDto
     roundIndex: number
+    /** Kurz hervorgehobener Lauf nach dem Sprung aus dem Zeitplan (Veranstaltungs-Modus). */
+    highlightedMatchId?: string | null
     filteredMatches: CompetitionMatchDto[]
     reloadRoundDto: () => void
     setSubmitting: (value: boolean) => void
@@ -85,8 +103,11 @@ type Props = {
 }
 
 const CompetitionExecutionRound = ({
+    eventId: eventIdProp,
+    competitionId: competitionIdProp,
     round,
     roundIndex,
+    highlightedMatchId,
     filteredMatches,
     submitting,
     smallScreenLayout,
@@ -117,8 +138,10 @@ const CompetitionExecutionRound = ({
     // Die Freilose der Runde — dieselbe Frage wie überall sonst, gestellt an `status.bye`.
     const byes = byeMatches(round)
 
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
+    const {eventId, competitionId} = useCompetitionScope({
+        eventId: eventIdProp,
+        competitionId: competitionIdProp,
+    })
 
     const {confirmAction} = useConfirmation()
 
@@ -223,6 +246,100 @@ const CompetitionExecutionRound = ({
         }
     }
 
+    /**
+     * Lauf beenden — vom Büro aus in JEDEM chainProgressionMode erlaubt, wie der Zeitplan-Weg
+     * und anders als das Schiedsrichter-Dashboard, das im REGATTABUERO-Modus sperrt. Bis zum
+     * 12.08.2026 fehlte der Knopf hier ganz: Im SCHIEDSRICHTER-Modus konnte das Büro einen Lauf
+     * ohne verknüpften Zeitplan-Slot nirgends beenden, obwohl der Hinweistext der Einstellung
+     * genau das verspricht (Nutzer-Feedback aus dem Veranstaltungs-Modus). Mit Bestätigung wie
+     * am Zeitplan: Beenden schaltet ggf. die Kette weiter, das soll kein Verklicker auslösen.
+     */
+    const handleFinishMatch = async (match: CompetitionMatchDto) => {
+        confirmAction(
+            async () => {
+                props.setSubmitting(true)
+                const {error} = await finishMatchFromExecution({
+                    path: {
+                        eventId: eventId,
+                        competitionId: competitionId,
+                        competitionMatchId: match.id,
+                    },
+                })
+                props.setSubmitting(false)
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                } else {
+                    feedback.success(
+                        t('event.competition.execution.match.control.finishSuccess'),
+                    )
+                }
+                props.reloadRoundDto()
+            },
+            {
+                content: t('event.competition.execution.match.control.finishConfirm'),
+                okText: t('event.competition.execution.match.control.finish'),
+            },
+        )
+    }
+
+    /**
+     * Lauf zurücksetzen: leert den Ausführungszustand (Ist-Start, Zeiten, Plätze, Rundenzeiten),
+     * behält aber Aufstellung, Bahnen und die Kennungen der Boote — die RaceClocker-Zuordnung
+     * bleibt gültig. Nur in der jüngsten Runde; hat die Folgerunde schon Läufe, lehnt der Server
+     * mit einem eigenen Fehlercode ab (siehe executionError.ts).
+     */
+    const handleResetMatch = async (match: CompetitionMatchDto) => {
+        confirmAction(
+            async () => {
+                props.setSubmitting(true)
+                const {error} = await resetMatch({
+                    path: {
+                        eventId: eventId,
+                        competitionId: competitionId,
+                        competitionMatchId: match.id,
+                    },
+                })
+                props.setSubmitting(false)
+                if (error) {
+                    const text = matchErrorText(error)
+                    feedback.error(
+                        text === undefined
+                            ? t('event.competition.execution.resetMatch.error')
+                            : t(text.key, text.values),
+                    )
+                } else {
+                    feedback.success(t('event.competition.execution.resetMatch.success'))
+                }
+                props.reloadRoundDto()
+            },
+            {
+                title: t('event.competition.execution.resetMatch.confirmation.title'),
+                content: (
+                    <Stack spacing={2}>
+                        <Typography color={'error.main'} sx={{fontWeight: 'bold'}}>
+                            {t('event.competition.execution.resetMatch.confirmation.warning')}
+                        </Typography>
+                        <Typography>
+                            {t('event.competition.execution.resetMatch.confirmation.keeps')}
+                        </Typography>
+                        {/* Nur bei RaceClocker-Zeitnahme: Der Reset pausiert den automatischen
+                            Abruf, sonst spielte der nächste Takt die gelöschten Ergebnisse sofort
+                            wieder ein - fortgesetzt wird bewusst über den bestehenden Knopf. */}
+                        {timingSystem === 'RACECLOCKER' && (
+                            <Typography>
+                                {t('event.competition.execution.resetMatch.confirmation.autoPull')}
+                            </Typography>
+                        )}
+                        <Typography sx={{fontWeight: 'bold'}}>
+                            {t('event.competition.execution.resetMatch.confirmation.question')}
+                        </Typography>
+                    </Stack>
+                ),
+                okText: t('event.competition.execution.resetMatch.action'),
+            },
+        )
+    }
+
     /** Beenden zurücknehmen — nur in der jüngsten Runde, der Server prüft das nochmal. */
     const handleReopen = async (match: CompetitionMatchDto) => {
         props.setSubmitting(true)
@@ -239,6 +356,33 @@ const CompetitionExecutionRound = ({
             feedback.error(t('event.competition.execution.running.error.update'))
         } else {
             feedback.success(t('event.competition.execution.running.success'))
+            props.reloadRoundDto()
+        }
+    }
+
+    /**
+     * Freilos "muss gefahren werden": Der Lauf wird operativ zum echten Rennen (Startliste,
+     * Zeitnahme, Beenden), das Weiterkommen bleibt Freilos-Semantik - Server-KDoc
+     * `updateByeMustRace`.
+     */
+    const handleToggleByeMustRace = async (match: CompetitionMatchDto, mustRace: boolean) => {
+        props.setSubmitting(true)
+        const {error} = await updateMatchByeMustRace({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+            body: {
+                mustRace,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        } else {
+            feedback.success(t('event.competition.execution.byeMustRace.success'))
             props.reloadRoundDto()
         }
     }
@@ -312,7 +456,7 @@ const CompetitionExecutionRound = ({
                                                         'event.competition.setup.match.outcome.outcome',
                                                     )}
                                                 </TableCell>
-                                                <TableCell width="60%">
+                                                <TableCell width="40%">
                                                     {t('event.competition.execution.match.team')}
                                                 </TableCell>
                                                 {/* Der Zustand des Laufs, aus derselben Ableitung
@@ -322,6 +466,11 @@ const CompetitionExecutionRound = ({
                                                 <TableCell width="25%">
                                                     {t('event.competition.execution.match.status')}
                                                 </TableCell>
+                                                <TableCell width="20%">
+                                                    {t(
+                                                        'event.competition.execution.byeMustRace.label',
+                                                    )}
+                                                </TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -330,7 +479,7 @@ const CompetitionExecutionRound = ({
                                                     <TableCell width="15%">
                                                         {match.weighting}
                                                     </TableCell>
-                                                    <TableCell width="60%">
+                                                    <TableCell width="40%">
                                                         {match.teams[0]
                                                             ? match.teams[0].clubName +
                                                               (match.teams[0].name
@@ -346,6 +495,35 @@ const CompetitionExecutionRound = ({
                                                                 now,
                                                             )}
                                                         />
+                                                    </TableCell>
+                                                    <TableCell width="20%">
+                                                        {/* Fairness-Regel: Strecke trotz Freilos
+                                                            fahren - Platzierung egal, Zeit läuft
+                                                            außer Konkurrenz (Hilfetext). */}
+                                                        <Tooltip
+                                                            title={t(
+                                                                'event.competition.execution.byeMustRace.hint',
+                                                            )}>
+                                                            <Switch
+                                                                size={'small'}
+                                                                checked={
+                                                                    match.status.bye?.mustRace ??
+                                                                    false
+                                                                }
+                                                                disabled={submitting}
+                                                                onChange={(_, checked) =>
+                                                                    handleToggleByeMustRace(
+                                                                        match,
+                                                                        checked,
+                                                                    )
+                                                                }
+                                                                inputProps={{
+                                                                    'aria-label': t(
+                                                                        'event.competition.execution.byeMustRace.label',
+                                                                    ),
+                                                                }}
+                                                            />
+                                                        </Tooltip>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -368,6 +546,8 @@ const CompetitionExecutionRound = ({
                         </AccordionSummary>
                         <AccordionDetails>
                             <Substitutions
+                                eventId={eventId}
+                                competitionId={competitionId}
                                 reloadRoundDto={() => props.reloadRoundDto()}
                                 roundDto={round}
                                 roundIndex={roundIndex}
@@ -399,6 +579,7 @@ const CompetitionExecutionRound = ({
                     {filteredMatches.map((match, matchIndex) => (
                         <Card
                             key={match.id}
+                            id={executionMatchDomId(match.id)}
                             sx={{
                                 p: 2,
                                 flex: 1,
@@ -410,6 +591,12 @@ const CompetitionExecutionRound = ({
                                     borderWidth: 2,
                                     borderStyle: 'solid',
                                 }),
+                                // Kurzes Aufleuchten nach dem Sprung aus dem Zeitplan — derselbe
+                                // Hintergrund-Fade wie bei der Zeilen-Hervorhebung dort.
+                                ...(highlightedMatchId === match.id && {
+                                    backgroundColor: 'action.selected',
+                                }),
+                                transition: 'background-color 0.5s ease',
                             }}>
                             <Stack
                                 direction={'row'}
@@ -499,6 +686,23 @@ const CompetitionExecutionRound = ({
                                                     )}
                                                 </LoadingButton>
                                             )}
+                                        {/* Beenden in JEDEM chainProgressionMode (siehe
+                                            handleFinishMatch) — angeboten, sobald der Lauf
+                                            unterwegs ist (aktiviert) oder alle Boote gewertet
+                                            sind („Wartet auf Beenden", auch ohne Aktivierung). */}
+                                        {match.finishedAt == null &&
+                                            (match.activatedAt != null ||
+                                                match.status.state === 'AWAITING_FINISH') && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    pending={submitting}
+                                                    onClick={() => handleFinishMatch(match)}>
+                                                    {t(
+                                                        'event.competition.execution.match.control.finish',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
                                         {match.finishedAt != null && roundIndex === 0 && (
                                             <LoadingButton
                                                 size={'small'}
@@ -510,6 +714,30 @@ const CompetitionExecutionRound = ({
                                                 )}
                                             </LoadingButton>
                                         )}
+                                        {/* Nur anbieten, wenn es etwas zurückzusetzen gibt —
+                                            ein unberührter Lauf bekäme sonst einen Knopf, der
+                                            nichts tut. */}
+                                        {roundIndex === 0 &&
+                                            (match.activatedAt != null ||
+                                                match.startedAt != null ||
+                                                match.finishedAt != null ||
+                                                match.teams.some(
+                                                    team =>
+                                                        team.place != null ||
+                                                        team.failed ||
+                                                        team.timeString != null,
+                                                )) && (
+                                                <LoadingButton
+                                                    size={'small'}
+                                                    variant={'outlined'}
+                                                    color={'error'}
+                                                    pending={submitting}
+                                                    onClick={() => handleResetMatch(match)}>
+                                                    {t(
+                                                        'event.competition.execution.resetMatch.action',
+                                                    )}
+                                                </LoadingButton>
+                                            )}
                                     </Stack>
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>

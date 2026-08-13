@@ -95,18 +95,41 @@ object MatchStatusLogic {
      * geraten. Der Freitext-Grund überlebt nur bei genau einer abgemeldeten Zeile: bei zweien wäre
      * die Zuordnung Name -> Grund ebenfalls geraten.
      */
-    fun deriveBye(roundRequired: Boolean, teams: List<MatchByeTeam>): MatchByeDto? {
+    fun deriveBye(
+        roundRequired: Boolean,
+        teams: List<MatchByeTeam>,
+        /**
+         * `competition_match.bye_must_race`: Der Lauf bleibt ein Freilos (dieses DTO bleibt
+         * gesetzt, das Panel zeigt ihn weiter), wird aber operativ als echtes Rennen behandelt.
+         * Nur durchgereicht, nicht Teil der Ableitung - ob ein Lauf ein Freilos IST, entscheidet
+         * weiterhin allein die Besetzung.
+         */
+        mustRace: Boolean = false,
+    ): MatchByeDto? {
         if (roundRequired) return null
         if (teams.count { it.racing } != 1) return null
 
+        // Die Setzungszahl der EINEN fahrenden Mannschaft - "Freilos 1" ist das Freilos des
+        // Bootes, das als Erstes weiterkam. Null (kein passender Setup-Platz) lässt das Label
+        // beim nackten "Freilos".
+        val seed = teams.single { it.racing }.seed
+
         val withdrawn = teams.filter { !it.racing && it.deregistered }
         if (withdrawn.isEmpty()) {
-            return MatchByeDto(MatchByeCause.NO_OPPONENT, teamName = null, reason = null)
+            return MatchByeDto(
+                MatchByeCause.NO_OPPONENT,
+                teamName = null,
+                reason = null,
+                mustRace = mustRace,
+                seed = seed,
+            )
         }
         return MatchByeDto(
             cause = MatchByeCause.DEREGISTRATION,
             teamName = withdrawn.joinToString(", ") { it.name },
             reason = withdrawn.singleOrNull()?.deregistrationReason,
+            mustRace = mustRace,
+            seed = seed,
         )
     }
 

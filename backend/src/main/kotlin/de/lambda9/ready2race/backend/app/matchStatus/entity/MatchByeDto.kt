@@ -18,6 +18,11 @@ enum class MatchByeCause { DEREGISTRATION, NO_OPPONENT }
 /**
  * Das Freilos eines Laufs. Reine Anzeige: an der Lauf-Kette, an der Ergebnissperre und am
  * automatischen ersten Platz ändert dieser Datensatz nichts.
+ *
+ * Ausnahme [mustRace]: Das Flag (competition_match.bye_must_race) macht den Lauf operativ zu einem
+ * echten Rennen - Ergebnissperre, Folgerunden-Automatik und Startlisten-Export behandeln ihn dann
+ * wie jeden Lauf. Er bleibt trotzdem ein Freilos (dieses DTO bleibt gesetzt): Das Weiterkommen
+ * hängt nicht an der gemessenen Zeit, sie läuft "außer Konkurrenz".
  */
 data class MatchByeDto(
     val cause: MatchByeCause,
@@ -31,6 +36,17 @@ data class MatchByeDto(
      * die Zuordnung Name -> Grund geraten, und geraten wird hier nichts.
      */
     val reason: String?,
+    /** Muss trotz Freilos gefahren werden - die Zeit wird genommen und "außer Konkurrenz" gezeigt. */
+    val mustRace: Boolean = false,
+    /**
+     * Die Setzungszahl der fahrenden Mannschaft - "Freilos 1" ist das Freilos des Bootes, das als
+     * Erstes ins Ziel kam und deshalb weiterkommt. Sie ist der `seed` des Setup-Platzes
+     * (competition_setup_participant), den die Mannschaft in diesem Lauf belegt (siehe
+     * [MatchByeRepo.getByeInputs]); null, wenn kein Setup-Platz zur Startnummer passt - etwa bei
+     * Erstrunden-Freilosen durch Abmeldung oder nachträglich umgetragenen Startnummern. Dann
+     * bleibt es beim nackten "Freilos".
+     */
+    val seed: Int? = null,
 )
 
 /**
@@ -45,4 +61,9 @@ data class MatchByeTeam(
     val name: String,
     val deregistered: Boolean,
     val deregistrationReason: String?,
+    /**
+     * Der `seed` des Setup-Platzes, den die Mannschaft belegt (siehe [MatchByeDto.seed]) -
+     * null, wenn keiner zur Startnummer passt.
+     */
+    val seed: Int? = null,
 )

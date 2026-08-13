@@ -80,7 +80,9 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                 .mapIndexed { index, match ->
                     CompetitionMatchDto(
                         id = match.second.id,
-                        name = match.second.name,
+                        // Ein Freilos zeigt seinen materialisierten Namen (V202608121300), alle
+                        // anderen den Setup-Namen - dieselbe Koaleszenz wie in den SQL-Lesepfaden.
+                        name = match.first.byeName ?: match.second.name,
                         teams = match.first.teams.map { team ->
                             CompetitionMatchTeamDto(
                                 registrationId = team.competitionRegistration,
@@ -200,6 +202,8 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 raceClockerPollError = match.raceclockerPollError,
                 raceClockerAutoPausedAt = match.raceclockerAutoPausedAt,
                 pairingsRecalculatedAt = match.pairingsRecalculatedAt,
+                byeMustRace = match.byeMustRace ?: false,
+                byeName = match.byeName,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,

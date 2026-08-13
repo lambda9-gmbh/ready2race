@@ -84,6 +84,7 @@
     },
     "ok": "Ok",
     "save": "Speichern",
+    "settings": "Einstellungen",
     "saveAndNew": "Speichern und Neu",
     "saveAndNext": "Speichern und weiter",
     "search": "Suchen",
@@ -554,6 +555,14 @@
         "log": "Status Protokoll der Teilnehmenden",
         "entry": "Protokolleintrag",
         "status": "Status",
+        "filter": {
+          "onlyLatest": "Nur letzter Status",
+          "status": {
+            "all": "Alle",
+            "entry": "Angemeldet",
+            "exit": "Abgemeldet"
+          }
+        },
         "in": "Drin",
         "out": "Draußen",
         "teams": "Teams",
@@ -672,6 +681,16 @@
       "seconds": "Takt in Sekunden",
       "hint": "Die Durchführungsseite zieht Zeiten, Ergebnisse, Läufe, Rundenwechsel und Check-ins im eingestellten Takt im Hintergrund nach — ohne die Seite neu zu laden. Erlaubt sind 5 bis 60 Sekunden, voreingestellt sind 5. Während ein Dialog offen ist, ruht der Abgleich."
     },
+    "settings": {
+      "openExecutionInNewTab": "„Zur Durchführung“ in neuem Fenster öffnen",
+      "shortLabels": "Kurznamen statt ausgeschriebener Wettkampfnamen",
+      "compact": "Kompakte Darstellung",
+      "deviceHint": "Alle Einstellungen gelten nur für dieses Gerät.",
+      "execution": {
+        "title": "Durchführung",
+        "hint": "Wie Läufe am Renntag beendet und Folgerunden erzeugt werden und in welchem Takt sich die Durchführungsseite selbst aktualisiert. Gilt für die ganze Veranstaltung, nicht nur für dieses Gerät."
+      }
+    },
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -714,8 +733,6 @@
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
       "navigation": {
-        "modeCompetitions": "Rennen",
-        "modeSchedule": "Zeitplan",
         "backToEvent": "Zurück zur Veranstaltung",
         "filter": "Filtern",
         "showShortNames": "Kurznamen zeigen",
@@ -1017,6 +1034,18 @@
           "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
           "success": "Runde erfolgreich gelöscht"
         },
+        "resetMatch": {
+          "action": "Lauf zurücksetzen",
+          "confirmation": {
+            "title": "Lauf zurücksetzen?",
+            "warning": "Achtung: Dieser Lauf wird auf „nie gefahren“ zurückgesetzt. Unwiderruflich verloren gehen: der Ist-Start, alle Ziel- und Zwischenzeiten, alle Plätze, Ausscheidungen und Zeitstrafen dieses Laufs.",
+            "keeps": "Erhalten bleiben: Aufstellung, Bahnen und die Kennungen der Boote — die RaceClocker-Zuordnung bleibt gültig, der Lauf kann direkt neu gefahren werden.",
+          "autoPull": "Der automatische RaceClocker-Abruf wird für diesen Lauf pausiert — sonst spielte der nächste Abruf die gelöschten Ergebnisse sofort wieder ein. Nach dem Aufräumen in RaceClocker über „Automatik wieder aufnehmen“ bewusst fortsetzen.",
+            "question": "Lauf wirklich zurücksetzen?"
+          },
+          "error": "Beim Zurücksetzen des Laufs ist ein Fehler aufgetreten",
+          "success": "Lauf zurückgesetzt"
+        },
         "cancelRound": {
           "action": "Runde entfällt",
           "confirmation": {
@@ -1032,6 +1061,11 @@
           "success": "Runde als entfallen markiert"
         },
         "teamsWithBye": "Teams mit Freilos",
+        "byeMustRace": {
+          "label": "Muss gefahren werden",
+          "hint": "Fairness: Die Athlet:innen fahren die Strecke trotz Freilos. Die Platzierung spielt keine Rolle – das Team kommt in jedem Fall weiter –, die Zeit wird genommen und außer Konkurrenz angezeigt.",
+          "success": "Gespeichert"
+        },
         "match": {
           "status": "Status",
           "startTime": "Startzeit",
@@ -1056,6 +1090,9 @@
             "activate": "Lauf aktivieren",
             "deactivate": "Lauf deaktivieren",
             "markStarted": "Läuft",
+          "finish": "Lauf beenden",
+          "finishConfirm": "Diesen Lauf jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
+          "finishSuccess": "Lauf beendet",
             "reopen": "Beenden zurücknehmen"
           }
         },
@@ -1268,6 +1305,7 @@
           "matchIsBye": "Dieser Lauf ist ein Freilos: das Boot zieht ohne zu fahren weiter, es gibt kein Ergebnis einzutragen.",
           "placesNotContinuous": "Die Plätze müssen lückenlos bei 1 beginnen. Erwartet war Platz {{expected}}, eingetragen ist Platz {{actual}}.",
           "startTimeManagedBySchedule": "Die Startzeit dieses Laufs wird über den Zeitplan gepflegt und lässt sich hier nicht ändern. Bitte den Slot im Zeitplan-Tab anpassen.",
+          "resetBlockedByNextRound": "Der Lauf lässt sich nicht mehr zurücksetzen: Aus den Ergebnissen wurde bereits die nächste Runde erstellt. Zuerst die neuere Runde löschen, dann den Lauf zurücksetzen.",
           "teamsNotMatching": "Die übertragenen Boote passen nicht zu den Booten dieses Laufs — vermutlich hat sich die Aufstellung zwischenzeitlich geändert (Ummeldung oder Abmeldung). Bitte die Ansicht neu laden und erneut speichern."
         }
       },
@@ -1286,15 +1324,16 @@
         },
         "override": {
           "label": "Für diesen Wettkampf abweichend einstellen",
-          "hint": "Aus: der Wettkampf folgt der Veranstaltung und übernimmt jede spätere Änderung dort. An: er bekommt eigene Werte — sinnvoll nur, wenn er ein eigenes Rennen im Zeitnahme-System hat."
+          "hint": "Gilt für Zeitnahme-System und Dateiformate. Aus: der Wettkampf folgt der Veranstaltung und übernimmt jede spätere Änderung dort. An: er bekommt eigene Werte. Die Rennen-Zuordnung oben bleibt davon unberührt — sie gehört immer zum Wettkampf."
+        },
+        "raceSection": {
+          "title": "Rennen dieses Wettkampfs"
         },
         "presets": {
           "title": "Dateiformate",
           "hint": "Welche Spalten exportiert und importiert werden. Abweichend nur nötig, wenn dieser Wettkampf in ein anderes Rennen im Zeitnahme-System läuft."
         },
-        "raceclockerHint": "RaceClocker-Rennen werden in den Einstellungen der Veranstaltung angelegt. Wählen Sie hier das Rennen dieses Wettkampfs für die Qualifikation und für die Läufe — dieselbe Zuordnung lässt sich auch umgekehrt am Rennen anhaken.",
-        "startlistQualification": "Startlisten Export Qualifikation",
-        "startlistRounds": "Startlisten Export Läufe",
+        "raceclockerHint": "RaceClocker-Rennen werden in den Einstellungen der Veranstaltung angelegt. Wählen Sie hier das eine Rennen dieses Wettkampfs — es gilt für die Qualifikation und alle übrigen Runden. Dieselbe Zuordnung lässt sich auch umgekehrt am Rennen anhaken.",
         "startlist": "Startlisten Export",
         "resultImport": "Rennergebnisse Import",
         "importHint": "Die RaceClocker-Vorlagen exportieren ohne Kopfzeile, weil RaceClocker eine solche Zeile sonst als Teilnehmer importiert. Ordnen Sie die Spalten beim Import in RaceClocker deshalb nach ihrer Reihenfolge zu – insbesondere die interne Kennung auf \"Extra info\".",
@@ -1305,16 +1344,13 @@
         },
         "incomplete": {
           "title": "Diese Zeitnahme ist noch nicht einsatzbereit",
-          "startlistRounds": "Es fehlt der Startlisten Export – ohne ihn lässt sich keine Startliste als CSV exportieren.",
-          "startlistQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es fehlt der Startlisten Export für die Qualifikation – ohne ihn lässt sich für die Qualifikation keine Startliste exportieren.",
-          "link": "Zu den Zeitnahme-Einstellungen",
-          "raceRounds": "Es ist kein Rennen für die Läufe angewählt – ohne eines lassen sich keine Ergebnisse aus RaceClocker holen.",
-          "raceQualification": "Dieser Wettkampf hat eine Qualifikationsrunde, aber es ist kein Zeitfahren-Rennen angewählt – ohne eines lassen sich für die Qualifikation keine Ergebnisse aus RaceClocker holen."
+          "startlist": "Es fehlt der Startlisten Export – ohne ihn lässt sich keine Startliste als CSV exportieren.",
+          "race": "Es ist kein Rennen angewählt – ohne eines lassen sich keine Ergebnisse aus RaceClocker holen.",
+          "link": "Zu den Zeitnahme-Einstellungen"
         },
         "saved": "Zeitnahme-Einstellungen gespeichert",
         "invalid": "Bitte wählen Sie ein Rennen dieser Veranstaltung aus.",
-        "raceQualification": "Rennen für Qualifikationsrunden",
-        "raceRounds": "Rennen für die Läufe"
+        "race": "RaceClocker-Rennen"
       },
       "places": {
         "places": "Platzierungen",
@@ -1424,6 +1460,17 @@
       },
       "error": {
         "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
+      },
+      "exportBundle": {
+        "title": "Export-Mappe",
+        "hint": "Die Reihenfolge der Regatta-Mappe: Der PDF-Startlisten-Export am Zeitplan kann diese Dokumente und die gesammelten Startlisten in genau dieser Reihenfolge zu einer Datei zusammenhängen.",
+        "startlistsPlaceholder": "Gesammelte Startlisten",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "addDocument": "Dokument hinzufügen",
+        "add": "Hinzufügen",
+        "noAddableDocuments": "Keine weiteren PDF-Dokumente vorhanden",
+        "onlyPdfHint": "Angeboten werden nur PDF-Dateien – andere Formate kann die Mappe nicht aufnehmen."
       }
     },
     "registration": {
@@ -1482,6 +1529,21 @@
       "organisation": "Organisation",
       "invoices": "Rechnungen"
     },
+    "notice": {
+      "title": "Globaler Hinweis",
+      "description": "Ein Banner auf allen öffentlichen Anzeigen (Ergebnisseite, Mein Event, Boards) und im Schiedsrichter-Dashboard — z. B. für eine Wetterwarnung. Änderungen erscheinen auf den Geräten mit dem nächsten Abruf (wenige Sekunden bis eine Viertelminute).",
+      "text": "Hinweistext",
+      "severity": {
+        "label": "Stufe",
+        "CRITICAL": "Rot (kritisch)",
+        "WARNING": "Gelb (Warnung)",
+        "INFO": "Grün (Info)"
+      },
+      "remove": "Hinweis entfernen",
+      "saved": "Hinweis gespeichert",
+      "removed": "Hinweis entfernt",
+      "saveError": "Der Hinweis konnte nicht gespeichert werden"
+    },
     "timing": {
       "title": "Zeitnahme",
       "hint": "Gilt für alle Wettkämpfe dieser Veranstaltung. Ein einzelner Wettkampf kann in seinem Zeitnahme-Tab eigene Werte eintragen und weicht damit gezielt ab.",
@@ -1491,7 +1553,7 @@
         "raceclocker": "RaceClocker",
         "webscorer": "Webscorer"
       },
-      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Timetrials“, „Langstrecke“ und „Kurzstrecke“ — und haken Sie darunter je Rennen an, welche Wettkämpfe es für die Qualifikation und welche für die Läufe nutzen.",
+      "raceclockerHint": "RaceClocker-Rennen gehören zur Veranstaltung, nicht zum Wettkampf. Legen Sie hier jedes Rennen einmal an — etwa „Langstrecke“ und „Kurzstrecke“ — und haken Sie darunter je Rennen an, welche Wettkämpfe es nutzen. Jeder Wettkampf fährt alle seine Runden in einem Rennen.",
       "autoPull": {
         "enabled": "Ergebnisse automatisch abrufen",
         "hint": "Läuft ein Lauf, holt der Server die Ergebnisse im schnellen Takt. Bevorstehende Läufe werden im langsamen Takt beobachtet, um ihren Start zu erkennen; beendete Läufe gar nicht.",
@@ -1500,8 +1562,6 @@
         "watchBefore": "Beobachten ab (Minuten vor der geplanten Startzeit)",
         "watchAfter": "Beobachten bis (Minuten nach der geplanten Startzeit)"
       },
-      "startlistQualification": "Startlisten Export Qualifikation",
-      "startlistRounds": "Startlisten Export Läufe",
       "startlist": "Startlisten Export",
       "resultImport": "Rennergebnisse Import",
       "formatsHint": {
@@ -1515,8 +1575,7 @@
         "title": "Wettkämpfe mit eigener Zeitnahme",
         "none": "Kein Wettkampf weicht ab — alle folgen dieser Voreinstellung.",
         "system": "eigenes System",
-        "startlistQualification": "eigener Startlisten Export Qualifikation",
-        "startlistRounds": "eigener Startlisten Export",
+        "startlist": "eigener Startlisten Export",
         "resultImport": "eigener Rennergebnisse Import"
       },
       "races": {
@@ -1526,11 +1585,6 @@
         "edit": "Rennen bearbeiten",
         "name": "Name",
         "url": "Ergebnis-Adresse",
-        "startMode": "Startart",
-        "startModes": {
-          "INDIVIDUAL": "Einzelstarts (Zeitfahren)",
-          "WAVE": "Start in mehreren Läufen"
-        },
         "capturesLaps": "Erfasst Rundenzeiten",
         "none": "Noch kein Rennen angelegt.",
         "deleteConfirm": "„{{name}}“ löschen? Solange noch ein Wettkampf darauf zeigt, lässt es sich nicht löschen — hake die Zuordnung vorher unten ab.",
@@ -1542,9 +1596,8 @@
       },
       "assignments": {
         "title": "Wettkämpfe je Rennen zuordnen",
-        "hint": "Umgekehrt zur Anwahl im Wettkampf: Hake hier je Rennen an, welche Wettkämpfe es nutzen. Ein Wettkampf hängt je Rundenart an genau einem Rennen — hakst du ihn hier an, wandert er von einem anderen hierher. Nicht angehakte Wettkämpfe haben für diese Rundenart kein Rennen.",
-        "forQualification": "Gilt für die Qualifikation von",
-        "forRounds": "Gilt für die Läufe von",
+        "hint": "Umgekehrt zur Anwahl im Wettkampf: Hake hier je Rennen an, welche Wettkämpfe es nutzen. Ein Wettkampf hängt mit allen seinen Runden an genau einem Rennen — hakst du ihn hier an, wandert er von einem anderen hierher. Nicht angehakte Wettkämpfe haben kein Rennen.",
+        "competitions": "Gilt für",
         "saved": "Zuordnung gespeichert."
       }
     },
@@ -1566,6 +1619,7 @@
         "unscheduled": "Zeit offen",
         "failed": "nicht gewertet",
         "startedAt": "gestartet {{time}}",
+        "awaitingReferee": "Zieleinlauf komplett — wartet auf Schiedsrichter-Entscheidung",
         "preparing": "in Vorbereitung",
         "penalty": "inkl. {{seconds}} s Zeitstrafe",
         "deregistered": "abgemeldet",
@@ -1585,7 +1639,6 @@
         "minutesUnit": "min",
         "hoursUnit": "Std.",
         "secondsUnit": "s",
-        "place": "{{count}}.",
         "advancing": "Weiter kommen {{count}} Boote → {{round}}",
         "advancing_one": "Weiter kommt 1 Boot → {{round}}",
         "advancingUnsized": "Weiter geht es: {{round}}",
@@ -1608,9 +1661,9 @@
         "inArena": "Arena {{inArena}}/{{total}}",
         "doesNotTakePlace": "Findet nicht statt",
         "bye": {
-          "open": "Freilos · offen",
-          "acknowledged": "Freilos · quittiert",
-          "cancelled": "Freilos · entfallen"
+          "open": "Freilos{{seed}} · offen",
+          "acknowledged": "Freilos{{seed}} · quittiert",
+          "cancelled": "Freilos{{seed}} · entfallen"
         },
         "counter": {
           "preparing": "{{n}} in Vorbereitung",
@@ -1621,9 +1674,11 @@
         }
       },
       "bye": {
-        "deregistration": "Freilos wegen Abmeldung – {{team}}",
-        "deregistrationWithReason": "Freilos wegen Abmeldung – {{team}} ({{reason}})",
-        "noOpponent": "Freilos – keine Gegner:in in dieser Runde"
+        "deregistration": "Freilos{{seed}} wegen Abmeldung – {{team}}",
+        "deregistrationWithReason": "Freilos{{seed}} wegen Abmeldung – {{team}} ({{reason}})",
+        "noOpponent": "Freilos{{seed}} – keine Gegner:in in dieser Runde",
+        "mustRace": "wird gefahren – Zeit außer Konkurrenz",
+        "mustRaceExplanation": "Wird aus Fairness gefahren: gleiche Belastung wie die Konkurrenz. Die Zeit zählt nicht für das Weiterkommen."
       }
     },
     "liveDashboard": {
@@ -1655,6 +1710,31 @@
         "label": "Aktualisierungsintervall",
         "tooltip": "Nächste Aktualisierung in {{seconds}} s (alle {{interval}} s)",
         "everySeconds": "Alle {{seconds}} Sekunden"
+      },
+      "settings": {
+        "focus": "Fokus",
+        "competitionFilter": {
+          "label": "Wettkämpfe filtern",
+          "all": "Alle Wettkämpfe",
+          "empty": "Keine Läufe vorhanden",
+          "chip_one": "gefiltert: {{count}} Wettkampf",
+          "chip_other": "gefiltert: {{count}} Wettkämpfe"
+        },
+        "onlyToday": "Nur den aktuellen Renntag zeigen",
+        "hideFinished": "Beendete ausblenden (die letzten {{count}} bleiben)",
+        "followCurrent": "Folge dem aktuellen Lauf",
+        "display": "Anzeige",
+        "notePreview": "Notiz-Vorschau an der Bootszeile",
+        "showCrew": "Aufstellung anzeigen",
+        "showChecks": "Prüfungen anzeigen",
+        "readability": "Lesbarkeit",
+        "fontSize": {
+          "label": "Schriftgröße",
+          "normal": "Normal",
+          "large": "Groß",
+          "xlarge": "Sehr groß"
+        },
+        "refresh": "Aktualisierung"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",
@@ -1706,6 +1786,21 @@
         "note": "Notiz: {{note}}",
         "none": "Keine Bedingungen zugewiesen"
       },
+      "notes": {
+        "title": "Notizen",
+        "indicator_one": "{{count}} Notiz",
+        "indicator_other": "{{count}} Notizen",
+        "empty": "Keine Notizen zu diesem Boot.",
+        "inputLabel": "Neue Notiz",
+        "placeholder": "z. B. Boje berührt",
+        "add": "Hinzufügen",
+        "byAt": "{{author}} · {{time}}",
+        "unknownAuthor": "Unbekannt",
+        "delete": "Notiz löschen",
+        "deleteConfirm": "Diese Notiz löschen? „{{note}}“",
+        "error": "Die Notiz konnte nicht gespeichert werden.",
+        "deleteError": "Die Notiz konnte nicht gelöscht werden."
+      },
       "timeCheck": {
         "TOO_EARLY": "Zu früh erfüllt",
         "LATE": "Spät erfüllt",
@@ -1742,6 +1837,61 @@
       "showShortNames": "Kurznamen zeigen",
       "showFullNames": "Ausgeschriebene Namen zeigen",
       "addSlot": "Slot hinzufügen",
+      "startlistExport": {
+        "button": "Startlisten",
+        "title": "Startlisten exportieren",
+        "kind": {
+          "label": "Export-Art",
+          "data": "CSV/ZIP – Import ins Zeitnahme-System",
+          "pdf": "PDF – Aushang oder Regatta-Mappe"
+        },
+        "format": {
+          "label": "Aufteilung",
+          "zip": "ZIP – eine CSV je Wettkampf",
+          "csv": "Eine große CSV – nach Startzeit sortiert"
+        },
+        "background": {
+          "label": "Amtspapier mitdrucken",
+          "hint": "Druckt das Design der Startlisten-Vorlage als Hintergrund mit. Für den Druck auf vorgedrucktem Papier abschalten – Format und Ränder bleiben gleich. Angehängte Mappen-Dokumente sind nicht betroffen."
+        },
+        "bundle": {
+          "label": "Mappen-Dokumente anhängen",
+          "hint": "Baut die Export-Mappe der Veranstaltung zusammen – Dokumente und gesammelte Startlisten in der unter Einstellungen festgelegten Reihenfolge, einzeln abwählbar.",
+          "skippedNonPdf": "kein PDF, wird übersprungen",
+          "disabled": {
+            "onlyStartlists": "Die Export-Mappe enthält außer den gesammelten Startlisten nichts zum Anhängen – Dokumente lassen sich am Reiter „Einstellungen“ der Veranstaltung unter „Export-Mappe“ hinzufügen.",
+            "loading": "Die Export-Mappe wird geladen …",
+            "loadFailed": "Die Export-Mappe konnte nicht geladen werden – Dialog schließen und erneut versuchen.",
+            "forbidden": "Keine Berechtigung, die Export-Mappe zu lesen."
+          }
+        },
+        "skipByes": {
+          "label": "Freilose überspringen",
+          "hint": "Läufe mit „Muss gefahren werden“ werden immer exportiert – auch mit gesetztem Häkchen."
+        },
+        "race": {
+          "label": "RaceClocker-Rennen",
+          "all": "Alle",
+          "hint": "Exportiert nur die Wettkämpfe, deren zugeordnetes RaceClocker-Rennen das gewählte ist – für den Import Rennen für Rennen."
+        },
+        "onlyMissing": {
+          "label": "Nur in RaceClocker fehlende Läufe",
+          "hint": "Ruft je Wettkampf das zugewiesene Rennen ab und exportiert nur Läufe, deren Teams dort noch nicht auftauchen."
+        },
+        "preview": {
+          "loading": "Vorschau wird geladen …",
+          "selectedCount": "{{selected}} von {{total}} ausgewählt",
+          "toggleAll": "Alle an- oder abwählen",
+          "empty": "Nichts zu exportieren – alle Läufe sind bereits in RaceClocker.",
+          "noStartTime": "Ohne geplante Startzeit – vom Export ausgenommen:"
+        },
+        "download": "Herunterladen",
+        "error": {
+          "unreachable": "Ein RaceClocker-Rennen war nicht erreichbar – es wurde nichts exportiert.",
+          "noStartTime_one": "{{count}} Lauf ohne geplante Startzeit blockiert den Export:",
+          "noStartTime_other": "{{count}} Läufe ohne geplante Startzeit blockieren den Export:"
+        }
+      },
       "slotType": "Art",
       "freeSlot": "Freier Slot",
       "matchSlot": "Lauf",
@@ -1828,9 +1978,11 @@
         "title": "Zeitplan anpassen",
         "fromSlot": "Start-Slot",
         "modePlus": "+X Minuten",
+        "modeRange": "Bereich verschieben",
         "modeSetTime": "Startzeit setzen",
         "modeCompress": "Aufholen bis",
         "targetSlot": "Ziel-Slot",
+        "toSlot": "Bis-Slot",
         "minutes": "Minuten",
         "newTime": "Neue Startzeit",
         "preview": "Vorschau",
@@ -1848,20 +2000,35 @@
           "leavesRaceDayPlain": "Die Verschiebung schiebt mindestens einen Slot über den Renntag hinaus. Bitte weniger weit verschieben; der Zeitplan des Folgetags wird getrennt angepasst.",
           "overtakesPredecessor": "So weit vorziehen ist nicht möglich: Der vorherige Slot beginnt um {{earliest}} und würde überholt. Höchstens {{max}} Minuten vorziehen — vor {{earliest}} darf kein verschobener Lauf starten.",
           "overtakesPredecessorPlain": "So weit vorziehen ist nicht möglich: Der verschobene Block würde den vorherigen Slot überholen. Bitte weniger weit vorziehen.",
+          "overtakesFollower": "So weit verzögern ist nicht möglich: Der nächste Slot dahinter beginnt um {{latest}} und würde eingeholt. Höchstens {{max}} Minuten verzögern — oder den Bis-Slot weiter nach hinten wählen.",
+          "overtakesFollowerPlain": "So weit verzögern ist nicht möglich: Der verschobene Bereich würde den ersten Slot dahinter einholen. Bitte weniger weit verzögern oder den Bis-Slot weiter hinten wählen.",
           "unexpected": "Die Verschiebung wurde abgelehnt. Bitte die Angaben im Formular prüfen und die Vorschau erneut ausführen."
         },
         "mode": "Methode",
         "delayMinutes": "Verzug (Minuten)",
         "help": {
           "plus": "Alle Slots ab dem gewählten Slot werden um die angegebenen Minuten verschoben (negativ = vorziehen).",
+          "range": "Nur die Slots vom Start-Slot bis einschließlich Bis-Slot werden um die angegebenen Minuten verschoben (negativ = vorziehen). Alles davor und dahinter behält seine Zeit.",
           "setTime": "Der gewählte Slot bekommt die neue Startzeit; alle folgenden Slots behalten ihre Abstände.",
           "compress": "Der angegebene Verzug wird bis zum Ziel-Slot aufgeholt: Die Abstände dazwischen werden verkürzt, der Ziel-Slot behält seine ursprüngliche Zeit."
         }
       },
       "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
       "goToExecution": "Zur Durchführung",
+      "eventMode": {
+        "enable": "Veranstaltungs-Modus einschalten: Zeitplan und Durchführung nebeneinander",
+        "disable": "Veranstaltungs-Modus ausschalten",
+        "tooSmall": "Der Veranstaltungs-Modus braucht einen breiten Bildschirm — dieses Fenster ist dafür zu schmal.",
+        "loadHint": "Lädt die Durchführung rechts neben dem Zeitplan. Die Geräte-Einstellung „In neuem Fenster öffnen“ gilt im Veranstaltungs-Modus nicht.",
+        "close": "Durchführung schließen",
+        "empty": "Wähle einen Lauf — seine Durchführung erscheint hier neben dem Zeitplan.",
+        "execution": "Durchführung"
+      },
       "indicator": {
         "now": "Jetzt",
+          "planned": "Geplant {{time}}",
+          "started": "Gestartet {{time}}",
+          "expected": "Erwartet ~{{time}}",
         "state": {
           "finished": "Beendet",
           "preparing": "In Vorbereitung",
@@ -1870,7 +2037,8 @@
           "linked": "Verknüpft",
           "waiting": "Lauf noch nicht gesetzt",
           "free": "Programmpunkt",
-          "skipped": "Übersprungen"
+          "skipped": "Übersprungen",
+          "bye": "Freilos"
         }
       },
       "error": {
@@ -1931,6 +2099,8 @@
       "copyUrl": "URL kopieren",
       "urlCopied": "URL kopiert",
       "name": "Name",
+      "saveAndClose": "Speichern und Beenden",
+      "matchDetailFullscreen": "Die Sprecher-Kachel füllt immer das ganze Board — Spalten und Spannweiten wirken hier nicht",
       "notFound": "Board nicht gefunden",
       "tileCount": "{{count}} Kacheln",
       "tileCount_one": "1 Kachel",
@@ -1942,14 +2112,31 @@
         "addElement": "Element hinzufügen",
         "width": "Breite (Spalten)",
         "height": "Höhe (Zeilen)",
-        "add": "Kachel hinzufügen"
+        "add": "Kachel hinzufügen",
+        "addDisabledMatchDetail": "Die Sprecher-Kachel füllt das ganze Board — weitere Kacheln sind nicht möglich"
+      },
+      "delay": {
+        "subtitle": "gegenüber Zeitplan, Stand letzter Start",
+        "onTime": "pünktlich",
+        "noStarts": "Noch kein Lauf gestartet"
+      },
+      "detail": {
+        "status": {
+          "upcoming": "Bevorstehend",
+          "preparing": "In Vorbereitung",
+          "running": "Läuft",
+          "awaiting": "Wartet auf Schiedsrichter-Entscheidung",
+          "finished": "Beendet"
+        }
       },
       "element": {
         "type": {
           "label": "Elementtyp",
           "match": "Lauf",
+          "matchDetail": "Sprecher-Kachel (Vollbild)",
           "matchList": "Laufliste",
           "clock": "Uhr",
+          "delay": "Verspätung",
           "text": "Hinweistext",
           "awardCeremony": "Siegerehrung"
         },
@@ -1972,6 +2159,11 @@
           "running": "Laufende Läufe",
           "schedule": "Tagesprogramm"
         },
+        "scheduleMode": {
+          "label": "Ausschnitt",
+          "follow": "Mitlaufender Ausschnitt",
+          "full": "Ganzer Tag (scrollbar)"
+        },
         "titleCurrent": "Im Rennen",
         "titleNext": "Als Nächstes",
         "titleUpcoming": "In {{count}} Läufen",
@@ -1991,7 +2183,11 @@
         "showCrewDetails": "Crew im Detail (je Zeile)",
         "showBirthYears": "Jahrgänge zeigen",
         "showAdvancement": "Weiterkommens-Regel zeigen",
-        "showRegisteringClub": "Meldenden Verein zeigen"
+        "showRegisteringClub": "Meldenden Verein zeigen",
+        "backgroundColor": "Kachelfarbe",
+        "borderColor": "Randfarbe",
+        "colorRemove": "Farbe entfernen",
+        "backgroundColorHint": "Helle Farbtöne halten den Inhalt lesbar"
       },
       "columns": "Spalten",
       "columnCount": "{{count}} Spalten",
@@ -2067,6 +2263,8 @@
     "publiclyVisible": "Für Teilnehmende sichtbar (Mein Event)",
     "checkEarliestMinutesBefore": "Frühestens (Minuten vor Start)",
     "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
+    "publicNote": "Öffentlicher Hinweis (Mein Event)",
+    "publicNoteHint": "Wird den Athletinnen und Athleten wörtlich angezeigt — die Beschreibung darüber bleibt intern.",
     "namedParticipantRequirements": {
       "title": "Named Participant Bedingungen",
       "description": "Verwalten Sie spezifische Bedingungen für Named Participants",
@@ -2517,6 +2715,11 @@
       "available": "Neue Version verfügbar",
       "reload": "Jetzt laden"
     },
+    "install": {
+      "message": "Du kannst diese App auf deinem Gerät installieren.",
+      "button": "App installieren",
+      "iosHint": "Du kannst diese App installieren: Tippe auf das Teilen-Symbol und wähle „Zum Home-Bildschirm“."
+    },
     "reset": {
       "button": "App zurücksetzen",
       "confirm": "Setzt die App auf dem Gerät zurück und lädt sie neu. Angemeldet bleibst du."
@@ -2872,9 +3075,36 @@
       }
     }
   },
+  "resultList": {
+    "download": {
+      "button": "Ergebnisliste",
+      "title": "Ergebnisliste drucken",
+      "action": "Herunterladen",
+      "hint": "Zum Aushängen oder fürs Pult — die Bestandteile sind frei wählbar, die Vorlage belegt sie nur vor. Jede Seite trägt einen Stand-Zeitstempel. Gedruckt werden nur bestätigte Platzierungen.",
+      "preset": {
+        "label": "Vorlage",
+        "posting": "Aushang",
+        "ceremony": "Siegerehrung"
+      },
+      "options": {
+        "crew": "Mannschaftsaufstellung (Namen je Boot)",
+        "times": "Zeiten und Zeitstrafen",
+        "podiumOnly": "Nur die Plätze 1 bis 3",
+        "byRatingCategory": "Je Wertungskategorie ein Abschnitt",
+        "largePrint": "Große Schrift (Aushang)"
+      },
+      "error": {
+        "noResults": "Es gibt noch keine bestätigten Platzierungen für diese Ergebnisliste.",
+        "competitionNotInEvent": "Dieser Wettkampf gehört nicht zu dieser Veranstaltung. Bitte die Seite neu laden.",
+        "isChallengeEvent": "Für eine Challenge-Veranstaltung gibt es keine Ergebnislisten — dort werden keine Läufe gefahren und keine Plätze vergeben.",
+        "unexpected": "Die Ergebnisliste konnte nicht erzeugt werden. Bitte die Seite neu laden und es erneut versuchen."
+      }
+    }
+  },
   "myEvent": {
     "tab": "Mein Event",
-    "hint": "Scanne den QR-Code auf deinem Band, um deine Läufe und Ergebnisse zu sehen.",
+    "emptyTitle": "Dein persönlicher Zeitplan",
+    "emptyHint": "Scanne den QR-Code auf deinem Teilnehmerband mit der Handykamera. Deine Läufe, Startzeiten und Ergebnisse erscheinen dann automatisch hier.",
     "notFound": "Zu diesem Code gibt es keine Teilnahme bei dieser Veranstaltung.",
     "next": "Dein nächster Lauf",
     "running": "Läuft gerade",
@@ -2888,6 +3118,12 @@
     "requirementFulfilled": "erledigt",
     "requirementOpen": "offen",
     "requirementOptional": "freiwillig",
+    "requirementCheckBetween": "Erledigen zwischen {{from}} und {{until}}",
+    "requirementCheckFrom": "Erledigen ab {{from}}",
+    "requirementCheckUntil": "Erledigen bis {{until}}",
+    "fieldOwnBoat": "Dein Boot",
+    "fieldNotReleased": "Das Feld dieses Laufs ist noch nicht freigegeben.",
+    "fieldLoadError": "Das Feld konnte nicht geladen werden.",
     "remove": "Eintrag entfernen",
     "lane": "Startposition",
     "team": "Mannschaft",

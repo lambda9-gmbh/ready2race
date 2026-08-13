@@ -2,21 +2,33 @@ import {describe, expect, it} from 'vitest'
 import {LiveDashboardMatchDto, LiveDashboardTeamDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
     buildLiveDashboardTimeline,
+    canSubmitNote,
+    centeredScrollTop,
     competitionLabel,
     crewMemberLabel,
+    dashboardCompetitionOptions,
     dashboardCrew,
     dashboardEntryDomId,
     dashboardEntryDomIdCandidates,
     dashboardMatchStatus,
     dashboardScope,
+    dashboardTypographySizes,
+    filterMatchesByCompetitions,
+    filterPendingSlotsByCompetitions,
+    filterTimelineEntriesForDay,
+    followTargetMatchId,
+    hideFinishedTimelineEntries,
     isLiveMatch,
+    latestTeamNote,
     liveMatches,
     matchControls,
     nextUpEntry,
     openResultTeams,
     pendingSlotLabel,
     shortenClubChain,
+    dashboardRowColumns,
     teamHasResult,
+    teamNoteCount,
     teamsInDisplayOrder,
     teamShowsClubLine,
     teamShowsCrew,
@@ -601,12 +613,308 @@ describe('dashboardMatchStatus', () => {
 
     it('trägt das Freilos in den Dashboard-Status', () => {
         const status = dashboardMatchStatus(
-            match({state: 'AWAITING_FINISH', bye: {cause: 'DEREGISTRATION', teamName: 'RV Hansa'}}),
+            match({
+                state: 'AWAITING_FINISH',
+                bye: {cause: 'DEREGISTRATION', teamName: 'RV Hansa', mustRace: false},
+            }),
         )
-        expect(status.bye).toEqual({cause: 'DEREGISTRATION', teamName: 'RV Hansa'})
+        expect(status.bye).toEqual({cause: 'DEREGISTRATION', teamName: 'RV Hansa', mustRace: false})
     })
 
     it('lässt einen gewöhnlichen Lauf ohne Freilos', () => {
         expect(dashboardMatchStatus(match({})).bye).toBeUndefined()
+    })
+})
+
+describe('teamNoteCount', () => {
+    it('zählt die Notizen eines Boots', () => {
+        expect(
+            teamNoteCount(
+                team({
+                    notes: [
+                        {id: '1', note: 'Boje berührt', createdAt: '2026-08-14T10:00:00'},
+                        {id: '2', note: 'geklärt', createdAt: '2026-08-14T10:05:00'},
+                    ],
+                }),
+            ),
+        ).toBe(2)
+    })
+
+    it('liefert 0, wenn der Server das Feld weglässt — der Marker bleibt weg', () => {
+        expect(teamNoteCount(team({}))).toBe(0)
+        expect(teamNoteCount(team({notes: []}))).toBe(0)
+    })
+})
+
+describe('canSubmitNote', () => {
+    it('lässt echten Text durch', () => {
+        expect(canSubmitNote('Boje berührt')).toBe(true)
+    })
+
+    it('sperrt leeren Text und reinen Leerraum — dieselbe Regel wie notBlank im Backend', () => {
+        expect(canSubmitNote('')).toBe(false)
+        expect(canSubmitNote('   ')).toBe(false)
+        expect(canSubmitNote('\n\t')).toBe(false)
+    })
+})
+
+describe('centeredScrollTop', () => {
+    // Spalte: 800 hoch, Inhalt 10000, Karte 200 hoch — die Karte mittig heißt: 300 Luft
+    // darüber und darunter.
+    it('stellt ein Element in der Mitte des Containers', () => {
+        expect(centeredScrollTop(5000, 200, 800, 10000)).toBe(4700)
+    })
+
+    it('überschießt am Listenanfang nicht ins Negative', () => {
+        expect(centeredScrollTop(100, 200, 800, 10000)).toBe(0)
+    })
+
+    it('hält am Listenende am maximalen scrollTop an', () => {
+        // max = 10000 - 800 = 9200; mittig wären 9500
+        expect(centeredScrollTop(9800, 200, 800, 10000)).toBe(9200)
+    })
+
+    it('bleibt bei 0, wenn der Inhalt in den Container passt', () => {
+        expect(centeredScrollTop(100, 200, 800, 600)).toBe(0)
+    })
+
+    it('richtet ein Element, das höher ist als der Container, an dessen Oberkante über der Mitte aus', () => {
+        // (800 - 1000) / 2 = -100 -> Oberkante 100 über der Container-Oberkante
+        expect(centeredScrollTop(5000, 1000, 800, 10000)).toBe(5100)
+    })
+})
+
+// === Geräte-lokale Anpassungen des Boards (12.08.2026) ==========================================
+
+describe('dashboardCompetitionOptions', () => {
+    const laeufe = [
+        match({competitionId: 'b', competitionName: 'Beta-Rennen', competitionShortName: 'B 2x'}),
+        match({competitionId: 'a', competitionName: 'Alpha-Rennen', competitionIdentifier: '17'}),
+        // Zweiter Lauf desselben Wettkampfs — er darf die Liste nicht verdoppeln.
+        match({competitionId: 'b', competitionName: 'Beta-Rennen', competitionShortName: 'B 2x'}),
+    ]
+
+    it('leitet je Wettkampf genau einen Eintrag ab, sortiert nach Label', () => {
+        expect(dashboardCompetitionOptions(laeufe)).toEqual([
+            {competitionId: 'a', label: 'Alpha-Rennen'},
+            {competitionId: 'b', label: 'Beta-Rennen'},
+        ])
+    })
+
+    it('trägt in der Kurzform das Kürzel als Label', () => {
+        expect(dashboardCompetitionOptions(laeufe, 'short')).toEqual([
+            {competitionId: 'a', label: '17'},
+            {competitionId: 'b', label: 'B 2x'},
+        ])
+    })
+
+    it('bleibt ohne Läufe leer', () => {
+        expect(dashboardCompetitionOptions([])).toEqual([])
+    })
+})
+
+describe('filterMatchesByCompetitions', () => {
+    const a = match({matchId: 'a1', competitionId: 'a'})
+    const b = match({matchId: 'b1', competitionId: 'b'})
+
+    it('lässt bei leerer Auswahl alles durch — leer heißt „alle"', () => {
+        expect(filterMatchesByCompetitions([a, b], [])).toEqual([a, b])
+    })
+
+    it('behält nur Läufe der gewählten Wettkämpfe', () => {
+        expect(filterMatchesByCompetitions([a, b], ['a']).map(m => m.matchId)).toEqual(['a1'])
+    })
+
+    it('ignoriert Ids, die in den Daten nicht vorkommen (gespeicherte Wahl von gestern)', () => {
+        expect(filterMatchesByCompetitions([a, b], ['a', 'gibtsnicht']).map(m => m.matchId)).toEqual([
+            'a1',
+        ])
+    })
+})
+
+describe('filterPendingSlotsByCompetitions', () => {
+    const laeufe = [
+        match({competitionId: 'a', competitionName: 'Alpha-Rennen'}),
+        match({competitionId: 'b', competitionName: 'Beta-Rennen'}),
+    ]
+    const alphaSlot = pendingSlot({slotId: 'alpha', competitionName: 'Alpha-Rennen'})
+    const betaSlot = pendingSlot({slotId: 'beta', competitionName: 'Beta-Rennen'})
+    const pause = pendingSlot({slotId: 'pause', name: 'Mittagspause'})
+    const fremd = pendingSlot({slotId: 'fremd', competitionName: 'Unbekanntes Rennen'})
+
+    it('lässt bei leerer Auswahl alles durch', () => {
+        expect(filterPendingSlotsByCompetitions([alphaSlot, pause], laeufe, [])).toEqual([
+            alphaSlot,
+            pause,
+        ])
+    })
+
+    it('filtert wartende Slots über den Wettkampfnamen der gewählten Läufe', () => {
+        expect(
+            filterPendingSlotsByCompetitions([alphaSlot, betaSlot], laeufe, ['a']).map(
+                s => s.slotId,
+            ),
+        ).toEqual(['alpha'])
+    })
+
+    it('lässt Programmpunkte immer stehen — die Mittagspause gehört zu keinem Wettkampf', () => {
+        expect(
+            filterPendingSlotsByCompetitions([pause, betaSlot], laeufe, ['a']).map(s => s.slotId),
+        ).toEqual(['pause'])
+    })
+
+    it('behält Slots, deren Wettkampf sich aus den Läufen nicht auflösen lässt', () => {
+        expect(
+            filterPendingSlotsByCompetitions([fremd], laeufe, ['a']).map(s => s.slotId),
+        ).toEqual(['fremd'])
+    })
+})
+
+describe('filterTimelineEntriesForDay', () => {
+    const heute = match({matchId: 'heute', startTime: '2026-08-14T10:00:00'})
+    const morgen = match({matchId: 'morgen', startTime: '2026-08-15T09:00:00'})
+    const ohneZeit = match({matchId: 'ohne', startTime: null})
+    const slotHeute = pendingSlot({slotId: 'slot-heute', startTime: '2026-08-14T12:00:00'})
+    const slotMorgen = pendingSlot({slotId: 'slot-morgen', startTime: '2026-08-15T12:00:00'})
+
+    it('behält nur die Einträge des Tages', () => {
+        const entries = buildLiveDashboardTimeline([heute, morgen], [slotHeute, slotMorgen])
+        expect(
+            filterTimelineEntriesForDay(entries, '2026-08-14').map(e =>
+                e.kind === 'match' ? e.match.matchId : e.slot.slotId,
+            ),
+        ).toEqual(['heute', 'slot-heute'])
+    })
+
+    it('lässt Einträge ohne Startzeit stehen — sie gehören zu keinem Tag', () => {
+        const entries = buildLiveDashboardTimeline([heute, ohneZeit], [])
+        expect(
+            filterTimelineEntriesForDay(entries, '2026-08-14').map(e =>
+                e.kind === 'match' ? e.match.matchId : '',
+            ),
+        ).toEqual(['heute', 'ohne'])
+    })
+})
+
+describe('hideFinishedTimelineEntries', () => {
+    const timeline = buildLiveDashboardTimeline(
+        [
+            match({matchId: 'f1', state: 'FINISHED', startTime: '2026-08-14T09:00:00'}),
+            match({matchId: 'f2', state: 'FINISHED', startTime: '2026-08-14T09:30:00'}),
+            match({matchId: 'f3', state: 'FINISHED', startTime: '2026-08-14T10:00:00'}),
+            match({matchId: 'laeuft', state: 'RUNNING', startTime: '2026-08-14T10:30:00'}),
+            match({matchId: 'abgesagt', state: 'SKIPPED', startTime: '2026-08-14T11:00:00'}),
+            match({matchId: 'anstehend', state: 'UPCOMING', startTime: '2026-08-14T11:30:00'}),
+        ],
+        [],
+    )
+    const ids = (entries: ReturnType<typeof buildLiveDashboardTimeline>) =>
+        entries.map(e => (e.kind === 'match' ? e.match.matchId : e.slot.slotId))
+
+    it('versteckt beendete Läufe bis auf die zwei jüngsten', () => {
+        expect(ids(hideFinishedTimelineEntries(timeline))).toEqual([
+            'f2',
+            'f3',
+            'laeuft',
+            'abgesagt',
+            'anstehend',
+        ])
+    })
+
+    it('lässt abgesagte Läufe stehen — die Absage muss auffindbar bleiben', () => {
+        expect(ids(hideFinishedTimelineEntries(timeline))).toContain('abgesagt')
+    })
+
+    it('versteckt nichts, solange höchstens so viele beendet sind wie behalten werden', () => {
+        const wenige = timeline.filter(
+            e => e.kind === 'match' && ['f2', 'f3', 'laeuft'].includes(e.match.matchId),
+        )
+        expect(ids(hideFinishedTimelineEntries(wenige))).toEqual(['f2', 'f3', 'laeuft'])
+    })
+})
+
+describe('followTargetMatchId', () => {
+    it('zentriert bevorzugt den Lauf, der im Live-Sinn läuft', () => {
+        const matches = [
+            match({matchId: 'beendet', state: 'FINISHED'}),
+            match({matchId: 'laeuft', state: 'RUNNING'}),
+            match({matchId: 'anstehend', state: 'UPCOMING'}),
+        ]
+        expect(followTargetMatchId(matches)).toBe('laeuft')
+    })
+
+    it('nimmt ersatzweise den nächsten anstehenden Lauf', () => {
+        const matches = [
+            match({matchId: 'beendet', state: 'FINISHED'}),
+            match({matchId: 'anstehend', state: 'UPCOMING'}),
+            match({matchId: 'spaeter', state: 'UPCOMING'}),
+        ]
+        expect(followTargetMatchId(matches)).toBe('anstehend')
+    })
+
+    it('liefert null, wenn es nichts zu folgen gibt', () => {
+        expect(followTargetMatchId([match({matchId: 'beendet', state: 'FINISHED'})])).toBeNull()
+        expect(followTargetMatchId([])).toBeNull()
+    })
+})
+
+describe('latestTeamNote', () => {
+    it('liefert die jüngste Notiz — der Server sortiert älteste zuerst', () => {
+        expect(
+            latestTeamNote(
+                team({
+                    notes: [
+                        {id: '1', note: 'Boje berührt', createdAt: '2026-08-14T10:00:00'},
+                        {id: '2', note: 'geklärt', createdAt: '2026-08-14T10:05:00'},
+                    ],
+                }),
+            )?.note,
+        ).toBe('geklärt')
+    })
+
+    it('liefert null ohne Notizen', () => {
+        expect(latestTeamNote(team({}))).toBeNull()
+        expect(latestTeamNote(team({notes: []}))).toBeNull()
+    })
+})
+
+describe('dashboardRowColumns', () => {
+    it('reserviert mit Prüfungs-Icons die 26px-Spalte am Zeilenende', () => {
+        expect(dashboardRowColumns(false, true)).toBe('2ch minmax(0, 1fr) 26px')
+        expect(dashboardRowColumns(true, true)).toBe('2ch minmax(0, 1fr) 10.5ch 2rem 26px')
+    })
+
+    it('räumt die Icon-Spalte KOMPLETT, wenn Prüfungen ausgeblendet sind — der Platzgewinn ist der Zweck', () => {
+        expect(dashboardRowColumns(false, false)).toBe('2ch minmax(0, 1fr)')
+        expect(dashboardRowColumns(true, false)).toBe('2ch minmax(0, 1fr) 10.5ch 2rem')
+    })
+})
+
+describe('dashboardTypographySizes', () => {
+    it('übersteuert im Normalzustand nichts', () => {
+        expect(dashboardTypographySizes(false, 'normal')).toBeNull()
+    })
+
+    it('liefert kompakt die bisherigen festen Stufen', () => {
+        expect(dashboardTypographySizes(true, 'normal')).toEqual({
+            subtitle1: '0.875rem',
+            body2: '0.8rem',
+            caption: '0.7rem',
+        })
+    })
+
+    it('skaliert die MUI-Standardgrößen je Stufe', () => {
+        expect(dashboardTypographySizes(false, 'large')).toEqual({
+            subtitle1: '1.15rem',
+            body2: '1.006rem',
+            // 0.75 × 1.15 ist als Gleitkommazahl 0.86249…, gerundet also 0.862.
+            caption: '0.862rem',
+        })
+        expect(dashboardTypographySizes(false, 'xlarge')?.subtitle1).toBe('1.3rem')
+    })
+
+    it('verrechnet Kompakt und Groß statt sie auszuschließen', () => {
+        // 0.875 × 1.15 = 1.006… — dichte Karten, größere Schrift.
+        expect(dashboardTypographySizes(true, 'large')?.subtitle1).toBe('1.006rem')
     })
 })

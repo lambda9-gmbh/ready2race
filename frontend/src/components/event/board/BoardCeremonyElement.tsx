@@ -1,7 +1,8 @@
 import {Box, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {BoardElement, BoardViewDto} from '@api/types.gen'
-import {formatPlace, scaled} from '../info/athleteBoard/common'
+import {scaled} from '../info/athleteBoard/common'
+import PlaceOrdinal from '@components/PlaceOrdinal'
 import {ceremonyForElement} from './boardView'
 
 interface BoardCeremonyElementProps {
@@ -58,7 +59,9 @@ const BoardCeremonyElement = ({element, view}: BoardCeremonyElementProps) => {
                 {ceremony?.ratingCategoryName ? ` — ${ceremony.ratingCategoryName}` : ''}
             </Typography>
 
-            <Box sx={{minHeight: 0, overflow: 'hidden', display: 'grid', alignContent: 'start'}}>
+            {/* Scrollen statt Abschneiden: ein langes Siegerfeld bleibt per Scroll
+                erreichbar, statt hinter der Zellkante zu verschwinden. */}
+            <Box sx={{minHeight: 0, overflow: 'auto', display: 'grid', alignContent: 'start'}}>
                 {!ceremony || ceremony.ranks.length === 0 ? (
                     <Typography
                         sx={{fontSize: scaled('0.85rem', '1.2vw', '1.8rem')}}
@@ -88,7 +91,7 @@ const BoardCeremonyElement = ({element, view}: BoardCeremonyElementProps) => {
                                     flexShrink: 0,
                                 }}>
                                 {/* Bei geteilten Rängen trägt nur das erste Boot die große Zahl. */}
-                                {rank.first ? formatPlace(rank.rank, t) : ''}
+                                {rank.first ? <PlaceOrdinal place={rank.rank} /> : ''}
                             </Typography>
                             <Box sx={{flex: 1, minWidth: 0}}>
                                 <Typography

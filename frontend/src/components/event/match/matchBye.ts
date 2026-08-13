@@ -1,7 +1,12 @@
 import {MatchByeDto} from '@api/types.gen.ts'
 
-/** Ein Satz als Datensatz — die aufrufende Komponente übersetzt und malt, wie bei [MatchChip]. */
-export type ByeExplanation = {key: string; values?: Record<string, string>}
+/**
+ * Ein Satz als Datensatz — die aufrufende Komponente übersetzt und malt, wie bei [MatchChip].
+ *
+ * [mustRace] hängt „muss gefahren werden" an: Die Komponente ergänzt dann den Hinweis
+ * `event.match.bye.mustRace` („wird gefahren – Zeit außer Konkurrenz") hinter dem Ursachen-Satz.
+ */
+export type ByeExplanation = {key: string; values?: Record<string, string>; mustRace?: boolean}
 
 /**
  * Der Satz, der unter einem Freilos steht — die Übersetzung der Ursache in etwas, das am Steg
@@ -11,15 +16,26 @@ export type ByeExplanation = {key: string; values?: Record<string, string>}
  * zurück: „Freilos wegen Abmeldung —" ohne Namen behauptet eine Ursache und liefert sie nicht.
  * Dasselbe Prinzip wie im Backend, wo der Freitext-Grund bei mehreren Abmeldungen entfällt.
  */
+/**
+ * Die Setzungszahl als Interpolationswert für die `{{seed}}`-Platzhalter der Freilos-Texte:
+ * „Freilos 1" für das Boot, das als Erstes weiterkam, nacktes „Freilos" ohne Zahl. Das führende
+ * Leerzeichen steckt im WERT, nicht im Schlüssel - sonst stünde ohne Zahl ein doppeltes
+ * Leerzeichen im Satz.
+ */
+export const byeSeedValue = (bye: MatchByeDto): string => (bye.seed != null ? ` ${bye.seed}` : '')
+
 export const byeExplanation = (bye: MatchByeDto | null | undefined): ByeExplanation | null => {
     if (!bye) return null
+    const mustRace = bye.mustRace || undefined
+    const seed = byeSeedValue(bye)
     if (bye.cause === 'DEREGISTRATION' && bye.teamName) {
         return bye.reason
             ? {
                   key: 'event.match.bye.deregistrationWithReason',
-                  values: {team: bye.teamName, reason: bye.reason},
+                  values: {team: bye.teamName, reason: bye.reason, seed},
+                  mustRace,
               }
-            : {key: 'event.match.bye.deregistration', values: {team: bye.teamName}}
+            : {key: 'event.match.bye.deregistration', values: {team: bye.teamName, seed}, mustRace}
     }
-    return {key: 'event.match.bye.noOpponent'}
+    return {key: 'event.match.bye.noOpponent', values: {seed}, mustRace}
 }

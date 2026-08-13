@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.UUID
 
 /** Grenzen der Board-Konfiguration — eine Stelle für Backend-Validierung und Editor-Hinweise. */
@@ -17,7 +18,9 @@ object BoardLimits {
     const val DEFAULT_ROTATION_INTERVAL_SECONDS = 10
     const val MIN_COLUMNS = 1
     const val MAX_COLUMNS = 4
-    const val MAX_TILES = 12
+    // 16 statt anfangs 12: mit 4 Spalten (MAX_COLUMNS) soll ein volles 4×4-Raster aus
+    // lauter 1×1-Kacheln möglich sein.
+    const val MAX_TILES = 16
     const val MAX_ROW_SPAN = 3
 }
 
@@ -34,17 +37,38 @@ enum class BoardLayout(val tileCount: Int, val columns: Int) {
     SIX_TILES(6, 3),
 }
 
-enum class BoardElementType { MATCH, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY }
+/**
+ * MATCH_DETAIL ist die Sprecher-Kachel: EIN Lauf (Slot-Wahl über `offset` wie bei MATCH) in
+ * maximaler Detailtiefe — volle Aufstellung, Jahrgänge, Vereine, Bedingungen je Person. Nur als
+ * einzige Kachel eines Boards gültig ([BoardRequest.validate]): sie ist für den zweiten
+ * Bildschirm bzw. Browser-Tab der Sprecherin gedacht, nicht als Raster-Baustein.
+ */
+enum class BoardElementType { MATCH, MATCH_DETAIL, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY, DELAY }
 
 /** SCHEDULE = Tagesprogramm: alle Slots des Zeitplans mit Status, für Sprecherinnen und Aushänge. */
 enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }
+
+/**
+ * Wie eine Tagesprogramm-Kachel (MATCH_LIST mit SCHEDULE) ihren Ausschnitt wählt:
+ * FOLLOW = mitlaufendes Fenster um „jetzt" (bisheriges Verhalten, [limit] deckelt),
+ * FULL = der ganze Tag ohne Zuschnitt — die Kachel scrollt stattdessen.
+ * Fehlt das Feld (Alt-Konfigurationen), gilt FOLLOW.
+ */
+enum class BoardScheduleMode { FOLLOW, FULL }
 
 /**
  * Ein Element einer Kachel. Bewusst flach statt sealed: das Schema geht 1:1 durch das
  * handgepflegte OpenAPI-YAML und den hey-api-Generator, die mit einem Discriminator
  * beide mehr Reibung als Nutzen erzeugen. Welche Felder je [type] Pflicht sind,
  * erzwingt [BoardRequest.validate].
+ *
+ * `ignoreUnknown`: Die Konfiguration liegt als JSON in der Datenbank — gespeicherte
+ * Stände können Felder tragen, die es nicht mehr gibt. Konkret: `backgroundOpacity`
+ * (Deckkraft der Kachelfarbe, am 12.08.2026 ersatzlos entfernt — hellere Töne wählt
+ * man direkt als Farbe). Ohne die Annotation risse jedes solche Alt-Feld die
+ * Deserialisierung (Jacksons FAIL_ON_UNKNOWN_PROPERTIES ist standardmäßig an).
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class BoardElement(
     val type: BoardElementType,
     // MATCH: Position auf der Tages-Timeline, 0 = zuletzt gestarteter noch laufender Lauf.
@@ -67,6 +91,8 @@ data class BoardElement(
     // MATCH_LIST
     val listMode: BoardListMode? = null,
     val limit: Int? = null,
+    /** Nur für [BoardListMode.SCHEDULE]: mitlaufender Ausschnitt oder ganzer Tag — siehe [BoardScheduleMode]. */
+    val scheduleMode: BoardScheduleMode? = null,
     /** Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale Listen. */
     val useShortNames: Boolean? = null,
     // AWARD_CEREMONY: die Ehrung (Wettkampf + optionale Wertung), deren Podium die Kachel zeigt.
@@ -76,6 +102,14 @@ data class BoardElement(
     val showEventName: Boolean? = null,
     // TEXT
     val text: String? = null,
+    // Für jeden Elementtyp erlaubt: Signalfarben je Kachel, z. B. rot für „Letztes
+    // Ergebnis", grün für „Im Rennen" — der Veranstalter wählt selbst. Fläche und Rand
+    // sind unabhängig setzbar (nur Rand, nur Fläche, beides). Fehlen die Felder
+    // (Alt-Konfigurationen), bleibt das bisherige Aussehen.
+    /** Hintergrundfarbe der Kachel als Hex (`#RGB` oder `#RRGGBB`). */
+    val backgroundColor: String? = null,
+    /** Randfarbe der Kachel als Hex (`#RGB` oder `#RRGGBB`) — rahmt die Kachelzelle. */
+    val borderColor: String? = null,
 )
 
 data class BoardTile(

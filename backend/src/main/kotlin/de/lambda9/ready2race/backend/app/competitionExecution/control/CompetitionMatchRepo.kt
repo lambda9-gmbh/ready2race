@@ -1,12 +1,12 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.BulkStartlistCompetitionRow
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchForRunningStatusDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListConfigTarget
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.WaveName
 import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerMatchTarget
 import de.lambda9.ready2race.backend.app.raceclocker.entity.RaceClockerRaceRef
-import de.lambda9.ready2race.backend.app.timingConfig.entity.TimingSystem
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
@@ -45,6 +45,18 @@ object CompetitionMatchRepo {
         )
 
     /**
+     * Materialisiert die Freilos-Namen ("Freilos <Setzungszahl>") an den Lauf-Instanzen der
+     * soeben erzeugten Runde (Schlüssel: Setup-Lauf-Id = Primärschlüssel von competition_match).
+     * Nur `createNewRound` schreibt hier, direkt nach der Erzeugung - ein Zurücksetzen braucht es
+     * nicht, weil die Instanz samt Name beim Löschen der Runde stirbt (V202608121300).
+     */
+    fun setByeNames(byeNameBySetupMatch: Map<UUID, String>) =
+        COMPETITION_MATCH.updateMany(
+            f = { byeName = byeNameBySetupMatch.getValue(competitionSetupMatch!!) },
+            condition = { COMPETITION_SETUP_MATCH.`in`(byeNameBySetupMatch.keys) },
+        )
+
+    /**
      * Der Wettkampf, zu dem dieser Lauf gehört — die Kette Lauf → Setup-Lauf → Runde →
      * Eigenschaften → Wettkampf. Die Aufrufer der Automatik kennen nur den Lauf.
      */
@@ -66,35 +78,25 @@ object CompetitionMatchRepo {
      * time, competition and match name, see [WaveName] - MUST be formatted exactly like
      * [de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.buildCsv]
      * builds it for the export, or the wave-name fallback filter in `assignFeedRows` never matches)
-     * and the two RaceClocker races it selected. Which of the two applies follows from the round: a
-     * qualification round is timed as a separate time trial race, because only individual starts have
-     * a real countdown in RaceClocker.
+     * and the ONE RaceClocker race the competition selected - since 2026-08-11 it serves the
+     * qualification and every other round alike.
      */
     fun getForRaceClockerPull(id: UUID) = Jooq.query {
-        // Die Zuordnung Wettkampf→Rennen steht ausschließlich am Wettkampf (seit dem 11.08.2026 nur
-        // noch über die Pro-Rennen-Anwahl im Zeitnahme-Tab der Veranstaltung gesetzt). Der frühere
-        // Veranstaltungs-Default ist entfallen: er duplizierte die Pro-Rennen-Zuordnung und ein
-        // nicht zugeordneter Wettkampf soll ehrlich „kein Rennen" sein, statt still zu erben.
-        // Zwei Aliase, weil dieselbe Tabelle zweimal gebraucht wird.
-        val qualiRace = RACECLOCKER_RACE.`as`("quali_race")
-        val roundsRace = RACECLOCKER_RACE.`as`("rounds_race")
-        val qualiRaceId = COMPETITION.RACECLOCKER_RACE_QUALIFICATION
-        val roundsRaceId = COMPETITION.RACECLOCKER_RACE_ROUNDS
-
+        // Die Zuordnung Wettkampf→Rennen steht ausschließlich am Wettkampf (seit dem 11.08.2026).
+        // Der frühere Veranstaltungs-Default ist entfallen: er duplizierte die Pro-Rennen-Zuordnung
+        // und ein nicht zugeordneter Wettkampf soll ehrlich „kein Rennen" sein, statt still zu erben.
         select(
-            COMPETITION_SETUP_MATCH.NAME,
+            // Freilose tragen ihren materialisierten Namen (V202608121300) - dieselbe Koaleszenz
+            // wie startlist_view, sonst fände der Wellennamen-Abgleich die exportierte Welle nicht.
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_MATCH.START_TIME,
-            COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
-            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die sechs
+            // Kennung und Kürzel tragen den Wettkampf in den Wellennamen (crf-2026); die drei
             // Rennen-Spalten die Anwahl.
             COMPETITION_PROPERTIES.IDENTIFIER,
             COMPETITION_PROPERTIES.SHORT_NAME,
-            qualiRace.ID,
-            qualiRace.NAME,
-            qualiRace.RESULTS_URL,
-            roundsRace.ID,
-            roundsRace.NAME,
-            roundsRace.RESULTS_URL,
+            RACECLOCKER_RACE.ID,
+            RACECLOCKER_RACE.NAME,
+            RACECLOCKER_RACE.RESULTS_URL,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -104,52 +106,69 @@ object CompetitionMatchRepo {
             .join(COMPETITION_PROPERTIES)
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(qualiRace).on(qualiRace.ID.eq(qualiRaceId))
-            .leftJoin(roundsRace).on(roundsRace.ID.eq(roundsRaceId))
+            .leftJoin(RACECLOCKER_RACE).on(RACECLOCKER_RACE.ID.eq(COMPETITION.RACECLOCKER_RACE))
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne { record ->
                 RaceClockerMatchTarget(
                     waveName = WaveName.format(
-                        matchName = record[COMPETITION_SETUP_MATCH.NAME],
+                        matchName = record["match_name", String::class.java],
                         startTime = record[COMPETITION_MATCH.START_TIME],
                         competitionIdentifier = record[COMPETITION_PROPERTIES.IDENTIFIER],
                         competitionShortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
                     ),
-                    // Not null in the schema; the projection just loses that guarantee.
-                    isQualification = record[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                    qualificationRace = record[qualiRace.ID]?.let {
-                        RaceClockerRaceRef(it, record[qualiRace.NAME]!!, record[qualiRace.RESULTS_URL]!!)
-                    },
-                    roundsRace = record[roundsRace.ID]?.let {
-                        RaceClockerRaceRef(it, record[roundsRace.NAME]!!, record[roundsRace.RESULTS_URL]!!)
+                    race = record[RACECLOCKER_RACE.ID]?.let {
+                        RaceClockerRaceRef(it, record[RACECLOCKER_RACE.NAME]!!, record[RACECLOCKER_RACE.RESULTS_URL]!!)
                     },
                 )
             }
     }
 
     /**
-     * Welches Spalten-Preset die Startliste dieses Laufs bekommt. Dieselbe Join-Kette wie
-     * [getForRaceClockerPull] und aus demselben Grund dieselbe Weiche: die Runde entscheidet, weil
-     * RaceClocker pro Wettkampf zwei Rennen mit unterschiedlichen Spalten braucht.
+     * Die Wettkämpfe einer Veranstaltung für den Startlisten-Sammelexport: Kennung (Dateiname und
+     * Reihenfolge der ZIP-Einträge) und das angewählte RaceClocker-Rennen (Delta-Abgleich und
+     * Rennen-Filter, null = keines angewählt). Sortiert nach Kennung, damit die ZIP-Einträge in
+     * Programmreihenfolge liegen. Bewusst ungefiltert - ob auf ein Rennen eingeschränkt wird,
+     * entscheidet der Service (eventStartlistPlan).
+     */
+    fun getForBulkStartlistExport(eventId: UUID) = Jooq.query {
+        select(
+            COMPETITION.ID,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            RACECLOCKER_RACE.RESULTS_URL,
+            RACECLOCKER_RACE.ID,
+            COMPETITION_PROPERTIES.SHORT_NAME,
+            COMPETITION_PROPERTIES.NAME,
+        )
+            .from(COMPETITION)
+            .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .leftJoin(RACECLOCKER_RACE).on(RACECLOCKER_RACE.ID.eq(COMPETITION.RACECLOCKER_RACE))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .orderBy(COMPETITION_PROPERTIES.IDENTIFIER)
+            .fetch { record ->
+                BulkStartlistCompetitionRow(
+                    competitionId = record[COMPETITION.ID]!!,
+                    identifier = record[COMPETITION_PROPERTIES.IDENTIFIER]!!,
+                    raceUrl = record[RACECLOCKER_RACE.RESULTS_URL],
+                    raceId = record[RACECLOCKER_RACE.ID],
+                    shortName = record[COMPETITION_PROPERTIES.SHORT_NAME],
+                    name = record[COMPETITION_PROPERTIES.NAME],
+                )
+            }
+    }
+
+    /**
+     * Welches Spalten-Preset die Startliste dieses Laufs bekommt: das eine Preset des Wettkampfs,
+     * mit der Veranstaltung als Vorgabe. Die frühere Weiche nach Rundenart ist mit den
+     * RaceClocker-Startarten entfallen (11.08.2026) — jede Runde exportiert dieselben Spalten.
      */
     fun getStartListConfigTarget(id: UUID) = Jooq.query {
-        // Wettkampf-Wert vor Veranstaltungs-Voreinstellung, wie in getForRaceClockerPull.
-        val timingSystem = DSL.coalesce(COMPETITION.TIMING_SYSTEM, EVENT.TIMING_SYSTEM).`as`("timing_system")
-        val qualificationConfig = DSL.coalesce(
-            COMPETITION.STARTLIST_CONFIG_QUALIFICATION,
-            EVENT.STARTLIST_CONFIG_QUALIFICATION,
-        ).`as`("qualification_config")
-        val roundsConfig = DSL.coalesce(
-            COMPETITION.STARTLIST_CONFIG_ROUNDS,
-            EVENT.STARTLIST_CONFIG_ROUNDS,
-        ).`as`("rounds_config")
+        // Wettkampf-Wert vor Veranstaltungs-Voreinstellung, wie beim Zeitnahmesystem.
+        val config = DSL.coalesce(
+            COMPETITION.STARTLIST_CONFIG,
+            EVENT.STARTLIST_CONFIG,
+        ).`as`("startlist_config")
 
-        select(
-            COMPETITION_SETUP_ROUND.IS_QUALIFICATION,
-            timingSystem,
-            qualificationConfig,
-            roundsConfig,
-        )
+        select(config)
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
             .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
@@ -162,14 +181,8 @@ object CompetitionMatchRepo {
             .where(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(id))
             .fetchOne {
                 StartListConfigTarget(
-                    // Im Schema not null; die Projektion verliert nur die Garantie.
-                    isQualification = it[COMPETITION_SETUP_ROUND.IS_QUALIFICATION] == true,
-                    // Als Text gespeichert, kein jOOQ-Converter in diesem Projekt -- von Hand
-                    // konvertiert wie EventRepo.getChainProgressionMode. null ist hier legitim:
-                    // es bedeutet "kein Zeitnahmesystem gesetzt".
-                    timingSystem = it[timingSystem]?.let { s -> TimingSystem.valueOf(s) },
-                    qualificationConfig = it[qualificationConfig],
-                    roundsConfig = it[roundsConfig],
+                    // null ist hier legitim: es bedeutet "kein Preset konfiguriert".
+                    configId = it[config],
                 )
             }
     }
@@ -186,6 +199,10 @@ object CompetitionMatchRepo {
         competitionId: UUID?,
         limit: Int,
         visibility: PublicResultsVisibility,
+        // Auf EINEN Lauf eingegrenzt ("Mein Event" öffnet das Feld des angetippten Laufs).
+        // Bewusst ein Filter in derselben Abfrage statt eines eigenen Selects: so kann ein
+        // einzelner Lauf gar nicht an der Sichtbarkeitsregel oben vorbeikommen.
+        matchId: UUID? = null,
     ) = Jooq.query {
         // Kein Boot mehr ohne Ergebnis: abgemeldete und ausgeschiedene Boote zählen nicht mit,
         // für sie kommt keins mehr (dieselbe Auslegung wie LiveDashboardLogic.teamHasResult).
@@ -220,7 +237,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.UPDATED_AT,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_MATCH.STARTED_AT,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
@@ -256,11 +274,63 @@ object CompetitionMatchRepo {
                 if (competitionId != null) {
                     and(COMPETITION.ID.eq(competitionId))
                 }
+                if (matchId != null) {
+                    and(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(matchId))
+                }
             }
             .orderBy(COMPETITION_MATCH.UPDATED_AT.desc())
             .limit(limit)
             .fetch()
     }
+
+    /**
+     * Die geplante Startzeit des im Zeitplan spätesten Laufs mit Aktivität (gestartet, aktiviert
+     * oder beendet) — die Schwelle der Programm-Reihenfolgen-Regel der Boards
+     * ([de.lambda9.ready2race.backend.app.eventInfo.boundary.BoardLogic.freeSlotPassed]):
+     * Programmpunkte vor dieser Zeit gelten als überholt.
+     */
+    fun getLatestProgressStartTime(eventId: UUID): JIO<LocalDateTime?> = Jooq.query {
+        select(max(COMPETITION_MATCH.START_TIME))
+            .from(COMPETITION_MATCH)
+            .join(COMPETITION_SETUP_MATCH)
+            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+            .join(COMPETITION_SETUP_ROUND)
+            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .and(
+                COMPETITION_MATCH.STARTED_AT.isNotNull
+                    .or(COMPETITION_MATCH.ACTIVATED_AT.isNotNull)
+                    .or(COMPETITION_MATCH.FINISHED_AT.isNotNull)
+            )
+            .fetchOne { it.value1() }
+    }
+
+    /**
+     * Ist-Start und geplanter Start des zuletzt gestarteten Laufs der Veranstaltung — die
+     * Eingabe der Verspätungsanzeige
+     * ([de.lambda9.ready2race.backend.app.eventInfo.boundary.BoardLogic.currentDelaySeconds]).
+     * Leer, solange noch nichts gestartet ist.
+     */
+    fun getLatestStartedTimes(eventId: UUID): JIO<List<Pair<LocalDateTime, LocalDateTime?>>> =
+        Jooq.query {
+            select(COMPETITION_MATCH.STARTED_AT, COMPETITION_MATCH.START_TIME)
+                .from(COMPETITION_MATCH)
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
+                .join(COMPETITION_SETUP_ROUND)
+                .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                .join(COMPETITION_PROPERTIES)
+                .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
+                .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+                .where(COMPETITION.EVENT.eq(eventId))
+                .and(COMPETITION_MATCH.STARTED_AT.isNotNull)
+                .orderBy(COMPETITION_MATCH.STARTED_AT.desc())
+                .limit(1)
+                .fetch { it.value1()!! to it.value2() }
+        }
 
     fun getRunningMatches(
         eventId: UUID,
@@ -272,7 +342,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.STARTED_AT,
             COMPETITION_MATCH.ACTIVATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
@@ -307,7 +378,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_MATCH.START_TIME_OFFSET,
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
@@ -352,7 +424,8 @@ object CompetitionMatchRepo {
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_MATCH.START_TIME_OFFSET,
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),

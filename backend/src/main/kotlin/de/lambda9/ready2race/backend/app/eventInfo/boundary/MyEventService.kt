@@ -53,7 +53,9 @@ object MyEventService {
     // paar Läufe, da ändert sich nichts im Sekundentakt.
     private const val REFRESH_INTERVAL_SECONDS = 15
 
-    private data class CachedMyEvent(val builtAt: LocalDateTime, val dto: MyEventDto)
+    // [marker] ist der [EventChangeMarker]-Stand beim Bau: jede Schreibaktion an der
+    // Veranstaltung entwertet den Eintrag sofort, die TTL deckelt nur den Nichts-passiert-Fall.
+    private data class CachedMyEvent(val builtAt: LocalDateTime, val marker: Long, val dto: MyEventDto)
 
     private val cache = ConcurrentHashMap<Pair<UUID, UUID>, CachedMyEvent>()
 
@@ -88,7 +90,12 @@ object MyEventService {
             // in laufend/kommend/Ergebnis stammen vom Bauzeitpunkt, die Uhr daneben ist neu. Bei
             // fünf Sekunden Frist fällt das in keiner Anzeige auf; eine Neuberechnung nur wegen
             // der Uhr wäre der Zweck des Zwischenspeichers.
-            val cached = cache[key]?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
+            // Markerstand VOR dem Bau lesen (siehe BoardService.getBoardView): ein Schreibzugriff
+            // mitten im Bau macht den Eintrag dann sofort wieder alt statt ihn TTL-lang zu halten.
+            val marker = EventChangeMarker.current(eventId)
+
+            val cached = cache[key]
+                ?.takeIf { AthleteBoardLogic.isCacheFresh(it.builtAt, now) && it.marker == marker }
             if (cached != null) {
                 return@comprehension KIO.ok(ApiResponse.Dto(cached.dto.copy(serverTime = now)))
             }
@@ -97,6 +104,9 @@ object MyEventService {
             // auf dem Weg nur die Zusage darauf.
             val eventName = !EventRepo.getName(eventId).orDie()
             val visibility = !EventRepo.getPublicResultsVisibility(eventId).orDie()
+            // Der veranstaltungsweite Hinweis wandert mit in den Zwischenspeicher - sein PUT
+            // bumpt den EventChangeMarker, eine Änderung kommt also mit dem nächsten Poll.
+            val notice = !EventRepo.getNotice(eventId).orDie()
 
             val person = !MyEventRepo.findParticipant(participantId).orDie()
             val matchRecords = !MyEventRepo.findMatchesForParticipant(eventId, participantId).orDie()
@@ -131,6 +141,10 @@ object MyEventService {
                 showCountdown = AthleteBoardLogic.DEFAULT_SHOW_COUNTDOWN,
             )
 
+            // Bezugsgröße für die Erledigungsfenster der Bedingungen: die Fenster hängen am
+            // ersten künftigen Start, und den kennt erst die fertige Aufteilung.
+            val firstFutureStart = MyEventLogic.firstFutureStart(split.upcoming, now)
+
             val dto = MyEventDto(
                 displayName = listOfNotNull(
                     person?.get(PARTICIPANT.FIRSTNAME),
@@ -150,19 +164,30 @@ object MyEventService {
                 requirements = requirementRecords
                     // Nur Bedingungen, die für diese Person überhaupt gelten, und davon nur die
                     // ausdrücklich freigegebenen. Die Freitext-Notiz dazu wird nicht einmal
-                    // geladen, siehe MyEventRepo.findFulfilledRequirementIds.
+                    // geladen, siehe MyEventRepo.findFulfilledRequirementIds. Nach außen geht
+                    // der öffentliche Text `publicNote` — die interne `description` bleibt seit
+                    // dem 11.08.2026 im Haus, siehe MyEventRequirementDto.
                     .filter { applicableRequirementIds.contains(it.id) }
                     .filter { it.publiclyVisible == true }
                     .map {
                         MyEventRequirementDto(
                             id = it.id!!,
                             name = it.name ?: "",
-                            description = it.description,
+                            publicNote = it.publicNote,
                             optional = it.optional == true,
                             fulfilled = fulfilledRequirementIds.contains(it.id),
+                            checkFrom = MyEventLogic.checkWindowBound(
+                                firstFutureStart,
+                                it.checkEarliestMinutesBefore,
+                            ),
+                            checkUntil = MyEventLogic.checkWindowBound(
+                                firstFutureStart,
+                                it.checkLatestMinutesBefore,
+                            ),
                         )
                     }
                     .sortedBy { it.name },
+                notice = notice,
             )
 
             // Rechnen zwei Abrufe gleichzeitig, gewinnt der letzte - bei Millisekunden Rechenzeit
@@ -170,7 +195,7 @@ object MyEventService {
             if (cache.size >= CACHE_CLEANUP_THRESHOLD) {
                 cache.values.removeIf { !AthleteBoardLogic.isCacheFresh(it.builtAt, now) }
             }
-            cache[key] = CachedMyEvent(now, dto)
+            cache[key] = CachedMyEvent(now, marker, dto)
 
             KIO.ok(ApiResponse.Dto(dto))
         }
@@ -254,6 +279,7 @@ object MyEventService {
 
         return MyEventLogic.RawMatch(
             matchId = matchId,
+            teamId = first.get("registration_id", UUID::class.java),
             competitionName = first.get("competition_name", String::class.java) ?: "",
             categoryName = first.get("category_name", String::class.java),
             roundName = first.get("round_name", String::class.java),

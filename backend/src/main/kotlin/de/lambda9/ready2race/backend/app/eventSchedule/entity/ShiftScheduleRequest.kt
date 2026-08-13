@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 import java.time.LocalDateTime
 import java.util.UUID
 
-enum class ShiftMode { PLUS_MINUTES, SET_TIME, COMPRESS_TO_TARGET }
+enum class ShiftMode { PLUS_MINUTES, SET_TIME, COMPRESS_TO_TARGET, PLUS_MINUTES_RANGE }
 
 data class ShiftScheduleRequest(
     val fromSlotId: UUID,
@@ -41,6 +41,14 @@ data class ShiftScheduleRequest(
                 } else {
                     ValidationResult.Valid
                 },
+            )
+
+            // Genau den Bereich [fromSlot .. targetSlot] um `minutes` verschieben (+/-), der Rest
+            // bleibt stehen. Für das gezielte Nachjustieren nach dem Revidieren einer Absage.
+            ShiftMode.PLUS_MINUTES_RANGE -> ValidationResult.allOf(
+                requiredField(minutes != null, "minutes must be set for PLUS_MINUTES_RANGE"),
+                requiredField(targetSlotId != null, "targetSlotId must be set for PLUS_MINUTES_RANGE"),
+                requiredField(newTime == null, "newTime must not be set for PLUS_MINUTES_RANGE"),
             )
         },
     )

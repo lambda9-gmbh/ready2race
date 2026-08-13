@@ -5,6 +5,8 @@ import de.lambda9.ready2race.backend.app.awardCeremony.boundary.AwardCeremonySer
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyError
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyKeyRequest
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonySelectionRequest
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.ResultListOptions
+import de.lambda9.ready2race.backend.app.awardCeremony.entity.ResultListSize
 import de.lambda9.ready2race.backend.app.club.CHAIN_SEED_TIME
 import de.lambda9.ready2race.backend.app.club.REGISTERING_CLUB
 import de.lambda9.ready2race.backend.app.club.seedClub
@@ -452,6 +454,134 @@ class AwardCeremonyServiceTest {
         }
         assertKIOFails(AwardCeremonyError.IsChallengeEvent) {
             AwardCeremonyService.download(eventId, AwardCeremonySelectionRequest(selection = null))
+        }
+    }
+
+    // --- Ergebnisliste: dieselbe Datenbasis, wählbare Bestandteile -----------------------------
+
+    /** Der Aushang, wie ihn der Endpoint ohne Parameter baut - die Fälle drehen einzelne Schalter. */
+    private fun postingOptions() = ResultListOptions(
+        heading = "ERGEBNISLISTE",
+        includeCrew = true,
+        includeTimes = true,
+        podiumOnly = false,
+        byRatingCategory = true,
+        size = ResultListSize.POSTING,
+        footerLine = null,
+    )
+
+    /**
+     * Ohne Podiumsschnitt stehen alle platzierten Boote auf dem Blatt - „Masters A" hat vier, der
+     * Bogen druckt drei. Und der Aushang trägt, was der Bogen nie trug: den Stand in der Fußzeile.
+     */
+    @Test
+    fun theResultListWithoutThePodiumCutListsEveryPlacedBoat() = testComprehension {
+        val seeded = seedCeremonies()
+
+        val file = !AwardCeremonyService.resultList(seeded.eventId, seeded.quadId, postingOptions())
+
+        assertEquals("ergebnisliste_Testregatta.pdf", file.name)
+        assertEquals(2, pagesOf(file.bytes))
+        assertContains(textOfPage(file.bytes, 1), "Wertung: Masters B")
+        assertContains(textOfPage(file.bytes, 2), "Wertung: Masters A")
+        assertContains(textOfPage(file.bytes, 1), "ERGEBNISLISTE")
+
+        // Startnummer 6 ist das vierte Boot der Wertung - genau das, was der Podiumsschnitt des
+        // Bogens abschneidet. Auf dem Aushang steht es.
+        assertEquals(listOf(1, 3, 5, 6), startNumbersOf(file.bytes, page = 2))
+
+        // Die Fußzeile nennt Veranstaltung und Stand - nur so erkennt man am Brett den alten Zettel.
+        (1..pagesOf(file.bytes)).forEach { page ->
+            assertContains(textOfPage(file.bytes, page), "Stand:", message = "Seite $page trägt keinen Stand")
+            assertContains(textOfPage(file.bytes, page), "Testregatta")
+        }
+    }
+
+    /**
+     * Mit dem Podiumsschnitt druckt die Ergebnisliste inhaltlich dieselben Boote wie der Bogen -
+     * das ist die Preset-Äquivalenz an der echten Datenbasis, nicht nur am Renderer.
+     */
+    @Test
+    fun withThePodiumCutTheResultListNamesTheSameBoatsAsTheCeremonySheet() = testComprehension {
+        val seeded = seedCeremonies()
+
+        val file = !AwardCeremonyService.resultList(
+            seeded.eventId,
+            seeded.quadId,
+            postingOptions().copy(podiumOnly = true, size = ResultListSize.CEREMONY),
+        )
+
+        assertEquals(2, pagesOf(file.bytes))
+        // Dieselben Startnummern wie in theChoiceCountsTheHonouredBoatsNotEveryPlacedOne - der
+        // Bogen und die geschnittene Liste meinen dieselben Boote.
+        assertEquals(listOf(1, 3, 5), startNumbersOf(file.bytes, page = 2))
+    }
+
+    /**
+     * Ohne Trennung nach Wertung wird das Rennen als ein Feld gedruckt: keine Wertungszeile, die
+     * Plätze aus dem Gesamtfeld. Ohne Crew-Aufstellung, denn um die geht es hier nicht.
+     */
+    @Test
+    fun theResultListCanMergeTheCategoriesIntoTheWholeField() = testComprehension {
+        val seeded = seedCeremonies()
+
+        val file = !AwardCeremonyService.resultList(
+            seeded.eventId,
+            seeded.quadId,
+            postingOptions().copy(byRatingCategory = false, includeCrew = false),
+        )
+
+        assertEquals(1, pagesOf(file.bytes))
+        val text = textOfPage(file.bytes, 1)
+        assertFalse(text.contains("Wertung:"), "Das Gesamtfeld trägt keine Wertungszeile")
+        assertFalse(text.contains("(1990,"), "Ohne Crew-Aufstellung darf kein Name stehen")
+        assertEquals(
+            listOf(1, 2, 3, 4, 5, 6),
+            startNumbersOf(file.bytes, page = 1),
+            "Das Gesamtfeld zählt über alle Boote des Rennens, in Platzreihenfolge",
+        )
+    }
+
+    /**
+     * Die Ergebnisregel des Bogens gilt unverändert: abgemeldete, ausgeschiedene und
+     * disqualifizierte Boote stehen auch auf dem Aushang nicht - und ein Wettkampf, der nie
+     * gefahren ist, bekommt kein leeres Kopf-Blatt.
+     */
+    @Test
+    fun theResultListKeepsTheCeremonyResultRule() = testComprehension {
+        val seeded = seedCeremonies()
+
+        val file = !AwardCeremonyService.resultList(seeded.eventId, competitionId = null, postingOptions())
+
+        val whole = (1..pagesOf(file.bytes)).joinToString("\n") { textOfPage(file.bytes, it) }
+        assertContains(whole, "Beachsprint")
+        assertContains(whole, "Coastal Quad")
+        assertFalse(whole.contains("Nicht gefahren"), "Ein Rennen ohne Plätze ergibt kein leeres Blatt")
+
+        // Der Beachsprint zeigt nur die gewerteten Boote 7 und 8 - die drei ausgeschlossenen
+        // (Startnummern 9-11) fallen heraus, obwohl die Platzberechnung ihnen Plätze gab.
+        val sprintPage = (1..pagesOf(file.bytes)).first { textOfPage(file.bytes, it).contains("Beachsprint") }
+        assertEquals(listOf(7, 8), startNumbersOf(file.bytes, page = sprintPage))
+    }
+
+    @Test
+    fun theResultListRejectsWhatTheCeremonySheetRejects() = testComprehension {
+        val seeded = seedCeremonies()
+
+        val challengeId = seedEvent("Challenge", challengeEvent = true)
+        assertKIOFails(AwardCeremonyError.IsChallengeEvent) {
+            AwardCeremonyService.resultList(challengeId, competitionId = null, postingOptions())
+        }
+
+        val otherEventId = seedEvent("Fremdregatta")
+        val (foreignCompetitionId, _) = seedCompetition(otherEventId, identifier = "1", name = "Fremdlauf")
+        assertKIOFails(AwardCeremonyError.CompetitionNotInEvent) {
+            AwardCeremonyService.resultList(seeded.eventId, foreignCompetitionId, postingOptions())
+        }
+
+        val emptyEventId = seedEvent("Leere Regatta")
+        assertKIOFails(AwardCeremonyError.NoResults) {
+            AwardCeremonyService.resultList(emptyEventId, competitionId = null, postingOptions())
         }
     }
 

@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.updateMatchResultFromRaceClocker
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.EventDocumentService
+import de.lambda9.ready2race.backend.app.liveDashboard.entity.OpenResultHandling
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -119,6 +120,44 @@ fun Route.competitionExecution() {
                 }
             }
 
+            // Freilos "muss gefahren werden" — nur an einem Freilos-Lauf, siehe Service-KDoc.
+            put("/bye-must-race") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    val body = !receiveKIO(UpdateMatchByeMustRaceRequest.example)
+                    CompetitionExecutionService.updateByeMustRace(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                        request = body,
+                    )
+                }
+            }
+
+            // Lauf beenden — in JEDEM chainProgressionMode erlaubt, wie der Zeitplan-Weg
+            // (/schedule/slot/{slotId}/finish) und anders als das Schiedsrichter-Dashboard,
+            // das im REGATTABUERO-Modus sperrt. Siehe Service-KDoc.
+            put("/finish") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+                    val openResults = !optionalQueryParam("openResults", enum<OpenResultHandling>())
+
+                    CompetitionExecutionService.finishMatch(
+                        eventId = eventId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                        openResults = openResults,
+                    )
+                }
+            }
+
             // Beenden zurücknehmen — nur in der jüngsten Runde, siehe Service-KDoc.
             put("/reopen") {
                 call.respondComprehension {
@@ -128,6 +167,23 @@ fun Route.competitionExecution() {
                     val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
                     CompetitionExecutionService.reopenMatch(
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        userId = user.id!!,
+                    )
+                }
+            }
+            // Lauf zurücksetzen — Ausführungszustand leeren, Aufstellung und UUIDs behalten
+            // (siehe Service-KDoc). Nur solange die Folgerunde keine erzeugten Läufe hat.
+            put("/reset") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                    CompetitionExecutionService.resetMatch(
                         eventId = eventId,
                         competitionId = competitionId,
                         matchId = competitionMatchId,

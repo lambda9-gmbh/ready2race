@@ -31,7 +31,8 @@ object LiveDashboardRepo {
             COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT,
             COMPETITION_MATCH.PAIRINGS_RECALCULATED_AT,
             COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-            COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
+            // Freilose zeigen ihren materialisierten Namen (V202608121300).
+            DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),

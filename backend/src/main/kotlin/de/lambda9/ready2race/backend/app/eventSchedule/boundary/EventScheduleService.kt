@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.boundary.AutoRound
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventSchedule.control.EventScheduleRepo
 import de.lambda9.ready2race.backend.app.eventSchedule.entity.*
 import de.lambda9.ready2race.backend.app.liveDashboard.boundary.LiveDashboardService
@@ -142,6 +143,9 @@ object EventScheduleService {
             !EventScheduleRepo.stampMatchStartTime(setupMatchId, request.startTime, userId).orDie()
         }
 
+        // Das Tagesprogramm der Boards zeigt die Slots — Zeitplan-Schreiber bumpen deshalb alle.
+        EventChangeMarker.bump(eventId)
+
         KIO.ok(ApiResponse.Created(id))
     }
 
@@ -178,6 +182,8 @@ object EventScheduleService {
             !EventScheduleRepo.stampMatchStartTime(setupMatchId, request.startTime, userId).orDie()
         }
 
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -191,6 +197,7 @@ object EventScheduleService {
         if (deleted < 1) {
             KIO.fail(EventScheduleError.SlotNotFound(slotId))
         } else {
+            EventChangeMarker.bump(eventId)
             noData
         }
     }
@@ -284,6 +291,9 @@ object EventScheduleService {
                 skippedBy = null
             }.orDie().onNullFail { EventScheduleError.SlotNotFound(slotId) }
         }
+
+        // Ein entfallener (oder zurückgeholter) Slot ändert Tagesprogramm und „nächste Läufe".
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -389,6 +399,9 @@ object EventScheduleService {
             !AutoRoundProgressionService.progressAfterMatch(eventId, someSetupMatchId, userId)
         }
 
+        // Wie beim Einzel-Skip: die entfallene Runde ändert Tagesprogramm und „nächste Läufe".
+        EventChangeMarker.bump(eventId)
+
         noData
     }
 
@@ -413,6 +426,8 @@ object EventScheduleService {
             ?: return@comprehension KIO.fail(EventScheduleError.SlotNotLinked(slotId))
 
         val mode = !EventRepo.getChainProgressionMode(eventId).orDie()
+        // Kein eigener EventChangeMarker.bump: finishMatchInternal ist der gemeinsame Trichter
+        // fürs Beenden und bumpt am Ende selbst.
         !LiveDashboardService.finishMatchInternal(eventId, matchId, userId, openResults, mode)
 
         noData
@@ -447,6 +462,9 @@ object EventScheduleService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
+
+        // „In Vorbereitung" soll sofort auf den Anzeigen stehen.
+        EventChangeMarker.bump(eventId)
 
         noData
     }
@@ -512,6 +530,7 @@ object EventScheduleService {
 
         val deltaMinutes = when (request.mode) {
             ShiftMode.PLUS_MINUTES -> request.minutes!!
+            ShiftMode.PLUS_MINUTES_RANGE -> request.minutes!!
             ShiftMode.SET_TIME -> Duration.between(fromStartTime, request.newTime!!).toMinutes()
             ShiftMode.COMPRESS_TO_TARGET ->
                 request.minutes ?: Duration.between(fromStartTime, request.newTime!!).toMinutes()
@@ -521,24 +540,57 @@ object EventScheduleService {
             return@comprehension KIO.fail(EventScheduleError.ShiftWithoutChange)
         }
 
-        val targetSlotId = if (request.mode == ShiftMode.COMPRESS_TO_TARGET) {
-            // Zwei getrennte Gründe, zwei getrennte Meldungen: ein Ziel-Slot, der nicht hinter dem
-            // Start-Slot liegt (oder gar nicht zu diesem Renntag gehört), verlangt eine andere
-            // Korrektur als ein negativer Verzug.
-            val problem = EventScheduleLogic.shiftTargetProblem(daySlots, request.targetSlotId, deltaMinutes)
-            if (problem != null) {
-                return@comprehension KIO.fail(EventScheduleError.ShiftTargetInvalid(problem))
+        // Bei PLUS_MINUTES_RANGE ist targetSlotId die OBERGRENZE des verschobenen Bereichs, nicht ein
+        // Stauch-Ziel: nur [Start-Slot .. Ziel-Slot] wird stumpf um delta verschoben. Der erste Slot
+        // dahinter (falls es einen am selben Tag gibt) darf beim Verzögern nicht überholt werden -
+        // sonst geriete die Reihenfolge durcheinander.
+        val rangeFollowerStart: LocalDateTime?
+        val slotsToShift: List<ShiftSlot>
+        val compressionTarget: UUID?
+        if (request.mode == ShiftMode.PLUS_MINUTES_RANGE) {
+            val targetIndexInDay = daySlots.indexOfFirst { it.id == request.targetSlotId }
+            if (targetIndexInDay <= 0) {
+                return@comprehension KIO.fail(
+                    EventScheduleError.ShiftTargetInvalid(ShiftTargetProblem.TARGET_NOT_AFTER_START)
+                )
             }
-            request.targetSlotId
+            slotsToShift = daySlots.take(targetIndexInDay + 1)
+            rangeFollowerStart = daySlots.getOrNull(targetIndexInDay + 1)?.startTime
+            compressionTarget = null
         } else {
-            null
+            slotsToShift = daySlots
+            rangeFollowerStart = null
+            compressionTarget = if (request.mode == ShiftMode.COMPRESS_TO_TARGET) {
+                // Zwei getrennte Gründe, zwei getrennte Meldungen: ein Ziel-Slot, der nicht hinter dem
+                // Start-Slot liegt (oder gar nicht zu diesem Renntag gehört), verlangt eine andere
+                // Korrektur als ein negativer Verzug.
+                val problem = EventScheduleLogic.shiftTargetProblem(daySlots, request.targetSlotId, deltaMinutes)
+                if (problem != null) {
+                    return@comprehension KIO.fail(EventScheduleError.ShiftTargetInvalid(problem))
+                }
+                request.targetSlotId
+            } else {
+                null
+            }
         }
 
-        val entries = when (val result = EventScheduleLogic.computeShift(daySlots, deltaMinutes, targetSlotId)) {
+        val entries = when (val result = EventScheduleLogic.computeShift(slotsToShift, deltaMinutes, compressionTarget)) {
             is ShiftResult.CompressionImpossible ->
                 return@comprehension KIO.fail(EventScheduleError.CompressionImpossible(result.maxReductionMinutes))
 
             is ShiftResult.Ok -> result.entries
+        }
+
+        // Der verschobene Bereich darf den ersten Slot dahinter nicht einholen (nur beim Verzögern).
+        if (rangeFollowerStart != null && deltaMinutes > 0 &&
+            entries.any { !it.newStartTime.isBefore(rangeFollowerStart) }
+        ) {
+            return@comprehension KIO.fail(
+                EventScheduleError.ShiftOvertakesFollower(
+                    latestStartTime = rangeFollowerStart,
+                    maxDelayMinutes = EventScheduleLogic.maxDelayBeforeFollower(entries, rangeFollowerStart),
+                )
+            )
         }
 
         // Ein Shift bleibt im Renntag — über Mitternacht hinaus wäre der Plan des Folgetags still betroffen.
@@ -724,7 +776,11 @@ object EventScheduleService {
 
                 KIO.unit
             }
-        }.map { }
+        }.map {
+            // Der gemeinsame Trichter von Verschieben und Aufrücken: neue Startzeiten stehen im
+            // Tagesprogramm und in den Countdowns der Anzeigen. Dry-Runs kommen hier nie an.
+            EventChangeMarker.bump(eventId)
+        }
 
     /**
      * Excel-Import des Zeitstrahls (Task 12). `dryRun=true` liefert nur die Vorschau (Matching je
@@ -866,6 +922,9 @@ object EventScheduleService {
         !finalRows.filter { it.first.status == ImportRowStatus.LINKED }.traverse { (result, _) ->
             EventScheduleRepo.stampMatchStartTime(result.setupMatchId!!, result.startTime, userId).orDie()
         }
+
+        // Der Import ersetzt den ganzen Zeitstrahl — Tagesprogramm und Startzeiten sind neu.
+        EventChangeMarker.bump(eventId)
 
         KIO.ok(ApiResponse.Dto(ScheduleImportResultDto(rowDtos, applied = true)))
     }

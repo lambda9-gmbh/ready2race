@@ -180,12 +180,21 @@ import type {
     DownloadRoundStartListData,
     DownloadRoundStartListError,
     DownloadRoundStartListResponse,
+    UpdateMatchByeMustRaceData,
+    UpdateMatchByeMustRaceError,
+    UpdateMatchByeMustRaceResponse,
     MarkMatchStartedFromExecutionData,
     MarkMatchStartedFromExecutionError,
     MarkMatchStartedFromExecutionResponse,
+    FinishMatchFromExecutionData,
+    FinishMatchFromExecutionError,
+    FinishMatchFromExecutionResponse,
     ReopenMatchData,
     ReopenMatchError,
     ReopenMatchResponse,
+    ResetMatchData,
+    ResetMatchError,
+    ResetMatchResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -213,6 +222,9 @@ import type {
     UpdateEventTimingConfigData,
     UpdateEventTimingConfigError,
     UpdateEventTimingConfigResponse,
+    UpdateEventNoticeData,
+    UpdateEventNoticeError,
+    UpdateEventNoticeResponse,
     GetTimingConfigData,
     GetTimingConfigError,
     GetTimingConfigResponse,
@@ -270,6 +282,18 @@ import type {
     DeleteDocumentData,
     DeleteDocumentError,
     DeleteDocumentResponse,
+    GetExportBundleData,
+    GetExportBundleError,
+    GetExportBundleResponse,
+    AddExportBundleDocumentData,
+    AddExportBundleDocumentError,
+    AddExportBundleDocumentResponse,
+    ReorderExportBundleData,
+    ReorderExportBundleError,
+    ReorderExportBundleResponse,
+    RemoveExportBundleItemData,
+    RemoveExportBundleItemError,
+    RemoveExportBundleItemResponse,
     GetParticipantTrackingsData,
     GetParticipantTrackingsError,
     GetParticipantTrackingsResponse,
@@ -745,6 +769,12 @@ import type {
     GetLiveDashboardTeamDetailData,
     GetLiveDashboardTeamDetailError,
     GetLiveDashboardTeamDetailResponse,
+    AddLiveDashboardTeamNoteData,
+    AddLiveDashboardTeamNoteError,
+    AddLiveDashboardTeamNoteResponse,
+    DeleteLiveDashboardTeamNoteData,
+    DeleteLiveDashboardTeamNoteError,
+    DeleteLiveDashboardTeamNoteResponse,
     GetCheckSeverityConfigData,
     GetCheckSeverityConfigError,
     GetCheckSeverityConfigResponse,
@@ -754,6 +784,12 @@ import type {
     GetEventScheduleData,
     GetEventScheduleError,
     GetEventScheduleResponse,
+    DownloadEventStartlistsData,
+    DownloadEventStartlistsError,
+    DownloadEventStartlistsResponse,
+    PreviewEventStartlistsData,
+    PreviewEventStartlistsError,
+    PreviewEventStartlistsResponse,
     CreateScheduleSlotData,
     CreateScheduleSlotError,
     CreateScheduleSlotResponse,
@@ -947,6 +983,9 @@ import type {
     DownloadAwardCeremonySheetsData,
     DownloadAwardCeremonySheetsError,
     DownloadAwardCeremonySheetsResponse,
+    DownloadResultListData,
+    DownloadResultListError,
+    DownloadResultListResponse,
     DownloadAwardCertificatesForCompetitionData,
     DownloadAwardCertificatesForCompetitionError,
     DownloadAwardCertificatesForCompetitionResponse,
@@ -1653,6 +1692,22 @@ export const downloadRoundStartList = <ThrowOnError extends boolean = false>(
 }
 
 /**
+ * Toggles 'must race' on a bye match (competition_match.bye_must_race). The match then operationally counts as a real race (start list exports, RaceClocker polling, the chain waits for it to be finished), while progression keeps bye semantics - the racing team moves on regardless of the measured time, which is displayed as out of competition.
+ */
+export const updateMatchByeMustRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchByeMustRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchByeMustRaceResponse,
+        UpdateMatchByeMustRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/bye-must-race',
+    })
+}
+
+/**
  * Records the real start of the match (idempotent) and activates it if it was not - the office-side counterpart of the referee dashboard's 'running' button
  */
 export const markMatchStartedFromExecution = <ThrowOnError extends boolean = false>(
@@ -1669,6 +1724,22 @@ export const markMatchStartedFromExecution = <ThrowOnError extends boolean = fal
 }
 
 /**
+ * Finishes the match from the execution page (regatta office side). Works in every chainProgressionMode, like finishScheduleSlot - unlike finishLiveDashboardMatch, which is gated in REGATTABUERO mode.
+ */
+export const finishMatchFromExecution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<FinishMatchFromExecutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        FinishMatchFromExecutionResponse,
+        FinishMatchFromExecutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/finish',
+    })
+}
+
+/**
  * Takes back the finish stamp of a finished match in the latest round - activation, real start and results stay untouched
  */
 export const reopenMatch = <ThrowOnError extends boolean = false>(
@@ -1677,6 +1748,18 @@ export const reopenMatch = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).put<ReopenMatchResponse, ReopenMatchError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reopen',
+    })
+}
+
+/**
+ * Resets a single match to 'never raced': clears activation, real start, finish stamp, places, times, penalties and laps while keeping the line-up, lanes and all row UUIDs (external timing references stay valid). Only allowed while the following round has no created matches yet.
+ */
+export const resetMatch = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResetMatchData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<ResetMatchResponse, ResetMatchError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/reset',
     })
 }
 
@@ -1806,6 +1889,22 @@ export const updateEventTimingConfig = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/timing-config',
+    })
+}
+
+/**
+ * Sets or clears the event-wide notice banner (e.g. a weather warning) - both fields set means set, both null means clear. Deliberately a small dedicated endpoint instead of a field on the big event update, so the race-day action stays lightweight. The notice is read through EventDto and embedded in the polled public responses (my-event, board view, live dashboard, live-matches); caches and poll intervals mean a change takes a few seconds to show up on devices.
+ */
+export const updateEventNotice = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateEventNoticeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateEventNoticeResponse,
+        UpdateEventNoticeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/notice',
     })
 }
 
@@ -2062,6 +2161,70 @@ export const deleteDocument = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDocument/{eventDocumentId}',
+    })
+}
+
+/**
+ * The event's export bundle in order: uploaded event documents plus exactly one placeholder for the generated start lists. The placeholder is created lazily on first access (default position: last), so every event has one. The PDF bulk start list export concatenates the entries in this order.
+ */
+export const getExportBundle = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetExportBundleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetExportBundleResponse,
+        GetExportBundleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle',
+    })
+}
+
+/**
+ * Adds an event document to the end of the export bundle. Fails with 409 (EXPORT_BUNDLE_DUPLICATE_DOCUMENT) if the document is already part of the bundle, and with 404 if the document does not belong to this event.
+ */
+export const addExportBundleDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddExportBundleDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddExportBundleDocumentResponse,
+        AddExportBundleDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle',
+    })
+}
+
+/**
+ * Writes the complete new order of the bundle. The submitted ids must contain exactly the current bundle items (each exactly once) - otherwise the request fails with 409 (EXPORT_BUNDLE_ORDER_MISMATCH), typically a second browser tab with a stale state.
+ */
+export const reorderExportBundle = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ReorderExportBundleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ReorderExportBundleResponse,
+        ReorderExportBundleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle/order',
+    })
+}
+
+/**
+ * Removes a document entry from the bundle. The generated-startlists placeholder cannot be removed (400, EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE) - it can only be reordered, and deselected per export in the export dialog.
+ */
+export const removeExportBundleItem = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RemoveExportBundleItemData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RemoveExportBundleItemResponse,
+        RemoveExportBundleItemError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle/{itemId}',
     })
 }
 
@@ -4134,6 +4297,38 @@ export const getLiveDashboardTeamDetail = <ThrowOnError extends boolean = false>
 }
 
 /**
+ * Adds a referee note to this boat ('touched a buoy'). Notes are communication between referees, not scoring; they are append-only - a correction is delete plus re-add, so no locking is needed and two concurrent authors simply produce two entries. Same privilege as the other referee actions (finish/start/activation).
+ */
+export const addLiveDashboardTeamNote = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddLiveDashboardTeamNoteData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddLiveDashboardTeamNoteResponse,
+        AddLiveDashboardTeamNoteError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note',
+    })
+}
+
+/**
+ * Deletes a referee note. Allowed for everyone with the referee write privilege, not only the author - the notes are a tool for internal exchange, and a wrong note must be removable while its author is out on the water.
+ */
+export const deleteLiveDashboardTeamNote = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteLiveDashboardTeamNoteData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteLiveDashboardTeamNoteResponse,
+        DeleteLiveDashboardTeamNoteError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/liveDashboard/match/{matchId}/team/{teamId}/note/{noteId}',
+    })
+}
+
+/**
  * The competitions, the configurable checks with their defaults and the deviations set for this event - administration for the referee dashboard's severity configuration.
  */
 export const getCheckSeverityConfig = <ThrowOnError extends boolean = false>(
@@ -4178,6 +4373,38 @@ export const getEventSchedule = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/schedule',
+    })
+}
+
+/**
+ * Bulk start list export for the whole event: the first created round of every competition (or, in delta mode, every created match missing in RaceClocker), as a ZIP with one CSV per competition (file names like the round export), as one big CSV sorted by start time across all competitions, or as one PDF concatenating the per-match start list PDFs in the same order.
+ */
+export const downloadEventStartlists = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadEventStartlistsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadEventStartlistsResponse,
+        DownloadEventStartlistsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/startlists',
+    })
+}
+
+/**
+ * Preview of the bulk start list export: exactly the matches the export with the same parameters would export (same plan logic, no second truth), as JSON instead of a file. Matches with startTime null would block the export (STARTLIST_MATCHES_WITHOUT_START_TIME) - deselect them via the export's matchIds parameter. RaceClocker feeds are fetched (also without delta mode) whenever the plan contains competitions with an assigned race, so missingInRaceClocker carries information; an unreachable race fails the preview like it fails the export.
+ */
+export const previewEventStartlists = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<PreviewEventStartlistsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        PreviewEventStartlistsResponse,
+        PreviewEventStartlistsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/schedule/startlists/preview',
     })
 }
 
@@ -5105,6 +5332,22 @@ export const downloadAwardCeremonySheets = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/event/{eventId}/awardCeremony/pdf',
+    })
+}
+
+/**
+ * Die Ergebnisliste als druckfertiges PDF, in der Regel zum Aushängen - dieselbe Datenbasis und dieselbe Ergebnisregel wie der Siegerehrungsbogen (nur bestätigte Platzierungen), aber mit wählbaren Bestandteilen. Jedes Blatt trägt eine Fußzeile mit Veranstaltung und Stand-Zeitstempel, damit veraltete Aushänge erkennbar sind. Fehlende Parameter fallen auf die Aushang-Vorgaben zurück.
+ */
+export const downloadResultList = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadResultListData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadResultListResponse,
+        DownloadResultListError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/resultList/pdf',
     })
 }
 

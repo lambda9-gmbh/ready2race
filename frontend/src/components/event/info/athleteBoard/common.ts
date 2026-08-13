@@ -3,6 +3,18 @@ import {TFunction} from 'i18next'
 export const formatClockTime = (value: string) =>
     new Date(value).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})
 
+/**
+ * Uhrzeit MIT Sekunden — für den gemessenen Boot-Start auf der Sprecher-Kachel: bei
+ * Einzelstarts (Zeitfahren) liegen die Boote Sekunden auseinander, „10:31" hilft der
+ * Sprecherin nicht.
+ */
+export const formatClockTimeWithSeconds = (value: string) =>
+    new Date(value).toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    })
+
 /** Tag und Monat ohne Jahr — genug, um "heute" von "nächste Woche" zu unterscheiden. */
 export const formatShortDate = (value: string) =>
     new Date(value).toLocaleDateString(undefined, {day: '2-digit', month: '2-digit'})
@@ -45,14 +57,9 @@ export const formatRemaining = (seconds: number, t: TFunction): string => {
     return `${total % 60} ${t('event.info.athleteBoard.secondsUnit')}`
 }
 
-/**
- * Ein Platz als Ordnungszahl („1." / "1st" / „1."), sprachrichtig über die
- * Ordinal-Pluralregeln von i18next. Überall, wo ein Platz neben einer Startnummer
- * stehen kann, muss er als Ordnungszahl erscheinen — eine nackte „1" ist von der
- * Startnummer 1 nicht zu unterscheiden (Wunsch vom 10.08.2026, Handtest am Prod-Abzug).
- */
-export const formatPlace = (place: number, t: TFunction): string =>
-    t('event.info.athleteBoard.place', {count: place, ordinal: true})
+// Plätze als Ordnungszahlen formatiert seit dem 12.08.2026 `formatPlaceOrdinal`
+// (utils/placeOrdinal) — englische Suffixe für alle Sprachen, Begründung dort.
+// Die frühere i18n-Fassung (`formatPlace`) ist damit entfallen.
 
 /**
  * Reihenfolge der Boote im laufenden Lauf: Sobald Zwischenstände da sind, zählt die
@@ -80,6 +87,18 @@ export const sortRunningTeams = <
         return a.place - b.place || a.startNumber - b.startNumber
     })
 }
+
+/**
+ * „Zieleinlauf komplett": jedes Boot der Aufstellung eines laufenden Laufs hat ein Ergebnis —
+ * Platz/Zeit oder gescheitert (DNS/DNF/DSQ). Der Lauf wartet dann nur noch auf die
+ * Schiedsrichter-Entscheidung (Beenden), erst die verschiebt ihn in „Letztes Ergebnis".
+ *
+ * Dieselbe Auslegung wie `LiveDashboardLogic.teamHasResult` im Backend, so wie sie dort für
+ * laufende Läufe angewandt wird (Conversions, `deregistered = false`): mehr als Platz und
+ * Gescheitert-Status weiß über ein laufendes Feld auch das Schiedsrichter-Dashboard nicht.
+ */
+export const finishComplete = (teams: {place?: number | null; failed?: boolean}[]): boolean =>
+    teams.length > 0 && teams.every(team => team.place != null || team.failed === true)
 
 /**
  * Welche Form der Vereinskette in der Zeile steht. Die Entscheidung trifft die Breite des
@@ -117,6 +136,17 @@ export const teamLabel = (
             ? (team.clubsShort ?? team.clubsFull)
             : (team.clubsFull ?? team.clubsShort)
     return [clubs, name].filter(Boolean).join(' | ')
+}
+
+/**
+ * Kurzform eines Rundennamens für die Runden-Zeile an der Zeit: „Runde 1" → „R1",
+ * „Lap 2" → „L2". Die Namen sind Spaltenüberschriften aus RaceClocker und damit freier
+ * Text — nur das Muster „ein Wort plus Zahl" wird eingedampft, alles andere (etwa
+ * „500m") bleibt unverändert stehen, bevor eine zu forsche Kürzung den Sinn kostet.
+ */
+export const compactLapLabel = (name: string): string => {
+    const match = name.trim().match(/^(\p{L})\p{L}*\s*(\d+)$/u)
+    return match ? `${match[1].toUpperCase()}${match[2]}` : name
 }
 
 /**

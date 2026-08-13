@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.event.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.entity.ChainProgressionMode
+import de.lambda9.ready2race.backend.app.event.entity.EventNoticeDto
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
@@ -53,6 +54,19 @@ object EventRepo {
             .from(EVENT)
             .where(EVENT.ID.eq(eventId))
             .fetchOne(EVENT.SHOW_BREAKS_ON_PUBLIC_BOARDS) ?: false
+    }
+
+    /**
+     * Der veranstaltungsweite Hinweis, fertig als Antwort-Objekt - null heißt "kein Banner"
+     * (beide Spalten leer oder Veranstaltung unbekannt). Der gemeinsame Lese-Punkt für alle
+     * gepollten Antworten, die den Hinweis einbetten.
+     */
+    fun getNotice(eventId: UUID) = Jooq.query {
+        select(EVENT.NOTICE_TEXT, EVENT.NOTICE_SEVERITY)
+            .from(EVENT)
+            .where(EVENT.ID.eq(eventId))
+            .fetchOne()
+            ?.let { EventNoticeDto.fromColumns(it.value1(), it.value2()) }
     }
 
 

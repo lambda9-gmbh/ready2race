@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventInfo.entity
 
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.MatchTeamLapDto
 import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRef
 import java.time.LocalDateTime
@@ -57,6 +58,14 @@ data class AthleteBoardMatch(
      */
     val nextRoundName: String? = null,
     val advancingSeats: Int? = null,
+    /**
+     * Das Freilos dieses Laufs — dieselbe Ableitung wie im Zeitplan und im
+     * Schiedsrichter-Dashboard (`MatchStatusLogic.deriveBye`), befüllt in
+     * `BoardService.getBoardView`. Die öffentlichen Anzeigen brauchen sie vor allem für
+     * Freilose mit „muss gefahren werden": Dort erklärt eine Zweitzeile, warum das Boot allein
+     * fährt und dass die Zeit außer Konkurrenz läuft.
+     */
+    val bye: de.lambda9.ready2race.backend.app.matchStatus.entity.MatchByeDto? = null,
 )
 
 data class AthleteBoardTeam(
@@ -96,6 +105,19 @@ data class AthleteBoardTeam(
     val failedReason: String? = null,
     /** Meldender Verein — nur befüllt, wenn ein Element showRegisteringClub anfordert. */
     val registeringClub: String? = null,
+    /**
+     * Zwischenzeiten aus RaceClocker, in Markenreihenfolge — leer, wenn das Rennen keine führt.
+     * Die Anzeige zeigt sie unter der Zeile, sobald sie da sind (Rückmeldung vom 11.08.2026).
+     */
+    val laps: List<MatchTeamLapDto> = emptyList(),
+    /**
+     * Gemessener Start DIESES Bootes (`competition_match_team.started_at`) — beim Zeitfahren
+     * starten die Boote versetzt, der Lauf-Start ([AthleteBoardMatch.actualStartTime]) sagt
+     * dann nichts über das einzelne Boot. Nur befüllt, wenn das Board eine Sprecher-Kachel
+     * (MATCH_DETAIL) hat — needs-Muster wie die Bedingungen; dank NON_NULL-Serialisierung
+     * bleibt die Poll-Nutzlast aller anderen Boards unverändert.
+     */
+    val startedAt: LocalDateTime? = null,
 )
 
 data class AthleteBoardParticipant(
@@ -108,6 +130,25 @@ data class AthleteBoardParticipant(
      */
     val year: Int? = null,
     val clubName: String? = null,
+    /**
+     * Bedingungen dieser Person (Sprecher-Kachel MATCH_DETAIL). Nur befüllt, wenn das Board
+     * eine solche Kachel hat, und serverseitig doppelt gefiltert: ausschließlich Bedingungen,
+     * die für die Rolle der Person überhaupt gelten UND `publicly_visible = true` tragen —
+     * dieselbe Regel wie das persönliche Dashboard (MyEventService). Interne Bedingungen und
+     * Freitext-Notizen verlassen den Server nie (siehe [AthleteBoardRequirement]).
+     */
+    val requirements: List<AthleteBoardRequirement> = emptyList(),
+)
+
+/**
+ * Eine Bedingung auf der öffentlichen Sprecher-Kachel: bewusst nur Name und Erfüllt-Status.
+ * Keine Kennung, keine Beschreibung und vor allem keine Notiz — die `note`-Spalte der
+ * Erfüllungstabelle ist für interne Augen und wird für Boards gar nicht erst geladen
+ * (gleiche Vorsicht wie `MyEventRepo.findFulfilledRequirementIds`).
+ */
+data class AthleteBoardRequirement(
+    val name: String,
+    val fulfilled: Boolean,
 )
 
 data class AthleteBoardResult(
@@ -155,4 +196,18 @@ data class AthleteBoardResultTeam(
      */
     val deregistered: Boolean,
     val deregisteredReason: String?,
+    /** Zwischenzeiten wie bei [AthleteBoardTeam.laps]; leer, wenn das Rennen keine führt. */
+    val laps: List<MatchTeamLapDto> = emptyList(),
+    /**
+     * Aufstellung des Bootes — seit dem 12.08.2026 immer dabei, wie bei [AthleteBoardTeam]:
+     * dieselbe Kachel zeigte die Crew im laufenden Lauf und verlor sie mit dem Beenden.
+     * Jahrgang und getragener Verein der Personen bleiben Detail-gated
+     * ([AthleteBoardParticipant]); die Ergebnis-Quelle trägt die Personen ohnehin
+     * (`MatchResultTeamInfo.participants`).
+     */
+    val participants: List<AthleteBoardParticipant> = emptyList(),
+    /** Wie bei [AthleteBoardTeam.registeringClub]: nur befüllt, wenn ein Element es anfordert. */
+    val registeringClub: String? = null,
+    /** Wie bei [AthleteBoardTeam.startedAt]: der gemessene Boot-Start, nur für die Sprecher-Kachel. */
+    val startedAt: LocalDateTime? = null,
 )

@@ -146,6 +146,12 @@ const CompetitionTimingConfig = () => {
      * Einschalten füllt alle Felder mit dem, was gerade gilt — man weicht von einem Stand ab, statt
      * vor leeren Feldern zu stehen. Ausschalten leert sie wieder; das ist die einzige Art, das Erben
      * zurückzubekommen, und der Schalter macht sie sichtbar statt sie zu verstecken.
+     *
+     * Die Rennen-Anwahl fasst der Schalter NICHT an — in keine Richtung. Sie ist kein Override,
+     * sondern die Zuordnung dieses Wettkampfs zu einem RaceClocker-Rennen, und dieselbe Zuordnung
+     * wird auch am Rennen selbst vergeben (RaceClockerRaceAssignments). Würde das Ausschalten sie
+     * leeren, löschte ein Klick hier die Arbeit aus der anderen Ansicht: genau das ist am Abend des
+     * 11.08.2026 passiert, und danach meldete der Tab „keine Rennen angewählt".
      */
     const toggleOverride = (checked: boolean) => {
         setOverride(checked)
@@ -157,12 +163,8 @@ const CompetitionTimingConfig = () => {
             // Rennen erben nicht von der Veranstaltung; sie werden hier (oder am Rennen) gezielt
             // zugewiesen und starten deshalb leer.
             formContext.setValue(
-                'startlistConfigQualification',
-                configOption(startListConfigs, formValues.eventStartlistConfigQualification),
-            )
-            formContext.setValue(
-                'startlistConfigRounds',
-                configOption(startListConfigs, formValues.eventStartlistConfigRounds),
+                'startlistConfig',
+                configOption(startListConfigs, formValues.eventStartlistConfig),
             )
             formContext.setValue(
                 'resultImportConfig',
@@ -170,10 +172,7 @@ const CompetitionTimingConfig = () => {
             )
         } else {
             formContext.setValue('timingSystem', 'NONE')
-            formContext.setValue('raceQualification', null)
-            formContext.setValue('raceRounds', null)
-            formContext.setValue('startlistConfigQualification', null)
-            formContext.setValue('startlistConfigRounds', null)
+            formContext.setValue('startlistConfig', null)
             formContext.setValue('resultImportConfig', null)
         }
     }
@@ -214,24 +213,11 @@ const CompetitionTimingConfig = () => {
                             {t('event.competition.timing.system')}:{' '}
                             {t(systemLabelKeys[eventSystem])}
                         </Typography>
-                        {eventSystem === 'RACECLOCKER' && (
-                            <Typography variant={'body2'} color={'text.secondary'}>
-                                {t('event.competition.timing.startlistQualification')}:{' '}
-                                {configName(
-                                    startListConfigs,
-                                    formValues.eventStartlistConfigQualification,
-                                )}
-                            </Typography>
-                        )}
                         {eventSystem !== 'NONE' && (
                             <>
                                 <Typography variant={'body2'} color={'text.secondary'}>
-                                    {t(
-                                        eventSystem === 'RACECLOCKER'
-                                            ? 'event.competition.timing.startlistRounds'
-                                            : 'event.competition.timing.startlist',
-                                    )}
-                                    : {configName(startListConfigs, formValues.eventStartlistConfigRounds)}
+                                    {t('event.competition.timing.startlist')}:{' '}
+                                    {configName(startListConfigs, formValues.eventStartlistConfig)}
                                 </Typography>
                                 <Typography variant={'body2'} color={'text.secondary'}>
                                     {t('event.competition.timing.resultImport')}:{' '}
@@ -248,6 +234,32 @@ const CompetitionTimingConfig = () => {
                             </InlineLink>
                         </Typography>
                     </Box>
+
+                    {/* Die Rennen-Anwahl steht ÜBER dem Überschreiben-Schalter und außerhalb seiner
+                        Reichweite: Sie ist keine Abweichung von der Veranstaltung, sondern die
+                        Zuordnung dieses Wettkampfs zu einem RaceClocker-Rennen. Dieselbe Zuordnung
+                        lässt sich umgekehrt am Rennen anhaken (RaceClockerRaceAssignments) — beide
+                        Wege schreiben dieselbe Spalte, deshalb darf der Schalter sie nicht
+                        anfassen (Fehler vom 11.08.2026). */}
+                    {effectiveSystem === 'RACECLOCKER' && (
+                        <Stack spacing={4}>
+                            <Box>
+                                <Typography variant={'subtitle2'}>
+                                    <Trans i18nKey={'event.competition.timing.raceSection.title'} />
+                                </Typography>
+                                <Typography variant={'body2'} color={'text.secondary'}>
+                                    <Trans i18nKey={'event.competition.timing.raceclockerHint'} />
+                                </Typography>
+                            </Box>
+                            <FormInputAutocomplete
+                                name={'race'}
+                                options={raceOptions ?? []}
+                                loading={racesPending}
+                                label={t('event.competition.timing.race')}
+                            />
+                            <Divider />
+                        </Stack>
+                    )}
 
                     <Box>
                         <FormControlLabel
@@ -296,26 +308,6 @@ const CompetitionTimingConfig = () => {
                         />
                     )}
 
-                    {override && effectiveSystem === 'RACECLOCKER' && (
-                        <Stack spacing={4}>
-                            <Alert variant={'outlined'} severity={'info'}>
-                                <Trans i18nKey={'event.competition.timing.raceclockerHint'} />
-                            </Alert>
-                            <FormInputAutocomplete
-                                name={'raceQualification'}
-                                options={raceOptions ?? []}
-                                loading={racesPending}
-                                label={t('event.competition.timing.raceQualification')}
-                            />
-                            <FormInputAutocomplete
-                                name={'raceRounds'}
-                                options={raceOptions ?? []}
-                                loading={racesPending}
-                                label={t('event.competition.timing.raceRounds')}
-                            />
-                        </Stack>
-                    )}
-
                     {override && effectiveSystem !== 'NONE' && (
                         <Stack spacing={4}>
                             <Divider />
@@ -331,23 +323,11 @@ const CompetitionTimingConfig = () => {
                                     <Trans i18nKey={'event.competition.timing.presets.hint'} />
                                 </Typography>
                             </Box>
-                            {effectiveSystem === 'RACECLOCKER' && (
-                                <FormInputAutocomplete
-                                    name={'startlistConfigQualification'}
-                                    options={startListConfigs ?? []}
-                                    loading={startListConfigsPending}
-                                    label={t('event.competition.timing.startlistQualification')}
-                                />
-                            )}
                             <FormInputAutocomplete
-                                name={'startlistConfigRounds'}
+                                name={'startlistConfig'}
                                 options={startListConfigs ?? []}
                                 loading={startListConfigsPending}
-                                label={t(
-                                    effectiveSystem === 'RACECLOCKER'
-                                        ? 'event.competition.timing.startlistRounds'
-                                        : 'event.competition.timing.startlist',
-                                )}
+                                label={t('event.competition.timing.startlist')}
                             />
                             {/* Die RaceClocker-Presets exportieren ohne Kopfzeile, weil RaceClocker
                                 eine solche Zeile als Teilnehmer importiert. Der Spaltenmapper zeigt

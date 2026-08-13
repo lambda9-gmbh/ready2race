@@ -414,4 +414,48 @@ class AwardCeremonyLogicTest {
         assertEquals(listOf(1, 2), sheet.ranks.map { it.rank })
         assertNull(sheet.ceremonyTime)
     }
+
+    /**
+     * Die Ergebnisliste zum Aushängen hebt den Podiumsschnitt auf - `maxRank = null` heißt „alle
+     * platzierten Boote". Was sie *nicht* aufhebt, ist die Ergebnisregel: ein ungewertetes Boot
+     * (categoryPlace `null`) bleibt draußen, auf dem Aushang wie auf dem Bogen.
+     */
+    @Test
+    fun withoutACutEveryPlacedBoatStaysAndUnplacedOnesStillFall() {
+        val entries = sectionOf(
+            listOf(candidate(1), candidate(2), candidate(3), candidate(4), candidate(5)),
+        ) + listOf(RankedEntry(candidate(1, startNumber = 99), categoryPlace = null))
+
+        val all = AwardCeremonyLogic.ranks(entries, maxRank = null)
+
+        assertEquals(listOf(1, 2, 3, 4, 5), all.map { it.rank })
+        assertEquals(
+            emptyList(),
+            all.filter { it.team.boatLine.contains("Startnummer 99") },
+            "Ein Boot ohne bestätigten Platz gehört auch nicht auf den Aushang",
+        )
+
+        // Ohne Angabe bleibt der Bogen der Bogen: der Schnitt beim Podium ist der Vorgabewert.
+        assertEquals(listOf(1, 2, 3), AwardCeremonyLogic.ranks(entries).map { it.rank })
+    }
+
+    /** Auch ohne Schnitt tragen Gleichstände Kennzeichen und Lücke - dieselbe Zählung wie bisher. */
+    @Test
+    fun sharedRanksKeepTheirMarksWithoutACut() {
+        val all = AwardCeremonyLogic.ranks(
+            sectionOf(
+                listOf(
+                    candidate(1),
+                    candidate(2, startNumber = 2),
+                    candidate(2, startNumber = 3),
+                    candidate(4, startNumber = 4),
+                )
+            ),
+            maxRank = null,
+        )
+
+        assertEquals(listOf(1, 2, 2, 4), all.map { it.rank })
+        assertEquals(listOf(false, true, true, false), all.map { it.shared })
+        assertEquals(listOf(true, true, false, true), all.map { it.first })
+    }
 }

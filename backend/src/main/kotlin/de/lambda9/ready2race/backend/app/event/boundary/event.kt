@@ -16,6 +16,7 @@ import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
 import de.lambda9.ready2race.backend.app.event.entity.UpdateEventRequest
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
+import de.lambda9.ready2race.backend.app.eventExportBundle.boundary.eventExportBundle
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
@@ -91,6 +92,7 @@ fun Route.event() {
             competition()
             eventRegistration()
             eventDocument()
+            eventExportBundle()
             participantRequirementForEvent()
             participantForEvent()
             task()
@@ -101,6 +103,7 @@ fun Route.event() {
             awardCertificate()
             awardCeremony()
             eventTimingConfig()
+            eventNotice()
             raceClockerRace()
 
             get("/matches") {

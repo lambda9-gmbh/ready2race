@@ -158,6 +158,95 @@ class RaceClockerPollLogicTest {
         )
     }
 
+    // --- Rückzug des Ist-Starts ---
+    //
+    // Die Gegenrichtung zur Start-Erkennung (11.08.2026): Zieht der Zeitnehmer nach einem
+    // Fehlstart alle Zeiten zurück, stehen alle zugeordneten Zeilen wieder ohne Startzeit und ohne
+    // Ergebnis da - dann geht der Ist-Start zurück. Alles andere ist ausdrücklich KEIN Rückzug.
+
+    private val startedAt = LocalDateTime.of(2026, 8, 14, 9, 58)
+
+    @Test
+    fun aFullyRetractedFeedRetractsTheStart() {
+        assertTrue(
+            RaceClockerPollLogic.startRetracted(
+                rows = listOf(row(result = "Not started"), row(result = "Not started")),
+                existingStartedAt = startedAt,
+                anyStoredResult = false,
+            )
+        )
+    }
+
+    @Test
+    fun aSingleBoatWithATimeOrAStartKeepsTheStart() {
+        // Ein Boot mit Zeit ist unstrittig gefahren - dieselbe Regel wie bei der Start-Erkennung,
+        // nur andersherum gelesen: Was einen Lauf starten lässt, hält ihn auch gestartet.
+        assertFalse(
+            RaceClockerPollLogic.startRetracted(
+                rows = listOf(row(result = "Not started"), row(result = "3:21.4")),
+                existingStartedAt = startedAt,
+                anyStoredResult = false,
+            )
+        )
+        assertFalse(
+            RaceClockerPollLogic.startRetracted(
+                rows = listOf(row(result = "In race...", start = LocalTime.of(9, 58))),
+                existingStartedAt = startedAt,
+                anyStoredResult = false,
+            )
+        )
+    }
+
+    @Test
+    fun anEmptyFeedIsNoRetraction() {
+        // Der Feed kennt den Lauf (noch) nicht - ein von Hand markierter Start muss das
+        // überleben. Nur ein Feed, der den Lauf kennt und ihn ungestartet zeigt, zählt.
+        assertFalse(
+            RaceClockerPollLogic.startRetracted(
+                rows = emptyList(),
+                existingStartedAt = startedAt,
+                anyStoredResult = false,
+            )
+        )
+    }
+
+    @Test
+    fun storedResultsBlockTheRetraction() {
+        // Stände in ready2race bei ungestartetem Feed sind Handeingaben - die nimmt der Abruf
+        // nie zurück. (Feed-Stände räumt beim Rückzug der Reset-Pfad ab, nicht dieser Zweig.)
+        assertFalse(
+            RaceClockerPollLogic.startRetracted(
+                rows = listOf(row(result = "Not started")),
+                existingStartedAt = startedAt,
+                anyStoredResult = true,
+            )
+        )
+    }
+
+    @Test
+    fun withoutAStartThereIsNothingToRetract() {
+        assertFalse(
+            RaceClockerPollLogic.startRetracted(
+                rows = listOf(row(result = "Not started")),
+                existingStartedAt = null,
+                anyStoredResult = false,
+            )
+        )
+    }
+
+    @Test
+    fun aRetractionChangesTheFingerprint() {
+        // Der Rückzug selbst läuft nie in die "unverändert"-Abkürzung: Startzeit und Ergebnis
+        // stehen im Fingerabdruck, ihr Verschwinden ändert ihn also zwangsläufig.
+        val id = UUID.randomUUID()
+        assertNotEquals(
+            RaceClockerPollLogic.fingerprint(
+                listOf(row(id = id, result = "In race...", start = LocalTime.of(9, 58)))
+            ),
+            RaceClockerPollLogic.fingerprint(listOf(row(id = id, result = "Not started"))),
+        )
+    }
+
     // --- der nachgetragene Ist-Start ---
     //
     // Der Fall, der den ganzen Umbau ausgelöst hat (Entwurf 09.08.2026, §2.2): Ein von der Kette an
