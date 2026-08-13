@@ -18,6 +18,7 @@ import {
     RadioGroup,
     Stack,
     TextField,
+    Tooltip,
     Typography,
 } from '@mui/material'
 import {Download} from '@mui/icons-material'
@@ -41,6 +42,7 @@ import {
     toggleMatch,
 } from './startlistPreviewSelection.ts'
 import {
+    bundleAttachDisabledReason,
     excludedItemsParam,
     initialBundleSelection,
     isPdfName,
@@ -156,18 +158,38 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
 
     // Die Mappe des PDF-Zweigs - schon beim Öffnen des Zweigs geholt (nicht erst beim Anhaken),
     // damit die Checkbox-Liste sofort dasteht. Jede Antwort wählt alles vor.
-    const {data: bundleItems} = useFetch(
-        signal => getExportBundle({signal, path: {eventId}}),
-        {
-            preCondition: () => open && pdfMode,
-            onResponse: ({data}) => {
-                if (data) {
-                    setBundleSelected(initialBundleSelection(data))
-                }
-            },
-            deps: [eventId, open, pdfMode],
+    const {
+        data: bundleItems,
+        pending: bundlePending,
+        error: bundleError,
+    } = useFetch(signal => getExportBundle({signal, path: {eventId}}), {
+        preCondition: () => open && pdfMode,
+        onResponse: ({data}) => {
+            if (data) {
+                setBundleSelected(initialBundleSelection(data))
+            }
         },
+        deps: [eventId, open, pdfMode],
+    })
+
+    // Warum „Mappen-Dokumente anhängen" ggf. ausgegraut ist - nie stumm (Feedback 13.08.2026):
+    // Der Grund steht als Tooltip am Schalter UND als Hinweiszeile darunter.
+    const bundleDisabledReason = bundleAttachDisabledReason(
+        bundleItems,
+        bundlePending,
+        bundleError?.status ?? null,
     )
+    const bundleDisabledText =
+        bundleDisabledReason &&
+        {
+            LOADING: t('event.schedule.startlistExport.bundle.disabled.loading'),
+            ONLY_STARTLISTS: t('event.schedule.startlistExport.bundle.disabled.onlyStartlists'),
+            LOAD_FAILED: t('event.schedule.startlistExport.bundle.disabled.loadFailed'),
+            FORBIDDEN: t('event.schedule.startlistExport.bundle.disabled.forbidden'),
+        }[bundleDisabledReason]
+    // Wirksam nur mit Grundfreiheit: Ein gesetzter Haken zählt nicht, solange ein
+    // Disabled-Grund besteht (z. B. Mappe zwischenzeitlich geleert).
+    const bundleActive = attachBundle && bundleDisabledReason === null
 
     // Die konfigurierten Rennen der Veranstaltung - Optionen des Rennen-Filters. Nur bei
     // Zeitnahme über RaceClocker geholt, anderswo gibt es weder Rennen noch das Select dazu.
@@ -228,9 +250,9 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                 // PDF-Zweig: Amtspapier und Mappe. Serverseitig zählt die ABWAHL der
                 // Mappen-Einträge - neu hinzugekommene Dokumente fallen so nie still heraus.
                 withBackground: pdfMode ? withBackground : undefined,
-                includeBundleDocuments: pdfMode && attachBundle ? true : undefined,
+                includeBundleDocuments: pdfMode && bundleActive ? true : undefined,
                 excludedBundleItems:
-                    pdfMode && attachBundle && bundleItems
+                    pdfMode && bundleActive && bundleItems
                         ? excludedItemsParam(bundleItems, bundleSelected)
                         : undefined,
             },
@@ -345,19 +367,39 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                         )}
                         {pdfMode && (
                             <FormControl>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={attachBundle}
-                                            onChange={(_, checked) => setAttachBundle(checked)}
+                                {/* Der span um das Label ist Pflicht: Ein disabled-Element
+                                    feuert keine Pointer-Events, ohne Wrapper bliebe der
+                                    Tooltip stumm (MUI-Muster für deaktivierte Kinder). */}
+                                <Tooltip title={bundleDisabledText ?? ''}>
+                                    <span>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={attachBundle && !bundleDisabledReason}
+                                                    disabled={bundleDisabledReason !== null}
+                                                    onChange={(_, checked) =>
+                                                        setAttachBundle(checked)
+                                                    }
+                                                />
+                                            }
+                                            label={t(
+                                                'event.schedule.startlistExport.bundle.label',
+                                            )}
                                         />
-                                    }
-                                    label={t('event.schedule.startlistExport.bundle.label')}
-                                />
-                                <FormHelperText>
-                                    {t('event.schedule.startlistExport.bundle.hint')}
-                                </FormHelperText>
-                                {attachBundle && (
+                                    </span>
+                                </Tooltip>
+                                {/* Nie stumm ausgrauen: Der Grund steht auch ohne Hover da. */}
+                                {bundleDisabledText && (
+                                    <Typography variant={'caption'} color={'text.secondary'}>
+                                        {bundleDisabledText}
+                                    </Typography>
+                                )}
+                                {!bundleDisabledReason && (
+                                    <FormHelperText>
+                                        {t('event.schedule.startlistExport.bundle.hint')}
+                                    </FormHelperText>
+                                )}
+                                {bundleActive && (
                                     <Stack sx={{pl: 1}}>
                                         {(bundleItems ?? []).map(item => {
                                             const isPlaceholder =
@@ -608,7 +650,7 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                             (previewActive &&
                                 (previewPending ||
                                     (preview !== null && selected.size === 0))) ||
-                            (pdfMode && attachBundle && bundleSelected.size === 0)
+                            (pdfMode && bundleActive && bundleSelected.size === 0)
                         }
                         onClick={handleDownload}>
                         {t('event.schedule.startlistExport.download')}

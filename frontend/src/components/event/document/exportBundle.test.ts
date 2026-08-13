@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest'
 import {EventExportBundleItemDto} from '@api/types.gen.ts'
 import {
+    bundleAttachDisabledReason,
     excludedItemsParam,
     includesGeneratedStartlists,
     initialBundleSelection,
@@ -65,6 +66,36 @@ describe('Auswahl im Export-Dialog', () => {
         expect(once.has('a')).toBe(false)
         const twice = toggleBundleItem(once, 'a')
         expect(twice.has('a')).toBe(true)
+    })
+})
+
+describe('bundleAttachDisabledReason', () => {
+    it('erlaubt das Anhängen, sobald die Mappe mindestens ein Dokument trägt', () => {
+        expect(bundleAttachDisabledReason(bundle, false, null)).toBeNull()
+        // Ein Reload (pending trotz geladener Einträge) lässt den Schalter nicht flackern.
+        expect(bundleAttachDisabledReason(bundle, true, null)).toBeNull()
+    })
+
+    it('benennt den wahrscheinlichsten Fall: nur der Startlisten-Platzhalter', () => {
+        expect(bundleAttachDisabledReason([placeholder('p')], false, null)).toBe('ONLY_STARTLISTS')
+        // Leere Liste (über die API unerreichbar, GET legt den Platzhalter an): derselbe Grund -
+        // es gibt so oder so nichts anzuhängen.
+        expect(bundleAttachDisabledReason([], false, null)).toBe('ONLY_STARTLISTS')
+    })
+
+    it('meldet Laden, solange keine Antwort da ist - auch beim Neuanlauf nach einem Fehler', () => {
+        expect(bundleAttachDisabledReason(null, true, null)).toBe('LOADING')
+        // preCondition noch nicht erfüllt: weder Antwort noch Fehler noch laufender Abruf.
+        expect(bundleAttachDisabledReason(null, false, null)).toBe('LOADING')
+        // Alter Fehlerstatus während des Retries zählt nicht als Fehler.
+        expect(bundleAttachDisabledReason(null, true, 500)).toBe('LOADING')
+    })
+
+    it('unterscheidet fehlende Berechtigung vom übrigen Ladefehler', () => {
+        expect(bundleAttachDisabledReason(null, false, 401)).toBe('FORBIDDEN')
+        expect(bundleAttachDisabledReason(null, false, 403)).toBe('FORBIDDEN')
+        expect(bundleAttachDisabledReason(null, false, 500)).toBe('LOAD_FAILED')
+        expect(bundleAttachDisabledReason(null, false, 404)).toBe('LOAD_FAILED')
     })
 })
 

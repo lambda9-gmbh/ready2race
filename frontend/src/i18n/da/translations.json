@@ -1857,7 +1857,13 @@
         "bundle": {
           "label": "Vedhæft mappedokumenter",
           "hint": "Samler arrangementets eksportmappe – dokumenter og samlede startlister i den rækkefølge, der er fastlagt under indstillinger, hver kan fravælges.",
-          "skippedNonPdf": "ikke en PDF, springes over"
+          "skippedNonPdf": "ikke en PDF, springes over",
+          "disabled": {
+            "onlyStartlists": "Eksportmappen indeholder intet at vedhæfte ud over de samlede startlister – dokumenter kan tilføjes på arrangementets fane “Indstillinger” under “Eksportmappe”.",
+            "loading": "Eksportmappen indlæses …",
+            "loadFailed": "Eksportmappen kunne ikke indlæses – luk dialogen og prøv igen.",
+            "forbidden": "Ingen tilladelse til at læse eksportmappen."
+          }
         },
         "skipByes": {
           "label": "Spring oversiddere over",
