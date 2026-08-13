@@ -21,6 +21,9 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
+import de.lambda9.ready2race.backend.app.eventExportBundle.control.EventExportBundleItemRepo
+import de.lambda9.ready2race.backend.app.eventExportBundle.entity.EventExportBundleItemKind
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.EventChangeMarker
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
@@ -96,6 +99,7 @@ import org.apache.pdfbox.multipdf.PDFMergerUtility
 import org.apache.pdfbox.pdmodel.PDDocument
 import java.awt.Color
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -2668,8 +2672,23 @@ object CompetitionExecutionService {
         // Aufrufer geholt (downloadEventStartlists), damit der Bau gegen Fixtures prüfbar bleibt.
         // null rendert die vorlagenlose Standard-Startliste, exakt wie der Einzel-Lauf-Export.
         startListTemplate: PageTemplate? = null,
+        // Nur für PDF: "Amtspapier mitdrucken" - false lässt das Vorlagen-Design weg (Druck auf
+        // vorgedrucktes Papier), Format und Rand der Vorlage bleiben. Mappen-Dokumente sind davon
+        // unberührt, die werden IMMER unverändert übernommen.
+        withBackground: Boolean = true,
+        // Nur für PDF: die Regatta-Mappe in Reihenfolge - Dokumente als fertige Bytes, die
+        // generierten Startlisten als Platzhalter-Teil. null = nur die generierten Startlisten
+        // (das bisherige Verhalten ohne Mappe).
+        bundleParts: List<StartlistBundlePart>? = null,
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
         val filtered = filterPlanAgainstFeeds(plan, feedsByUrl)
+
+        // Die effektive Mappen-Reihenfolge des PDF-Baus: ohne Mappe genau der generierte Teil.
+        val parts = bundleParts ?: listOf(StartlistBundlePart.GeneratedStartlists)
+        // Ist der Startlisten-Platzhalter abgewählt (Mappe ohne GeneratedStartlists), wird kein
+        // Lauf gerendert - dann darf auch keiner den Export blockieren.
+        val includesGenerated = fileType != EventStartlistFileType.PDF ||
+            parts.any { it is StartlistBundlePart.GeneratedStartlists }
 
         // Startzeit-Wächter über ALLE Läufe statt Abbruch beim ersten (appendMatchCsv bliebe als
         // Rückhalt): Ein nacktes "StartTime not set" ohne Laufbezug ist am Renntag unbrauchbar
@@ -2694,7 +2713,7 @@ object CompetitionExecutionService {
         // und eine Fehlermeldung, die ihre Läufe bei jedem Aufruf anders reiht, liest sich wie
         // eine andere Meldung.
         }.sortedWith(compareBy({ it.competitionIdentifier }, { it.roundName }, { it.matchName ?: "" }))
-        !KIO.failOn(withoutStartTime.isNotEmpty()) {
+        !KIO.failOn(includesGenerated && withoutStartTime.isNotEmpty()) {
             CompetitionExecutionError.StartlistMatchesWithoutStartTime(withoutStartTime)
         }
 
@@ -2771,38 +2790,72 @@ object CompetitionExecutionService {
             }
 
             EventStartlistFileType.PDF -> {
-                // Eine Datei für Aushang bzw. (geändertes) Meldeergebnis: je Lauf die bekannte
-                // Einzel-Startlisten-PDF ([buildPdf], mit der zugewiesenen Vorlage), in
-                // Startzeit-Reihenfolge über alle Wettkämpfe aneinandergehängt - dieselbe
-                // Reihenfolge wie die große CSV. Läufe ohne Mannschaften werden wie dort
-                // kommentarlos übersprungen. Bewusst NICHT "meldeergebnis" im Dateinamen:
-                // REGISTRATION_REPORT ist ein eigener Dokumenttyp, der Name bliebe zweideutig.
+                // Eine Datei für Aushang bzw. (geändertes) Meldeergebnis: die Mappen-Teile in
+                // Reihenfolge - Dokumente unverändert, an der Platzhalter-Position je Lauf die
+                // bekannte Einzel-Startlisten-PDF ([buildPdf], mit der zugewiesenen Vorlage), in
+                // Startzeit-Reihenfolge über alle Wettkämpfe - dieselbe Reihenfolge wie die
+                // große CSV. Läufe ohne Mannschaften werden wie dort kommentarlos übersprungen.
+                // Bewusst NICHT "meldeergebnis" im Dateinamen: REGISTRATION_REPORT ist ein
+                // eigener Dokumenttyp, der Name bliebe zweideutig.
                 val merged = PDDocument()
                 val merger = PDFMergerUtility()
-                !filtered.flatMap { it.matches }
-                    .sortedWith(compareBy(nullsLast()) { it.startTime })
-                    .traverse { m ->
-                        KIO.comprehension {
-                            val record = !CompetitionMatchRepo.getForStartList(m.setupMatchId).orDie()
-                                .onNullFail { CompetitionExecutionError.MatchNotFound }
-                            if (record.teams!!.isEmpty()) return@comprehension unit
-
-                            val data = !CompetitionMatchData.fromPersisted(record)
-                            val part = Loader.loadPDF(buildPdf(data, startListTemplate))
-                            // appendDocument kopiert die Seiten in das Sammeldokument - das
-                            // Teilstück kann danach zu, erst das Ganze wird gespeichert.
-                            merger.appendDocument(merged, part)
-                            part.close()
+                !parts.traverse { bundlePart ->
+                    when (bundlePart) {
+                        is StartlistBundlePart.Document -> KIO.comprehension {
+                            // Tolerant: Ein Nicht-PDF (die Tabelle kennt keinen Content-Type)
+                            // wird übersprungen statt den ganzen Export zu reißen - die
+                            // Oberfläche bietet ohnehin nur .pdf-Dateien zur Mappe an und weist
+                            // andere Namen im Dialog aus.
+                            val partDoc = try {
+                                Loader.loadPDF(bundlePart.bytes)
+                            } catch (e: IOException) {
+                                logger.warn {
+                                    "Export-Mappe: Dokument '${bundlePart.name}' ist kein lesbares PDF und wird übersprungen."
+                                }
+                                null
+                            }
+                            if (partDoc != null) {
+                                // appendDocument kopiert die Seiten in das Sammeldokument - das
+                                // Teilstück kann danach zu, erst das Ganze wird gespeichert.
+                                merger.appendDocument(merged, partDoc)
+                                partDoc.close()
+                            }
                             unit
                         }
+
+                        StartlistBundlePart.GeneratedStartlists ->
+                            filtered.flatMap { it.matches }
+                                .sortedWith(compareBy(nullsLast()) { it.startTime })
+                                .traverse { m ->
+                                    KIO.comprehension {
+                                        val record =
+                                            !CompetitionMatchRepo.getForStartList(m.setupMatchId).orDie()
+                                                .onNullFail { CompetitionExecutionError.MatchNotFound }
+                                        if (record.teams!!.isEmpty()) return@comprehension unit
+
+                                        val data = !CompetitionMatchData.fromPersisted(record)
+                                        val part = Loader.loadPDF(
+                                            buildPdf(data, startListTemplate, withBackground)
+                                        )
+                                        merger.appendDocument(merged, part)
+                                        part.close()
+                                        unit
+                                    }
+                                }.map { }
                     }
+                }
 
                 val out = ByteArrayOutputStream()
                 merged.save(out)
                 merged.close()
                 KIO.ok(
                     ApiResponse.File(
-                        name = "startLists-$fileNameDate.pdf",
+                        // Mit Mappe ist die Datei mehr als Startlisten - der Name sagt das.
+                        name = if (bundleParts != null) {
+                            "exportBundle-$fileNameDate.pdf"
+                        } else {
+                            "startLists-$fileNameDate.pdf"
+                        },
                         bytes = out.toByteArray(),
                     )
                 )
@@ -2832,6 +2885,15 @@ object CompetitionExecutionService {
         // Schnittmenge mit dem Plan, nie mehr (Sicherheitsregel in [restrictPlanToMatches]) -
         // die Abwahl aus der Export-Vorschau. null = alles, was der Plan hergibt.
         matchIds: Set<UUID>? = null,
+        // Nur für PDF: "Amtspapier mitdrucken" - false lässt das Vorlagen-Design der generierten
+        // Startlisten weg (Druck auf vorgedrucktes Papier). Mappen-Dokumente bleiben unberührt.
+        withBackground: Boolean = true,
+        // Nur für PDF: die Export-Mappe der Veranstaltung anhängen - Dokumente und generierte
+        // Startlisten in Mappen-Reihenfolge statt nur der Startlisten.
+        includeBundleDocuments: Boolean = false,
+        // Abgewählte Mappen-Einträge (event_export_bundle_item.id) - auch der
+        // Startlisten-Platzhalter ist abwählbar. Fremde Ids treffen nichts und stören nicht.
+        excludedBundleItems: Set<UUID>? = null,
     ): App<ServiceError, ApiResponse.File> {
         !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
@@ -2862,7 +2924,76 @@ object CompetitionExecutionService {
             null
         }
 
-        return buildEventStartlists(restricted, fileType, feeds, startListTemplate)
+        // Die Mappe wird HIER aufgelöst (Bytes aus dem Dokumentenspeicher), der Bau bekommt
+        // fertige Teile - dieselbe Trennung wie bei den Feeds, der Bau bleibt Fixture-prüfbar.
+        val bundleParts = if (fileType == EventStartlistFileType.PDF && includeBundleDocuments) {
+            !resolveBundleParts(eventId, excludedBundleItems ?: emptySet())
+        } else {
+            null
+        }
+
+        return buildEventStartlists(
+            restricted,
+            fileType,
+            feeds,
+            startListTemplate,
+            withBackground = withBackground,
+            bundleParts = bundleParts,
+        )
+    }
+
+    /**
+     * Löst die Export-Mappe der Veranstaltung in Bau-Teile auf: je nicht abgewähltem
+     * Dokument-Eintrag die Datei-Bytes aus dem Dokumentenspeicher, an der Platzhalter-Position
+     * die generierten Startlisten. Wurde die Mappe nie geöffnet (kein Platzhalter-Datensatz),
+     * stehen die Startlisten am Default-Platz ganz hinten - ohne dass der Export etwas schreiben
+     * müsste. Ein Dokument-Eintrag, dessen Datei fehlt, wird mit Log-Hinweis übersprungen.
+     *
+     * Öffentlich wie [restrictPlanToMatches]: Die Abwahl-Logik der Mappe ist damit gegen eine
+     * gesäte Mappe prüfbar, ohne den HTTP-Weg zu brauchen.
+     */
+    fun resolveBundleParts(
+        eventId: UUID,
+        excludedBundleItems: Set<UUID>,
+    ): App<ServiceError, List<StartlistBundlePart>> = KIO.comprehension {
+        val items = !EventExportBundleItemRepo.allForEvent(eventId).orDie()
+        val downloads = !EventDocumentRepo.getDownloadsByEvent(eventId).orDie()
+            .map { records -> records.associateBy { it.id } }
+
+        val parts = items
+            .filter { it.id !in excludedBundleItems }
+            .mapNotNull { item ->
+                when (EventExportBundleItemKind.valueOf(item.kind)) {
+                    EventExportBundleItemKind.GENERATED_STARTLISTS ->
+                        StartlistBundlePart.GeneratedStartlists
+
+                    EventExportBundleItemKind.DOCUMENT -> {
+                        val download = downloads[item.document]
+                        if (download?.data == null) {
+                            logger.warn {
+                                "Export-Mappe: Zu Eintrag ${item.id} fehlt die Dokumentdatei - übersprungen."
+                            }
+                            null
+                        } else {
+                            StartlistBundlePart.Document(
+                                name = download.name ?: item.document.toString(),
+                                bytes = download.data!!,
+                            )
+                        }
+                    }
+                }
+            }
+
+        // Kein Platzhalter-Datensatz heißt: Die Mappe wurde nie umsortiert - die Startlisten
+        // stehen am Default-Platz ganz hinten. Ein VORHANDENER, aber abgewählter Platzhalter
+        // fällt dagegen bewusst weg (items trägt ihn, der Filter oben hat ihn entfernt).
+        val placeholderExists = items.any {
+            EventExportBundleItemKind.valueOf(it.kind) == EventExportBundleItemKind.GENERATED_STARTLISTS
+        }
+        KIO.ok(
+            if (placeholderExists) parts
+            else parts + StartlistBundlePart.GeneratedStartlists
+        )
     }
 
     /**
@@ -3051,8 +3182,11 @@ object CompetitionExecutionService {
     fun buildPdf(
         data: CompetitionMatchData,
         template: PageTemplate?,
+        // "Amtspapier mitdrucken": false lässt das Vorlagen-Design weg (Druck auf vorgedrucktes
+        // Papier), Format und Rand der Vorlage bleiben - siehe document(pageTemplate, ...).
+        withBackground: Boolean = true,
     ): ByteArray {
-        val doc = document(template) {
+        val doc = document(template, withBackground) {
             page {
                 block(
                     padding = Padding(bottom = 25f),
