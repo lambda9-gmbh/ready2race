@@ -13677,6 +13677,11 @@ components:
         timeString:
           type: string
           description: "Cumulative race time at this mark, formatted for display (e.g. '1:05.5')"
+        recordedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "when the lap time arrived; carries the ordering of the stream lap band"
 
     UpdateCompetitionMatchRequest:
       type: object
@@ -14646,12 +14651,22 @@ components:
         streamMode:
           type: string
           nullable: true
-          description: "STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result)"
+          description: "STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races"
           enum:
             - AUTO
             - RUNNING
             - RESULTS
             - UPCOMING
+            - LAPS
+            - UPCOMING_LIST
+        streamCrew:
+          type: string
+          nullable: true
+          description: "STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only"
+          enum:
+            - CLUBS_FIRST
+            - PARTICIPANTS_FIRST
+            - CLUBS_ONLY
         limit:
           type: integer
           minimum: 1

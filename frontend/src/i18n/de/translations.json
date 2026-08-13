@@ -2204,9 +2204,20 @@
           "auto": "Automatisch (läuft, sonst letztes Ergebnis)",
           "running": "Nur laufender Lauf",
           "results": "Nur letztes Ergebnis",
-          "upcoming": "Nächster anstehender Lauf"
+          "upcoming": "Nächster anstehender Lauf",
+          "laps": "Rundenanzeige",
+          "upcomingList": "Nächste Läufe"
         },
-        "longClubNames": "Vereins-Langform"
+        "crew": {
+          "label": "Boot-Darstellung",
+          "clubsFirst": "Vereine prominent",
+          "participantsFirst": "Personen prominent",
+          "clubsOnly": "Nur Vereine"
+        },
+        "longClubNames": "Vereins-Langform",
+        "showCountdown": "Uhrzeit/Countdown",
+        "upcomingListTitle": "Nächste Läufe",
+        "inMinutes": "in {{time}}"
       }
     }
   },

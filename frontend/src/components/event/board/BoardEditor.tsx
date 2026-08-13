@@ -36,6 +36,7 @@ import {
     BoardRequest,
     BoardScheduleMode,
     BoardTile,
+    streamCrew,
     streamMode,
 } from '@api/types.gen'
 import {boardColumns, gridPlacement, hasMatchDetail, hasStreamOverlay, rowSizes, tileColor} from './boardView'
@@ -87,8 +88,15 @@ const elementForType = (type: BoardElementType): BoardElement => {
             // Die Ehrung wählt das Formular; ohne Auswahl lehnt der Server das Board ab.
             return {type}
         case 'STREAM':
-            // Stream-Overlay: Grün als Key-Farbe voreingestellt, Kurzform an, Modus AUTO.
-            return {type, streamMode: 'AUTO', useShortNames: true, backgroundColor: '#00FF00'}
+            // Stream-Overlay: Grün als Key-Farbe voreingestellt, Kurzform an, Modus AUTO,
+            // Uhr/Countdown standardmäßig sichtbar.
+            return {
+                type,
+                streamMode: 'AUTO',
+                useShortNames: true,
+                backgroundColor: '#00FF00',
+                showCountdown: true,
+            }
     }
 }
 
@@ -402,6 +410,31 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         <MenuItem value="RUNNING">{t('event.boards.stream.mode.running')}</MenuItem>
                         <MenuItem value="RESULTS">{t('event.boards.stream.mode.results')}</MenuItem>
                         <MenuItem value="UPCOMING">{t('event.boards.stream.mode.upcoming')}</MenuItem>
+                        <MenuItem value="LAPS">{t('event.boards.stream.mode.laps')}</MenuItem>
+                        <MenuItem value="UPCOMING_LIST">
+                            {t('event.boards.stream.mode.upcomingList')}
+                        </MenuItem>
+                    </TextField>
+                    <TextField
+                        select
+                        size="small"
+                        label={t('event.boards.stream.crew.label')}
+                        value={element.streamCrew ?? 'CLUBS_FIRST'}
+                        onChange={e =>
+                            updateElement(tileIndex, elementIndex, {
+                                ...element,
+                                streamCrew: e.target.value as streamCrew,
+                            })
+                        }>
+                        <MenuItem value="CLUBS_FIRST">
+                            {t('event.boards.stream.crew.clubsFirst')}
+                        </MenuItem>
+                        <MenuItem value="PARTICIPANTS_FIRST">
+                            {t('event.boards.stream.crew.participantsFirst')}
+                        </MenuItem>
+                        <MenuItem value="CLUBS_ONLY">
+                            {t('event.boards.stream.crew.clubsOnly')}
+                        </MenuItem>
                     </TextField>
                     <FormControlLabel
                         control={
@@ -418,6 +451,22 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         }
                         label={t('event.boards.stream.longClubNames')}
                     />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={element.showCountdown !== false}
+                                onChange={e =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        showCountdown: e.target.checked,
+                                    })
+                                }
+                            />
+                        }
+                        label={t('event.boards.stream.showCountdown')}
+                    />
+                    {booleanOption(tileIndex, elementIndex, element, 'showAdvancement', false)}
                 </Stack>
             )}
 

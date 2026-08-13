@@ -70,9 +70,12 @@ data class BoardRequest(
                 if (element.borderColor != null && !HEX_COLOR.matches(element.borderColor)) {
                     errors += "$at: borderColor must be a hex color (#RGB or #RRGGBB)"
                 }
-                // streamMode ist nur an STREAM-Elementen erlaubt.
+                // streamMode/streamCrew sind nur an STREAM-Elementen erlaubt.
                 if (element.streamMode != null && element.type != BoardElementType.STREAM) {
                     errors += "$at: streamMode requires type STREAM"
+                }
+                if (element.streamCrew != null && element.type != BoardElementType.STREAM) {
+                    errors += "$at: streamCrew requires type STREAM"
                 }
                 when (element.type) {
                     BoardElementType.MATCH -> {

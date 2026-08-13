@@ -493,9 +493,13 @@ export type BoardElement = {
     listMode?: BoardListMode
     scheduleMode?: BoardScheduleMode
     /**
-     * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result)
+     * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races
      */
-    streamMode?: ('AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING') | null
+    streamMode?: ('AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING' | 'LAPS' | 'UPCOMING_LIST') | null
+    /**
+     * STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only
+     */
+    streamCrew?: ('CLUBS_FIRST' | 'PARTICIPANTS_FIRST' | 'CLUBS_ONLY') | null
     limit?: number | null
     useShortNames?: boolean | null
     competitionId?: string | null
@@ -513,9 +517,14 @@ export type BoardElement = {
 }
 
 /**
- * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result)
+ * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races
  */
-export type streamMode = 'AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING'
+export type streamMode = 'AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING' | 'LAPS' | 'UPCOMING_LIST'
+
+/**
+ * STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only
+ */
+export type streamCrew = 'CLUBS_FIRST' | 'PARTICIPANTS_FIRST' | 'CLUBS_ONLY'
 
 /**
  * MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile
@@ -2554,6 +2563,10 @@ export type MatchTeamLapDto = {
      * Cumulative race time at this mark, formatted for display (e.g. '1:05.5')
      */
     timeString: string
+    /**
+     * when the lap time arrived; carries the ordering of the stream lap band
+     */
+    recordedAt?: string | null
 }
 
 /**

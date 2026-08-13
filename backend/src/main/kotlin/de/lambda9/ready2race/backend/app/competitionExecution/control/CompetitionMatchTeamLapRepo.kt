@@ -32,6 +32,7 @@ object CompetitionMatchTeamLapRepo {
                 COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
                 COMPETITION_MATCH_TEAM_LAP.NAME,
                 COMPETITION_MATCH_TEAM_LAP.LAP_MILLIS,
+                COMPETITION_MATCH_TEAM_LAP.CREATED_AT,
             )
                 .from(COMPETITION_MATCH_TEAM_LAP)
                 .join(COMPETITION_MATCH_TEAM)
@@ -42,7 +43,11 @@ object CompetitionMatchTeamLapRepo {
                     Triple(
                         r[COMPETITION_MATCH_TEAM.COMPETITION_MATCH]!!,
                         r[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION]!!,
-                        matchTeamLapDto(r[COMPETITION_MATCH_TEAM_LAP.NAME]!!, r[COMPETITION_MATCH_TEAM_LAP.LAP_MILLIS]!!),
+                        matchTeamLapDto(
+                            r[COMPETITION_MATCH_TEAM_LAP.NAME]!!,
+                            r[COMPETITION_MATCH_TEAM_LAP.LAP_MILLIS]!!,
+                            r[COMPETITION_MATCH_TEAM_LAP.CREATED_AT],
+                        ),
                     )
                 }
                 .groupBy({ it.first to it.second }, { it.third })

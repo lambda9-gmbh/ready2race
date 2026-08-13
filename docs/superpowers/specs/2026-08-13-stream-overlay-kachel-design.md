@@ -69,3 +69,63 @@ im r2r-Design.
   Validierung/Serialisierung mitgeprüft.
 - Browser-Verifikation mit dem CRF-Seed: laufender Lauf, Ergebnis-Rückfall, Leerzustand,
   Zeitstrafe und Rundenzeiten — Screenshots als Beleg.
+
+---
+
+# Ausbaustufe (13./14.08.2026, mit Thomas abgestimmt — „mit Uhrzeiten")
+
+## Neue Anforderungen
+
+1. **Zentrierte Panels für Ergebnis und Als-Nächstes.** „Läuft" bleibt Lower-Third; `result`
+   und `upcoming` (Einzellauf) rendern als prominentes, mittig zentriertes Panel im
+   TV-Grafik-Stil: großer Kopf (Wettkampf + Runde/Lauf + Zustand), darunter die Boote als
+   breite Zeilen. Uhrzeit/Countdown im Als-Nächstes-Panel über das vorhandene Flag
+   `showCountdown` wählbar; die Weiterkommens-Regel („Weiter kommen N Boote → …") über das
+   vorhandene Flag `showAdvancement` (Server liefert sie nur bei Anforderung —
+   `dataNeeds.advancement`).
+2. **Boot-Darstellung einstellbar** (`streamCrew` am STREAM-Element):
+   - `CLUBS_FIRST` (Voreinstellung): Vereinsname prominent, Personen als kleine Zeile.
+   - `PARTICIPANTS_FIRST`: Personennamen prominent, Verein klein.
+   - `CLUBS_ONLY`: keine Personen.
+   Personennamen kommen aus den Team-`participants`; Crew-Details werden serverseitig nur
+   angefordert, wenn `streamCrew != CLUBS_ONLY` (Sparsamkeitsregel der Boards).
+3. **Laufende Uhr** im Lower-Third des laufenden Laufs: Zehntel-genau ab `actualStartTime`,
+   100-ms-Tick, synchronisiert über `BoardViewDto.serverTime` (Client-Versatz = clientNow −
+   serverTime beim Eintreffen der Antwort; das Poll-Delay verschiebt nur das Erscheinen,
+   nie den Wert). Text-Fade-in (~400 ms) sobald `actualStartTime` erstmals eintrifft;
+   Einfrieren, sobald alle Boote gewertet/ausgeschieden sind; danach ~5 s halten und
+   Text-Fade-out. Fades ausschließlich als Text-Opacity AUF dem deckenden Panel — nie als
+   Flächen-Fade über der Key-Farbe.
+4. **Neuer Modus `LAPS` („Rundenanzeige").** Schmales Bauchband unten: die letzten drei
+   eingetroffenen Rundenzeiten des laufenden Laufs (Boot · Rundenname · Zeit), neueste
+   zuerst und hervorgehoben. „Eingetroffen" = `created_at` der Runde; das DTO
+   (`MatchTeamLapDto`) wird additiv um `recordedAt` erweitert. Kein laufender Lauf oder
+   keine Runden → reine Key-Farbe.
+5. **Neuer Modus `UPCOMING_LIST` („Nächste Läufe").** Zentriertes Panel mit den nächsten
+   fünf anstehenden Läufen: Startzeit („mit Uhrzeiten"), Wettkampf, Runde/Lauf — eine
+   Zeile je Lauf. `dataNeeds` fordert dafür `upcomingLimit ≥ 5` an.
+
+6. **Bewegung („wie beim Skifahren", Thomas 13.08. nachts).** Zeiten bauen sich sichtbar
+   auf: Im laufenden Lower-Third sortieren sich Bootszeilen um, sobald Zeiten/Plätze
+   eintreffen — die neue Zeile schiebt sich von unten an ihre Rangposition, bestehende
+   rutschen animiert nach oben/unten (FLIP-Prinzip: Positionen messen, per Transform
+   invertieren, zur Identität animieren, ~350 ms ease-out). Boote ohne Zeit stehen in
+   Startnummern-Reihenfolge darunter. Ergebnis-Panel: Zeilen erscheinen gestaffelt per
+   Slide-in von unten. Rundenband: die neue Rundenzeit schiebt von rechts herein, ältere
+   rücken nach. Alles ausschließlich über Transforms auf deckenden Flächen (chroma-sicher);
+   keine neue Animations-Bibliothek — kleiner eigener FLIP-Helfer.
+
+## Broadcast-Konventionen (Rechercheergebnis, bindend für die Darstellung)
+
+- **Tabellenziffern** (`fontVariantNumeric: tabular-nums`) für ALLE live tickenden oder
+  wechselnden Werte — sonst springen die Ziffernbreiten sichtbar.
+- **Panel-Einblendungen als Transform-Slide** (translateY), nie als Flächen-Opacity:
+  harte Kanten bleiben chroma-sicher, der Look entspricht TV-Einblendungen.
+- Zustands-Akzent im Kopf: „LÄUFT" mit Punkt-Indikator, „ERGEBNIS", „ALS NÄCHSTES" —
+  Akzentfarbe aus dem Theme.
+- Dichte: höchstens die nötigen Zeilen, keine Deko; Schrift serifenlos, hoher Kontrast.
+
+## Unverändert
+
+Chroma-Regeln, Ein-Lauf-Regel, Ergebnis-Tore, Kachel-Farbe, Kurz-/Langform-Schalter
+(`useShortNames` wirkt in allen Darstellungen), Editor-Sperren.
