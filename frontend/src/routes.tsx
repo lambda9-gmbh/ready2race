@@ -500,9 +500,15 @@ export const resultsEventRoute = createRoute({
     component: () => <ResultsPage />,
     // Direkteinstieg für QR-Aushänge: ?tab=live öffnet den Live-Reiter, ?tab=my-event wie
     // bisher „Mein Event", ?tab=results ist das ausgeschriebene Default-Ziel — alles andere
-    // fällt auf den Default (siehe resultsTab.ts).
-    validateSearch: (search: {tab?: string} & SearchSchemaInput) => ({
+    // fällt auf den Default (siehe resultsTab.ts). ?competition=<id> springt auf dem
+    // Ergebnisse-Reiter direkt in einen Wettkampf — für teilbare Links; eine unbekannte Id
+    // läuft ins Leere und die Seite startet normal.
+    validateSearch: (search: {tab?: string; competition?: string} & SearchSchemaInput) => ({
         tab: parseResultsTabSearch(search.tab),
+        competition:
+            typeof search.competition === 'string' && search.competition !== ''
+                ? search.competition
+                : undefined,
     }),
 })
 

@@ -5,6 +5,7 @@ import {Trans, useTranslation} from 'react-i18next'
 import {useState} from 'react'
 import {eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {
     deleteRaceClockerRace,
     getEventTimingConfig,
@@ -61,6 +62,7 @@ const describeDeviation = (
 const EventTimingConfig = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const {confirmAction} = useConfirmation()
 
     const {eventId} = eventRoute.useParams()
 
@@ -110,20 +112,28 @@ const EventTimingConfig = () => {
         },
     )
 
-    const removeRace = async (race: RaceClockerRaceDto) => {
-        if (!confirm(t('event.timing.races.deleteConfirm', {name: race.name}))) return
-
-        const {error} = await deleteRaceClockerRace({
-            path: {eventId, raceId: race.id},
-        })
-        if (error) {
-            // Ein Rennen, das noch einem Wettkampf zugewiesen ist, lässt sich nicht löschen — die
-            // Zuordnung muss erst am Rennen abgehakt werden (RaceClockerRaceAssignments unten).
-            feedback.error(t('common.error.unexpected'))
-        } else {
-            feedback.success(t('event.timing.races.deleted'))
-            setRacesReloaded(Date.now())
-        }
+    // App-eigener Bestätigungsdialog statt des nackten Browser-confirm. Die Sperre für noch
+    // zugewiesene Rennen sitzt im Server (RACECLOCKER_RACE_STILL_ASSIGNED) — hier wird nur
+    // gefragt, und der Hinweis auf die Zuordnung kommt erst, wenn die Sperre wirklich greift.
+    const removeRace = (race: RaceClockerRaceDto) => {
+        confirmAction(
+            async () => {
+                const {error} = await deleteRaceClockerRace({
+                    path: {eventId, raceId: race.id},
+                })
+                if (error) {
+                    if (error.errorCode === 'RACECLOCKER_RACE_STILL_ASSIGNED') {
+                        feedback.error(t('event.timing.races.deleteBlocked', {name: race.name}))
+                    } else {
+                        feedback.error(t('common.error.unexpected'))
+                    }
+                } else {
+                    feedback.success(t('event.timing.races.deleted'))
+                    setRacesReloaded(Date.now())
+                }
+            },
+            {content: t('event.timing.races.deleteConfirm', {name: race.name})},
+        )
     }
 
     // Die Abweichungen stehen bewusst außerhalb des Formulars: sie werden hier nicht bearbeitet,

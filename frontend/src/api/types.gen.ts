@@ -1431,6 +1431,7 @@ export type ErrorCode =
     | 'RACECLOCKER_MATCH_IS_BYE'
     | 'RACECLOCKER_RACE_NAME_TAKEN'
     | 'RACECLOCKER_RACE_URL_TAKEN'
+    | 'RACECLOCKER_RACE_STILL_ASSIGNED'
     | 'STARTLIST_CONFIG_NOT_CONFIGURED'
     | 'STARTLIST_MATCHES_WITHOUT_START_TIME'
     | 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
@@ -7517,6 +7518,16 @@ export type GetLiveMatchesData = {
 export type GetLiveMatchesResponse = LiveMatchesDto
 
 export type GetLiveMatchesError = ApiError
+
+export type GetPublicProgramData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetPublicProgramResponse = Array<BoardProgramEntry>
+
+export type GetPublicProgramError = ApiError
 
 export type GetPublicBoardsData = {
     path: {

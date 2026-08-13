@@ -5,6 +5,7 @@ describe('parseResultsTabSearch', () => {
     it('lässt die bekannten Werte durch', () => {
         expect(parseResultsTabSearch('results')).toBe('results')
         expect(parseResultsTabSearch('live')).toBe('live')
+        expect(parseResultsTabSearch('schedule')).toBe('schedule')
         expect(parseResultsTabSearch('my-event')).toBe('my-event')
     })
 
@@ -24,6 +25,10 @@ describe('initialResultsTab', () => {
 
     it('öffnet Mein Event für ?tab=my-event (bestehender QR-Einstieg)', () => {
         expect(initialResultsTab('my-event')).toBe('my-event')
+    })
+
+    it('öffnet den Zeitplan für ?tab=schedule', () => {
+        expect(initialResultsTab('schedule')).toBe('schedule')
     })
 
     it('landet für ?tab=results und ohne Parameter auf den aktuellen Ergebnissen', () => {

@@ -105,6 +105,13 @@ object RaceClockerRaceService {
      */
     fun deleteRace(eventId: UUID, raceId: UUID): App<ServiceError, ApiResponse.NoData> =
         KIO.comprehension {
+            // Der Fremdschlüssel steht auf SET NULL - ohne diese Sperre würde das Löschen
+            // zugewiesene Wettkämpfe stillschweigend von ihrer Zeitnahme trennen und der
+            // Abruf bliebe kommentarlos stehen. Erst die Zuordnung abhaken, dann löschen.
+            val assigned = !RaceClockerRaceRepo.countAssignedCompetitions(raceId).orDie()
+            if (assigned > 0) {
+                return@comprehension KIO.fail(RaceClockerRaceError.StillAssigned)
+            }
             val deleted = !RACECLOCKER_RACE.delete { ID.eq(raceId).and(EVENT.eq(eventId)) }.orDie()
             if (deleted == 0) return@comprehension KIO.fail(RaceClockerRaceError.NotFound)
             noData

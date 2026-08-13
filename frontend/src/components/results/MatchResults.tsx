@@ -3,7 +3,7 @@ import {getCompetitionsHavingResults, getLatestMatchResults} from '@api/sdk.gen.
 import {Alert, Box, Card, CardActionArea, CardContent, Chip, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {CompetitionChoiceDto, EventNoticeDto, LatestMatchResultInfo} from '@api/types.gen.ts'
 import ResultsMatchDialog from '@components/results/ResultsMatchDialog.tsx'
 import ResultsMatchCard from '@components/results/ResultsMatchCard.tsx'
@@ -14,6 +14,12 @@ type Props = {
     competitionSelected: CompetitionChoiceDto | null
     setCompetitionSelected: (value: CompetitionChoiceDto | null) => void
     /**
+     * Wettkampf-Id aus der Adresse (?competition=…): sobald die Wettkampfliste da ist, wird
+     * die passende Auswahl gesetzt — so ist ein Link auf einen Wettkampf teilbar. Eine
+     * unbekannte Id läuft ins Leere und die Seite startet mit der Übersicht.
+     */
+    initialCompetitionId?: string
+    /**
      * Der veranstaltungsweite Hinweis aus dem EventDto der Seite. Dieser Tab pollt nicht —
      * der Banner ist so aktuell wie der Rest des Tabs (Stand des Seitenaufrufs); live
      * nachgezogen wird er auf dem Live-Tab und in "Mein Event".
@@ -21,7 +27,13 @@ type Props = {
     notice?: EventNoticeDto | null
 }
 
-const MatchResults = ({eventId, competitionSelected, setCompetitionSelected, notice}: Props) => {
+const MatchResults = ({
+    eventId,
+    competitionSelected,
+    setCompetitionSelected,
+    initialCompetitionId,
+    notice,
+}: Props) => {
     const matchesLimit = 100 // todo
 
     const {t} = useTranslation()
@@ -50,6 +62,38 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected, not
     const onClickCompetition = (competition: CompetitionChoiceDto) => {
         setCompetitionSelected(competition)
     }
+
+    // Direkteinstieg aus der Adresse: genau einmal beim Eintreffen der Liste, danach gehört
+    // die Auswahl wieder der Bedienung (sonst käme nach „zurück zur Übersicht" die Vorwahl wieder).
+    const [initialApplied, setInitialApplied] = useState(false)
+    useEffect(() => {
+        if (initialApplied || !competitionsData) return
+        setInitialApplied(true)
+        if (initialCompetitionId && !competitionSelected) {
+            const match = competitionsData.data.find(c => c.id === initialCompetitionId)
+            if (match) {
+                setCompetitionSelected(match)
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [competitionsData])
+
+    // „Zuletzt beendet": die frischesten Ergebnisse quer über alle Wettkämpfe, als Einstieg
+    // ohne Wettkampfwahl — wer nur wissen will, was gerade reingekommen ist, muss sich nicht
+    // durch die Liste klicken. Der Endpoint ist derselbe, nur ohne competitionId.
+    const latestLimit = 8
+    const {data: latestData} = useFetch(
+        signal =>
+            getLatestMatchResults({
+                signal,
+                path: {eventId},
+                query: {limit: latestLimit},
+            }),
+        {
+            preCondition: () => competitionSelected === null,
+            deps: [eventId, competitionSelected],
+        },
+    )
 
     const {data: matchResultsData, pending: matchResultsPending} = useFetch(
         signal =>
@@ -97,37 +141,66 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected, not
                     competitionsData?.data.length === 0 ? (
                         <Alert severity={'info'}>{t('results.matchResults.noResults')}</Alert>
                     ) : (
-                        competitionsData?.data.map(competition => (
-                            <Card sx={{flex: 1, width: 1}} key={competition.id}>
-                                <CardActionArea onClick={() => onClickCompetition(competition)}>
-                                    <CardContent>
-                                        {/* Umbrechende Zeile statt Name-links/Chip-rechts: der
+                        <>
+                            {(latestData?.length ?? 0) > 0 && (
+                                <>
+                                    <Typography variant={'h6'}>
+                                        {t('results.matchResults.latestSection')}
+                                    </Typography>
+                                    {latestData
+                                        ?.slice()
+                                        .sort((a, b) =>
+                                            (a.startTime ?? '') > (b.startTime ?? '') ? -1 : 1,
+                                        )
+                                        .map(match => (
+                                            <ResultsMatchCard
+                                                match={match}
+                                                selectMatch={onClickMatch}
+                                                key={match.matchId}
+                                                competition={{
+                                                    competitionName: match.competitionName,
+                                                    competitionCategory:
+                                                        match.categoryName ?? undefined,
+                                                }}
+                                            />
+                                        ))}
+                                    <Typography variant={'h6'} sx={{pt: 1}}>
+                                        {t('results.matchResults.byCompetitionSection')}
+                                    </Typography>
+                                </>
+                            )}
+                            {competitionsData?.data.map(competition => (
+                                <Card sx={{flex: 1, width: 1}} key={competition.id}>
+                                    <CardActionArea onClick={() => onClickCompetition(competition)}>
+                                        <CardContent>
+                                            {/* Umbrechende Zeile statt Name-links/Chip-rechts: der
                                             Chip drückte auf schmalen Bildschirmen den Namen in
                                             eine Ein-Wort-Spalte und lief selbst aus der Karte. */}
-                                        <Box
-                                            sx={{
-                                                display: 'flex',
-                                                columnGap: 1,
-                                                rowGap: 0.5,
-                                                flexWrap: 'wrap',
-                                                alignItems: 'center',
-                                            }}>
-                                            <Typography variant={'h6'} sx={{minWidth: 0}}>
-                                                {competition.identifier} | {competition.name}
-                                            </Typography>
-                                            {competition.category && (
-                                                <Chip
-                                                    label={competition.category}
-                                                    color="primary"
-                                                    variant="outlined"
-                                                    size="small"
-                                                />
-                                            )}
-                                        </Box>
-                                    </CardContent>
-                                </CardActionArea>
-                            </Card>
-                        ))
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    columnGap: 1,
+                                                    rowGap: 0.5,
+                                                    flexWrap: 'wrap',
+                                                    alignItems: 'center',
+                                                }}>
+                                                <Typography variant={'h6'} sx={{minWidth: 0}}>
+                                                    {competition.identifier} | {competition.name}
+                                                </Typography>
+                                                {competition.category && (
+                                                    <Chip
+                                                        label={competition.category}
+                                                        color="primary"
+                                                        variant="outlined"
+                                                        size="small"
+                                                    />
+                                                )}
+                                            </Box>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
+                            ))}
+                        </>
                     )
                 ) : matchResultsData?.length === 0 ? (
                     <Alert severity={'info'}>{t('results.matchResults.noResults')}</Alert>
