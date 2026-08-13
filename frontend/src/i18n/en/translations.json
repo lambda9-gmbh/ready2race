@@ -2204,9 +2204,20 @@
           "auto": "Automatic (running, else latest result)",
           "running": "Running match only",
           "results": "Latest result only",
-          "upcoming": "Next upcoming match"
+          "upcoming": "Next upcoming match",
+          "laps": "Lap display",
+          "upcomingList": "Upcoming matches"
         },
-        "longClubNames": "Full club names"
+        "crew": {
+          "label": "Crew display",
+          "clubsFirst": "Clubs prominent",
+          "participantsFirst": "Participants prominent",
+          "clubsOnly": "Clubs only"
+        },
+        "longClubNames": "Full club names",
+        "showCountdown": "Clock/countdown",
+        "upcomingListTitle": "Upcoming matches",
+        "inMinutes": "in {{time}}"
       }
     }
   },

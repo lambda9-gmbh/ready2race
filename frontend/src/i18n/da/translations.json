@@ -2198,9 +2198,20 @@
           "auto": "Automatisk (i gang, ellers seneste resultat)",
           "running": "Kun løb i gang",
           "results": "Kun seneste resultat",
-          "upcoming": "Næste kommende løb"
+          "upcoming": "Næste kommende løb",
+          "laps": "Rundevisning",
+          "upcomingList": "Næste løb"
         },
-        "longClubNames": "Fulde klubnavne"
+        "crew": {
+          "label": "Bådvisning",
+          "clubsFirst": "Klubber fremhævet",
+          "participantsFirst": "Personer fremhævet",
+          "clubsOnly": "Kun klubber"
+        },
+        "longClubNames": "Fulde klubnavne",
+        "showCountdown": "Ur/nedtælling",
+        "upcomingListTitle": "Næste løb",
+        "inMinutes": "om {{time}}"
       }
     }
   },
