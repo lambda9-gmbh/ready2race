@@ -166,7 +166,9 @@ export const hasStreamOverlay = (tiles: BoardTile[]): boolean =>
  * Funktion, damit beide dasselbe zeigen.
  */
 export const boardColumns = (config: {columns?: number | null; tiles: BoardTile[]}): number =>
-    config.tiles.length === 1 && hasMatchDetail(config.tiles) ? 1 : (config.columns ?? 3)
+    config.tiles.length === 1 && (hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles))
+        ? 1
+        : (config.columns ?? 3)
 
 /**
  * Die Daten eines Listen-Elements, auf sein eigenes Limit zugeschnitten. Der Server

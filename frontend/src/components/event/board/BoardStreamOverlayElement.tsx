@@ -58,9 +58,6 @@ const solidOr = (color: string, fallback: string): string =>
  */
 const BoardStreamOverlayElement = ({view, element}: Props) => {
     const {t} = useTranslation()
-    // Die Stream-Schlüssel kommen erst mit Task 6 in den Übersetzungskatalog — dieselbe
-    // gelockerte Signatur wie in StatusChip.tsx, bis die Typen sie kennen.
-    const translate = t as (key: string, values?: Record<string, string | number>) => string
     const theme = useTheme()
     const content = streamOverlayContent(view.slots, element.streamMode)
     const keyColor = element.backgroundColor ?? STREAM_DEFAULT_BACKGROUND
@@ -94,10 +91,10 @@ const BoardStreamOverlayElement = ({view, element}: Props) => {
 
     const stateLabel =
         content.kind === 'running'
-            ? translate('event.boards.stream.running')
+            ? t('event.boards.stream.running')
             : content.kind === 'result'
-              ? translate('event.boards.stream.result')
-              : translate('event.boards.stream.upcoming')
+              ? t('event.boards.stream.result')
+              : t('event.boards.stream.upcoming')
 
     // Startzeit nur beim anstehenden Lauf — beim laufenden/gewerteten Lauf sagt die
     // Kopfzeile ohnehin schon, in welchem Zustand er ist.
