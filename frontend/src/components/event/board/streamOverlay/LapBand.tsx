@@ -37,12 +37,13 @@ const LapBand = ({laps, element}: LapBandProps) => {
                     enterOffset={LAP_ENTER_OFFSET}
                     items={laps}
                     keyOf={lap => `${lap.startNumber}-${lap.lapName}-${lap.recordedAt ?? ''}`}
+                    // `flex`/`minWidth` müssen auf FlipLists Wrapper-<div> sitzen — das ist
+                    // das tatsächliche Flex-Item der Stack-Row, nicht diese innere Box.
+                    itemStyle={{flex: '1 1 0', minWidth: '16rem'}}
                     render={(lap, index) => (
                         <Box
                             sx={{
                                 height: 1,
-                                minWidth: '16rem',
-                                flex: '1 1 0',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 2,

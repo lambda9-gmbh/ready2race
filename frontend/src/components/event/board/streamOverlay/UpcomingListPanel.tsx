@@ -25,7 +25,8 @@ const UpcomingListPanel = ({matches, element}: UpcomingListPanelProps) => {
             panelKey="upcoming-list"
             title={t('event.boards.stream.upcomingListTitle')}
             roundLine={null}>
-            <Stack sx={{gap: 1.5, overflow: 'auto'}}>
+            {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie. */}
+            <Stack sx={{gap: 1.5, overflow: 'hidden'}}>
                 <FlipList
                     items={matches}
                     keyOf={match => match.matchId}

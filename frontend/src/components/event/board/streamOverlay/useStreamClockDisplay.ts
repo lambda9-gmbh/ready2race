@@ -26,6 +26,24 @@ export interface StreamClockDisplay {
  * weiterer Aufruf mit fortschreitender Zeit würde den „eingefrorenen" Wert einfach
  * weiterlaufen lassen (siehe deren KDoc). Deshalb stoppt der 100-ms-Ticker selbst,
  * sobald ein Freeze-Wert feststeht.
+ *
+ * Ruhezustände (zwischen denen ausschließlich die Effekte unten wandern):
+ * - UNMOUNTED  mounted=false, visible=false — kein Start gestempelt, oder ein
+ *              vorheriger Fade-out ist fertig durchgelaufen.
+ * - MOUNTING   mounted=true,  visible=false — genau einen Frame lang, bevor das
+ *              Fade-in per rAF startet (die CSS-Transition braucht einen Ausgangswert).
+ * - VISIBLE    mounted=true,  visible=true  — Uhr läuft oder zeigt den eingefrorenen
+ *              Wert, noch innerhalb der 5-s-Haltezeit.
+ * - FADING_OUT mounted=true,  visible=false, wasVisible.current=true — Haltezeit
+ *              vorbei, Opacity läuft auf 0, der 400-ms-Timer räumt danach `mounted`.
+ *
+ * Übergang VISIBLE → UNMOUNTED ohne FADING_OUT: springt der Lauf auf einen NEUEN Match
+ * OHNE eigenen Start (Kette schaltet weiter, RaceClocker hat den Start noch nicht
+ * bestätigt), gibt es nichts zum Ausfaden — die alte Uhr gehörte zum alten Lauf. Der
+ * matchId/hasStart-Reset-Effekt unten räumt `mounted`/`visible` in diesem Fall deshalb
+ * SOFORT, statt sich auf den Fade-out-Timer zu verlassen: der armt nur, wenn
+ * `wasVisible.current` beim Wechsel auf `visible=false` noch `true` ist — genau das
+ * verhindert der Reset aber, sonst bliebe ein opacity:0-Knoten für immer im DOM stehen.
  */
 const useStreamClockDisplay = (match: AthleteBoardMatch, clockOffsetMs: number): StreamClockDisplay => {
     const matchId = match.matchId
@@ -45,7 +63,17 @@ const useStreamClockDisplay = (match: AthleteBoardMatch, clockOffsetMs: number):
     useEffect(() => {
         setFrozenElapsedMs(null)
         wasVisible.current = false
-    }, [matchId])
+        if (!hasStart) {
+            // Sofortiger Sprung UNMOUNTED (siehe KDoc oben) — kein Fade-out für eine Uhr,
+            // die zum neuen, startlosen Lauf nie sichtbar war. `hasStart` bewusst mit in
+            // den Deps: die frühere Fassung reagierte nur auf `matchId` und ließ
+            // `mounted`/`visible` unangetastet, wodurch der Fade-out-Timer unten nie
+            // anspringen konnte (der braucht `wasVisible.current===true`, das der Reset
+            // gerade eben auf `false` gesetzt hat) — ein opacity:0-Knoten blieb stehen.
+            setVisible(false)
+            setMounted(false)
+        }
+    }, [matchId, hasStart])
 
     const now = useTicker(CLOCK_TICK_MS, hasStart && frozenElapsedMs === null)
     const liveState = hasStart ? streamClockState(match, now, clockOffsetMs) : null

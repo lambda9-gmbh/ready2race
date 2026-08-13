@@ -77,7 +77,8 @@ const UpcomingPanel = ({match, element, clockOffsetMs}: UpcomingPanelProps) => {
                         : t('event.info.athleteBoard.advancingUnsized', {round: match.nextRoundName})}
                 </Typography>
             )}
-            <Stack sx={{gap: 1.5, overflow: 'auto'}}>
+            {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie. */}
+            <Stack sx={{gap: 1.5, overflow: 'hidden'}}>
                 <FlipList
                     items={teams}
                     keyOf={team => String(team.startNumber)}

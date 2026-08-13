@@ -29,7 +29,8 @@ const ResultPanel = ({result, element}: ResultPanelProps) => {
             stateLabel={t('event.boards.stream.result')}
             title={competitionLabel(result.competitionName, result.competitionShortName, useShortNames)}
             roundLine={roundMatchLabel(result.roundName, result.matchName)}>
-            <Stack sx={{gap: 1.5, overflow: 'auto'}}>
+            {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie. */}
+            <Stack sx={{gap: 1.5, overflow: 'hidden'}}>
                 <FlipList
                     items={teams}
                     keyOf={team => String(team.startNumber)}
