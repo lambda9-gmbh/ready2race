@@ -105,6 +105,16 @@ im r2r-Design.
    fünf anstehenden Läufen: Startzeit („mit Uhrzeiten"), Wettkampf, Runde/Lauf — eine
    Zeile je Lauf. `dataNeeds` fordert dafür `upcomingLimit ≥ 5` an.
 
+6. **Bewegung („wie beim Skifahren", Thomas 13.08. nachts).** Zeiten bauen sich sichtbar
+   auf: Im laufenden Lower-Third sortieren sich Bootszeilen um, sobald Zeiten/Plätze
+   eintreffen — die neue Zeile schiebt sich von unten an ihre Rangposition, bestehende
+   rutschen animiert nach oben/unten (FLIP-Prinzip: Positionen messen, per Transform
+   invertieren, zur Identität animieren, ~350 ms ease-out). Boote ohne Zeit stehen in
+   Startnummern-Reihenfolge darunter. Ergebnis-Panel: Zeilen erscheinen gestaffelt per
+   Slide-in von unten. Rundenband: die neue Rundenzeit schiebt von rechts herein, ältere
+   rücken nach. Alles ausschließlich über Transforms auf deckenden Flächen (chroma-sicher);
+   keine neue Animations-Bibliothek — kleiner eigener FLIP-Helfer.
+
 ## Broadcast-Konventionen (Rechercheergebnis, bindend für die Darstellung)
 
 - **Tabellenziffern** (`fontVariantNumeric: tabular-nums`) für ALLE live tickenden oder
