@@ -101,23 +101,26 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected, not
                             <Card sx={{flex: 1, width: 1}} key={competition.id}>
                                 <CardActionArea onClick={() => onClickCompetition(competition)}>
                                     <CardContent>
+                                        {/* Umbrechende Zeile statt Name-links/Chip-rechts: der
+                                            Chip drückte auf schmalen Bildschirmen den Namen in
+                                            eine Ein-Wort-Spalte und lief selbst aus der Karte. */}
                                         <Box
                                             sx={{
                                                 display: 'flex',
-                                                gap: 1,
-                                                justifyContent: 'space-between',
+                                                columnGap: 1,
+                                                rowGap: 0.5,
+                                                flexWrap: 'wrap',
                                                 alignItems: 'center',
                                             }}>
-                                            <Box>
-                                                <Typography variant={'h6'}>
-                                                    {competition.identifier} | {competition.name}
-                                                </Typography>
-                                            </Box>
+                                            <Typography variant={'h6'} sx={{minWidth: 0}}>
+                                                {competition.identifier} | {competition.name}
+                                            </Typography>
                                             {competition.category && (
                                                 <Chip
                                                     label={competition.category}
                                                     color="primary"
                                                     variant="outlined"
+                                                    size="small"
                                                 />
                                             )}
                                         </Box>
@@ -130,20 +133,32 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected, not
                     <Alert severity={'info'}>{t('results.matchResults.noResults')}</Alert>
                 ) : (
                     <>
-                        <Chip
-                            variant={'outlined'}
-                            color={'primary'}
-                            sx={{mb: 1}}
-                            label={
-                                <Typography fontWeight={'bold'} variant={'body2'}>
-                                    {competitionSelected.identifier} |{' '}
-                                    {competitionSelected.name +
-                                        (competitionSelected.category
-                                            ? ` (${competitionSelected.category})`
-                                            : '')}
-                                </Typography>
-                            }
-                        />
+                        {/* Überschrift des gewählten Wettkampfs: vorher ein Chip, der auf dem
+                            Telefon nicht umbrach und lange Namen abschnitt. */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                columnGap: 1,
+                                rowGap: 0.5,
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                mb: 1,
+                            }}>
+                            <Typography
+                                fontWeight={'bold'}
+                                color={'primary'}
+                                sx={{minWidth: 0, overflowWrap: 'anywhere'}}>
+                                {competitionSelected.identifier} | {competitionSelected.name}
+                            </Typography>
+                            {competitionSelected.category && (
+                                <Chip
+                                    label={competitionSelected.category}
+                                    color="primary"
+                                    variant="outlined"
+                                    size="small"
+                                />
+                            )}
+                        </Box>
                         {matchResultsData
                             ?.sort((a, b) => ((a.startTime ?? '') > (b.startTime ?? '') ? -1 : 1))
                             .map(match => (

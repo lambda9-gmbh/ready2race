@@ -1,5 +1,5 @@
 import {LatestMatchResultInfo, LiveMatchInfo, RunningMatchInfo} from '@api/types.gen.ts'
-import {Box, Card, CardActionArea, CardContent, Chip, Typography} from '@mui/material'
+import {Box, Card, CardActionArea, CardContent, Chip, Stack, Typography} from '@mui/material'
 import {format} from 'date-fns'
 import {useTranslation} from 'react-i18next'
 import {MatchChip} from '@components/event/match/matchStatusChip.ts'
@@ -36,6 +36,17 @@ type Props<M extends ResultsMatchInfo> = {
     cancelled?: boolean
 }
 
+/**
+ * Die Karte eines Laufs auf der öffentlichen Ergebnisseite (Reiter „Ergebnisse" und „Live").
+ *
+ * Mobil-Umbau 13.08.2026: Der Wettkampfname stand vorher komplett in einem Chip — ein Chip
+ * bricht nie um, auf 375 px Breite liefen „Coastal Frauen Doppelvierer mit Steuerfrau/mann
+ * (Beach Sprint International)" deshalb rechts aus der Karte und der Rest verschwand. Jetzt ist
+ * der Name normaler, umbrechender Text; nur die kurze Wertungskategorie bleibt ein Chip. Die
+ * rechte Spalte (Zustand + Startzeit) darf unter den Namen rutschen statt ihn zusammenzudrücken,
+ * und ein Laufname, der ohnehin nur die Runde wiederholt („Zeitfahren"/„Zeitfahren"), wird nicht
+ * doppelt gezeigt.
+ */
 const ResultsMatchCard = <M extends ResultsMatchInfo>({
     match,
     selectMatch,
@@ -47,60 +58,69 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
 }: Props<M>) => {
     const {t} = useTranslation()
 
+    const strikethrough = cancelled ? {textDecoration: 'line-through'} : undefined
+    // "Zeitfahren" als Runde und "Zeitfahren" als Laufname: einmal reicht.
+    const matchName = match.matchName !== match.roundName ? match.matchName : undefined
+
     const content = (
         <CardContent>
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                }}>
-                <Box>
-                    {competition && (
-                        <Chip
-                            variant={'outlined'}
-                            color={'primary'}
-                            sx={{mb: 1}}
-                            label={
-                                <Typography fontWeight={'bold'} variant={'body2'}>
-                                    {competition.competitionName +
-                                        (competition.competitionCategory
-                                            ? ` (${competition.competitionCategory})`
-                                            : '')}
-                                </Typography>
-                            }
-                        />
-                    )}
-                    {match.roundName && (
+            <Stack spacing={0.5}>
+                {competition && (
+                    <Stack
+                        direction={'row'}
+                        spacing={1}
+                        sx={{alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5}}>
                         <Typography
-                            sx={cancelled ? {textDecoration: 'line-through'} : undefined}>
-                            {match.roundName}
+                            fontWeight={'bold'}
+                            color={'primary'}
+                            sx={{minWidth: 0, overflowWrap: 'anywhere'}}>
+                            {competition.competitionName}
                         </Typography>
-                    )}
-                    <Box>
-                        {match.matchName && (
-                            <Typography
-                                variant={'h6'}
-                                sx={cancelled ? {textDecoration: 'line-through'} : undefined}>
-                                {match.matchName}
+                        {competition.competitionCategory && (
+                            <Chip
+                                variant={'outlined'}
+                                color={'primary'}
+                                size={'small'}
+                                label={competition.competitionCategory}
+                            />
+                        )}
+                    </Stack>
+                )}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        columnGap: 1,
+                        rowGap: 0.5,
+                    }}>
+                    <Box sx={{minWidth: 0}}>
+                        {match.roundName && (
+                            <Typography sx={strikethrough}>{match.roundName}</Typography>
+                        )}
+                        {matchName && (
+                            <Typography variant={'h6'} sx={strikethrough}>
+                                {matchName}
+                            </Typography>
+                        )}
+                    </Box>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-end',
+                            gap: 0.5,
+                            ml: 'auto',
+                        }}>
+                        <StatusChip chip={statusChip ?? null} />
+                        {match.startTime && (
+                            <Typography>
+                                {format(new Date(match.startTime), t('format.datetime'))}
                             </Typography>
                         )}
                     </Box>
                 </Box>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 0.5,
-                    }}>
-                    <StatusChip chip={statusChip ?? null} />
-                    {match.startTime && (
-                        <Typography>
-                            {format(new Date(match.startTime), t('format.datetime'))}
-                        </Typography>
-                    )}
-                </Box>
-            </Box>
+            </Stack>
             {note && (
                 <Typography variant={'body2'} color={'text.secondary'} fontStyle={'italic'}>
                     {note}
