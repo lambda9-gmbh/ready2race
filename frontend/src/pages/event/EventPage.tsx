@@ -30,6 +30,7 @@ import {
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
+import ExportBundleCard from '@components/event/document/ExportBundleCard.tsx'
 import {
     Forward,
     InfoOutlined,
@@ -541,6 +542,14 @@ const EventPage = () => {
                                     ]}
                                 />
                                 <DocumentDialog {...documentAdministrationProps.dialog} />
+                                {/* Die Export-Mappe direkt beim Dokumente-Bereich: sie sortiert
+                                    genau diese Dokumente. lastRequested nimmt Uploads und
+                                    Löschungen der Tabelle mit - ein gelöschtes Dokument fällt
+                                    serverseitig auch aus der Mappe (on delete cascade). */}
+                                <ExportBundleCard
+                                    eventId={eventId}
+                                    lastRequested={documentAdministrationProps.table.lastRequested}
+                                />
                                 <ParticipantRequirementForEventTable
                                     {...participantRequirementAdministrationProps.table}
                                     title={t('participantRequirement.participantRequirements')}

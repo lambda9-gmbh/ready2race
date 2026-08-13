@@ -1454,6 +1454,17 @@
       },
       "error": {
         "emptyList": "Tilføj venligst mindst ét dokument"
+      },
+      "exportBundle": {
+        "title": "Eksportmappe",
+        "hint": "Rækkefølgen i regattamappen: PDF-startlisteeksporten på tidsplanfanen kan samle disse dokumenter og de samlede startlister i én fil i præcis denne rækkefølge.",
+        "startlistsPlaceholder": "Samlede startlister",
+        "moveUp": "Flyt op",
+        "moveDown": "Flyt ned",
+        "addDocument": "Tilføj dokument",
+        "add": "Tilføj",
+        "noAddableDocuments": "Ingen flere PDF-dokumenter tilgængelige",
+        "onlyPdfHint": "Der tilbydes kun PDF-filer – mappen kan ikke indeholde andre formater."
       }
     },
     "registration": {
@@ -1824,11 +1835,24 @@
       "startlistExport": {
         "button": "Startlister",
         "title": "Eksportér startlister",
+        "kind": {
+          "label": "Eksporttype",
+          "data": "CSV/ZIP – import til tidtagningssystemet",
+          "pdf": "PDF – opslag eller regattamappe"
+        },
         "format": {
-          "label": "Format",
+          "label": "Opdeling",
           "zip": "ZIP – én CSV pr. konkurrence",
-          "csv": "Én stor CSV – sorteret efter starttid",
-          "pdf": "PDF – startlister som opslag/tilmeldingsresultat"
+          "csv": "Én stor CSV – sorteret efter starttid"
+        },
+        "background": {
+          "label": "Udskriv officielt papir",
+          "hint": "Udskriver startlisteskabelonens design som baggrund. Slå fra ved udskrift på fortrykt papir – sideformat og marginer forbliver de samme. Vedhæftede mappedokumenter berøres ikke."
+        },
+        "bundle": {
+          "label": "Vedhæft mappedokumenter",
+          "hint": "Samler arrangementets eksportmappe – dokumenter og samlede startlister i den rækkefølge, der er fastlagt under indstillinger, hver kan fravælges.",
+          "skippedNonPdf": "ikke en PDF, springes over"
         },
         "skipByes": {
           "label": "Spring oversiddere over",
