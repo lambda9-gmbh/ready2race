@@ -682,11 +682,14 @@
       "hint": "Gennemførelsessiden henter tider, resultater, løb, rundeskift og check-ins i baggrunden i det indstillede interval — uden at genindlæse siden. Tilladt er 5 til 60 sekunder, standard er 5. Synkroniseringen hviler, mens en dialog er åben."
     },
     "settings": {
-      "device": "Denne enhed",
-      "event": "Arrangement",
       "openExecutionInNewTab": "Åbn „Til gennemførelse“ i nyt vindue",
       "shortLabels": "Korte navne i stedet for fulde konkurrencenavne",
-      "compact": "Kompakt visning"
+      "compact": "Kompakt visning",
+      "deviceHint": "Alle indstillinger gælder kun for denne enhed.",
+      "execution": {
+        "title": "Gennemførelse",
+        "hint": "Hvordan løb afsluttes og følgende runder oprettes på løbsdagen, og hvor ofte gennemførelsessiden holder sig opdateret. Gælder for hele arrangementet, ikke kun denne enhed."
+      }
     },
     "invoice": {
       "prefix": "Fakturapræfiks",
@@ -1717,8 +1720,7 @@
           "large": "Stor",
           "xlarge": "Meget stor"
         },
-        "refresh": "Opdatering",
-        "deviceHint": "Alle indstillinger gælder kun for denne enhed."
+        "refresh": "Opdatering"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Resultater komplette — venter på afslutning",

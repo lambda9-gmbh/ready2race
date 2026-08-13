@@ -682,11 +682,14 @@
       "hint": "The execution page picks up times, results, matches, round changes and check-ins in the background at the configured interval — without reloading the page. Allowed are 5 to 60 seconds, 5 by default. The sync rests while a dialog is open."
     },
     "settings": {
-      "device": "This device",
-      "event": "Event",
       "openExecutionInNewTab": "Open “Go to execution” in a new window",
       "shortLabels": "Short names instead of full competition names",
-      "compact": "Compact view"
+      "compact": "Compact view",
+      "deviceHint": "All settings apply to this device only.",
+      "execution": {
+        "title": "Execution",
+        "hint": "How matches are finished and following rounds are created on race day, and how often the execution page keeps itself up to date. Applies to the whole event, not just this device."
+      }
     },
     "invoice": {
       "prefix": "Invoice prefix",
@@ -1717,8 +1720,7 @@
           "large": "Large",
           "xlarge": "Extra large"
         },
-        "refresh": "Refresh",
-        "deviceHint": "All settings apply to this device only."
+        "refresh": "Refresh"
       },
       "penaltyIncluded": "incl. {{seconds}} s",
       "resultsCompleteWaiting": "Results complete — waiting to finish",

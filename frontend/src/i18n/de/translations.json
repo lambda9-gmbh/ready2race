@@ -682,11 +682,14 @@
       "hint": "Die Durchführungsseite zieht Zeiten, Ergebnisse, Läufe, Rundenwechsel und Check-ins im eingestellten Takt im Hintergrund nach — ohne die Seite neu zu laden. Erlaubt sind 5 bis 60 Sekunden, voreingestellt sind 5. Während ein Dialog offen ist, ruht der Abgleich."
     },
     "settings": {
-      "device": "Dieses Gerät",
-      "event": "Veranstaltung",
       "openExecutionInNewTab": "„Zur Durchführung“ in neuem Fenster öffnen",
       "shortLabels": "Kurznamen statt ausgeschriebener Wettkampfnamen",
-      "compact": "Kompakte Darstellung"
+      "compact": "Kompakte Darstellung",
+      "deviceHint": "Alle Einstellungen gelten nur für dieses Gerät.",
+      "execution": {
+        "title": "Durchführung",
+        "hint": "Wie Läufe am Renntag beendet und Folgerunden erzeugt werden und in welchem Takt sich die Durchführungsseite selbst aktualisiert. Gilt für die ganze Veranstaltung, nicht nur für dieses Gerät."
+      }
     },
     "invoice": {
       "prefix": "Rechnungspräfix",
@@ -1717,8 +1720,7 @@
           "large": "Groß",
           "xlarge": "Sehr groß"
         },
-        "refresh": "Aktualisierung",
-        "deviceHint": "Alle Einstellungen gelten nur für dieses Gerät."
+        "refresh": "Aktualisierung"
       },
       "penaltyIncluded": "inkl. {{seconds}} s",
       "resultsCompleteWaiting": "Ergebnisse vollständig — wartet auf Beenden",

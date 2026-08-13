@@ -79,6 +79,7 @@ import EventRegistrations from '@components/event/competition/registration/Event
 import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
 import RatingCategoriesForEvent from '@components/ratingCategory/RatingCategoriesForEvent.tsx'
 import EventTimingConfig from '@components/event/timing/EventTimingConfig.tsx'
+import EventExecutionSettings from '@components/event/EventExecutionSettings.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import AwardCertificateDialog from '@components/awardCertificate/AwardCertificateDialog.tsx'
 import CheckSeverityDialog from '@components/event/liveDashboard/CheckSeverityDialog.tsx'
@@ -516,11 +517,15 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'schedule'} activeTab={activeTab}>
-                            <EventSchedule event={data} reloadEvent={reload}/>
+                            <EventSchedule event={data}/>
                         </TabPanel>
                         <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={4}>
                                 <RatingCategoriesForEvent/>
+                                {/* Wie Läufe am Renntag beendet und Folgerunden erzeugt werden -
+                                    aus dem Zeitplan-Popover hierher gezogen (12.08.2026), weil es
+                                    die Veranstaltung ändert und kein Geräte-Schalter ist. */}
+                                <EventExecutionSettings event={data} reloadEvent={reload}/>
                                 <EventTimingConfig />
                                 <DocumentTable
                                     {...documentAdministrationProps.table}

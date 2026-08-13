@@ -265,9 +265,10 @@ const DashboardSettingsPopover = ({
                     ))}
                 </TextField>
             </SettingsSection>
-            {/* Einmal für alle Abschnitte statt einer Überschrift über nur einem Teil. */}
+            {/* Einmal für alle Abschnitte statt einer Überschrift über nur einem Teil — der Text
+                ist geteilt mit dem Zeitplan-Popover (event.settings.deviceHint). */}
             <Typography variant="caption" sx={{color: 'text.secondary'}}>
-                {t('event.liveDashboard.settings.deviceHint')}
+                {t('event.settings.deviceHint')}
             </Typography>
         </SettingsPopover>
     )
