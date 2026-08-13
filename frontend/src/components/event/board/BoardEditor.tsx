@@ -38,7 +38,7 @@ import {
     BoardTile,
     streamMode,
 } from '@api/types.gen'
-import {boardColumns, gridPlacement, hasMatchDetail, rowSizes, tileColor} from './boardView'
+import {boardColumns, gridPlacement, hasMatchDetail, hasStreamOverlay, rowSizes, tileColor} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
@@ -128,11 +128,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
         },
     )
 
-    // Wirksame Spaltenzahl wie auf der Bühne (boardColumns): ein Sprecher-Board rendert
-    // immer 1×1-vollflächig. `config.columns` bleibt dabei bewusst UNVERÄNDERT stehen —
-    // das Rendering ignoriert es ohnehin, und wer die Sprecher-Kachel wieder entfernt,
-    // bekommt seine alte Spaltenwahl zurück.
-    const detailFullscreen = config.tiles.length === 1 && hasMatchDetail(config.tiles)
+    // Wirksame Spaltenzahl wie auf der Bühne (boardColumns): ein Sprecher-Board oder
+    // Stream-Overlay rendert immer 1×1-vollflächig. `config.columns` bleibt dabei bewusst
+    // UNVERÄNDERT stehen — das Rendering ignoriert es ohnehin, und wer die Vollbild-Kachel
+    // wieder entfernt, bekommt seine alte Spaltenwahl zurück.
+    const fullscreenTile = config.tiles.length === 1 && (hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles))
     const columns = boardColumns(config)
 
     const changeColumns = (value: number) =>
@@ -679,7 +679,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             wirkungslos — deaktiviert mit Erklärung statt stiller Falle
                             (3 Spalten + Sprecher-Kachel quetschte die Kachel in eine Spalte). */}
                         <Tooltip
-                            title={detailFullscreen ? t('event.boards.matchDetailFullscreen') : ''}>
+                            title={fullscreenTile ? t('event.boards.matchDetailFullscreen') : ''}>
                             <Box>
                                 <Typography gutterBottom>{t('event.boards.columns')}</Typography>
                                 <ToggleButtonGroup
@@ -688,7 +688,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                     value={columns}
                                     onChange={(_, value) => value && changeColumns(value as number)}>
                                     {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
-                                        <ToggleButton key={n} value={n} disabled={detailFullscreen}>
+                                        <ToggleButton key={n} value={n} disabled={fullscreenTile}>
                                             {n}
                                         </ToggleButton>
                                     ))}
@@ -784,7 +784,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                             gleiche Erklärung. */}
                                         <Tooltip
                                             title={
-                                                detailFullscreen
+                                                fullscreenTile
                                                     ? t('event.boards.matchDetailFullscreen')
                                                     : ''
                                             }>
@@ -793,7 +793,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                                     select
                                                     size="small"
                                                     sx={{flex: 1}}
-                                                    disabled={detailFullscreen}
+                                                    disabled={fullscreenTile}
                                                     label={t('event.boards.tile.width')}
                                                     value={Math.min(tile.colSpan ?? 1, columns)}
                                                     onChange={e =>
@@ -815,7 +815,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                                     select
                                                     size="small"
                                                     sx={{flex: 1}}
-                                                    disabled={detailFullscreen}
+                                                    disabled={fullscreenTile}
                                                     label={t('event.boards.tile.height')}
                                                     value={tile.rowSpan ?? 1}
                                                     onChange={e =>
@@ -892,7 +892,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             <Button
                                 startIcon={<AddIcon />}
                                 disabled={
-                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles)
+                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles)
                                 }
                                 onClick={() =>
                                     setConfig({...config, tiles: [...config.tiles, defaultTile()]})
