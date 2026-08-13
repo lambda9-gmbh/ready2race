@@ -1,6 +1,8 @@
 import {describe, expect, it} from 'vitest'
 import {EventScheduleSlotDto, LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {
+    axisLabelAnchor,
+    axisLabelPx,
     computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
@@ -8,6 +10,7 @@ import {
     dashboardEntriesForDay,
     dashboardMatchState,
     dayOf,
+    nowLabelHidesHourLabel,
     resolveDashboardDay,
     scheduleSlotsToEntries,
     labelFitsWidth,
@@ -381,52 +384,125 @@ describe('timelineSpan', () => {
 })
 
 describe('computeHourMarks', () => {
+    // Ein üblicher Renntag: Achse 06:00-22:00 = 16 Stunden.
+    const raceDay = () =>
+        scheduleSlotsToEntries([slot('2026-08-17T06:00:00'), slot('2026-08-17T22:00:00')])
+
     it('marks every full hour of a short span, first at 0 % and last at 100 %', () => {
-        const marks = computeHourMarks(
+        const {marks, format} = computeHourMarks(
             scheduleSlotsToEntries([slot('2026-08-17T08:00:00'), slot('2026-08-17T10:00:00')]),
+            1200,
         )
         expect(marks.map(m => m.percent)).toEqual([0, 50, 100])
         expect(new Date(marks[1].timeMs).getHours()).toBe(9)
+        expect(format).toBe('full')
     })
 
-    it('widens the step on long days so at most about ten marks remain', () => {
-        const marks = computeHourMarks(
-            scheduleSlotsToEntries([
-                slot('2026-08-17T06:00:00'),
-                // 06:00 bis 22:00 = 16 Stunden -> Schrittweite 2 h statt 17 Marken
-                slot('2026-08-17T22:00:00'),
-            ]),
-        )
-        expect(marks.length).toBeLessThanOrEqual(11)
-        const hourStep = (marks[1].timeMs - marks[0].timeMs) / 3_600_000
-        expect(hourStep).toBe(2)
+    it('labels every hour in full on a wide desktop surface', () => {
+        const plan = computeHourMarks(raceDay(), 1400)
+        expect(plan.format).toBe('full')
+        expect(plan.stepHours).toBe(1)
+        // Genug Pixel je Label: 1400 / 16 Marken-Abstände = 87,5 px je "08:00"
+        expect(plan.marks).toHaveLength(17)
+    })
+
+    it('falls back to bare hours on a phone instead of overlapping full labels', () => {
+        // 375 px / 16 h = 23,4 px je Stunde: "08:00" (~44 px) kollidiert, "8" (~13 px) nicht
+        // bei Schrittweite 2 -> mobil nackte Stunden statt ineinandergeschobener Uhrzeiten.
+        const plan = computeHourMarks(raceDay(), 375)
+        expect(plan.format).toBe('hour')
+        expect(plan.marks.length).toBeGreaterThan(2)
+        // Kollisionfreiheit strukturell: Markenabstand in Pixeln >= Labelbreite + Luft.
+        const spacingPx = ((plan.marks[1].percent - plan.marks[0].percent) / 100) * 375
+        expect(spacingPx).toBeGreaterThanOrEqual(axisLabelPx('hour') + 12)
+    })
+
+    it('keeps full labels at tablet width', () => {
+        // 768 px / 16 h = 48 px je Stunde: für "08:00" reicht Schrittweite 2 (96 px je Label).
+        const plan = computeHourMarks(raceDay(), 768)
+        expect(plan.format).toBe('full')
+        const spacingPx = ((plan.marks[1].percent - plan.marks[0].percent) / 100) * 768
+        expect(spacingPx).toBeGreaterThanOrEqual(axisLabelPx('full') + 12)
+    })
+
+    it('prefers fewer marks over overlapping ones when the surface gets absurdly narrow', () => {
+        const plan = computeHourMarks(raceDay(), 120)
+        // Egal welches Format: kein Markenpaar darf sich gezeichnet überlappen.
+        const spacingPx = ((plan.marks[1].percent - plan.marks[0].percent) / 100) * 120
+        expect(spacingPx).toBeGreaterThanOrEqual(axisLabelPx(plan.format) + 12)
+    })
+
+    it('plans with a fallback width while the surface is not measured yet', () => {
+        // containerPx 0 (erste Renderrunde) darf nicht "nichts passt" bedeuten.
+        const plan = computeHourMarks(raceDay(), 0)
+        expect(plan.marks.length).toBeGreaterThan(2)
     })
 
     it('returns no marks without entries', () => {
-        expect(computeHourMarks([])).toEqual([])
+        expect(computeHourMarks([], 1200).marks).toEqual([])
+    })
+})
+
+describe('axisLabelAnchor', () => {
+    it('anchors edge labels inwards so they cannot clip out of the container', () => {
+        // Label 40 px breit auf 400 px: Mitte bei 0 % ragte 20 px nach links hinaus.
+        expect(axisLabelAnchor(0, 40, 400)).toBe('start')
+        expect(axisLabelAnchor(50, 40, 400)).toBe('center')
+        expect(axisLabelAnchor(100, 40, 400)).toBe('end')
+    })
+
+    it('also folds labels NEAR the edge, measured in pixels rather than percent', () => {
+        // 4 % von 400 px = 16 px < halbe Labelbreite -> zentriert ragte es hinaus.
+        expect(axisLabelAnchor(4, 40, 400)).toBe('start')
+        expect(axisLabelAnchor(96, 40, 400)).toBe('end')
+        // Auf einer breiten Fläche ist dieselbe Prozentposition unkritisch.
+        expect(axisLabelAnchor(4, 40, 2000)).toBe('center')
+    })
+})
+
+describe('nowLabelHidesHourLabel', () => {
+    it('hides hour labels whose pixels would collide with the now label', () => {
+        // 375 px, Marke 5 % neben dem Jetzt-Marker = 18,75 px Abstand < halbe Labelbreiten.
+        expect(nowLabelHidesHourLabel(45, 50, axisLabelPx('hour'), 375)).toBe(true)
+        // Auf 1400 px sind 5 % = 70 px - genug Luft, das Label bleibt.
+        expect(nowLabelHidesHourLabel(45, 50, axisLabelPx('hour'), 1400)).toBe(false)
     })
 })
 
 describe('computeTimelinePositions', () => {
+    const PX = 1200
+
     it('positions entries proportionally across the day span', () => {
         const entries = scheduleSlotsToEntries([
             slot('2026-08-17T08:00:00'),
             slot('2026-08-17T09:00:00'),
             slot('2026-08-17T10:00:00'),
         ])
-        const positioned = computeTimelinePositions(entries)
+        const positioned = computeTimelinePositions(entries, PX)
         expect(positioned[0].leftPercent).toBeCloseTo(0)
         expect(positioned[1].leftPercent).toBeCloseTo(50)
         expect(positioned[2].leftPercent).toBeCloseTo(100)
     })
 
-    it('enforces a minimum segment width for very short or zero-duration slots', () => {
+    it('draws blocks time-true - a short race looks as long as it lasts', () => {
+        // 10-Minuten-Lauf auf 12 Stunden Achse: zeittreu 1,39 % - die frühere prozentuale
+        // Mindestbreite (3 %) zeichnete ihn mehr als doppelt so lang.
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {durationMinutes: 10}),
+            slot('2026-08-17T20:00:00', {durationMinutes: 0}),
+        ])
+        const positioned = computeTimelinePositions(entries, PX)
+        expect(positioned[0].widthPercent).toBeCloseTo((10 / 720) * 100, 5)
+    })
+
+    it('keeps zero-duration entries visible with a few pixels, no more', () => {
         const entries = scheduleSlotsToEntries([
             slot('2026-08-17T08:00:00', {durationMinutes: 0}),
             slot('2026-08-17T20:00:00', {durationMinutes: 0}),
         ])
-        const positioned = computeTimelinePositions(entries)
-        expect(positioned[0].widthPercent).toBeGreaterThan(0)
+        const positioned = computeTimelinePositions(entries, PX)
+        // 3 px auf 1200 px = 0,25 % - sichtbar, aber nicht länger als real.
+        expect(positioned[0].widthPercent).toBeCloseTo((3 / PX) * 100, 5)
     })
 
     it('stacks entries that share the exact same start time into separate rows', () => {
@@ -434,7 +510,7 @@ describe('computeTimelinePositions', () => {
             slot('2026-08-17T08:00:00', {name: 'A', state: 'FREE'}),
             slot('2026-08-17T08:00:00', {name: 'B', state: 'FREE'}),
         ])
-        const positioned = computeTimelinePositions(entries)
+        const positioned = computeTimelinePositions(entries, PX)
         expect(positioned[0].stackRow).toBe(0)
         expect(positioned[1].stackRow).toBe(1)
     })
@@ -446,26 +522,82 @@ describe('computeTimelinePositions', () => {
             // 09:30 beginnt, wenn beide vorbei sind - zurück in Spur 0
             slot('2026-08-17T09:30:00', {durationMinutes: 30}),
         ])
-        const positioned = computeTimelinePositions(entries)
+        const positioned = computeTimelinePositions(entries, PX)
         expect(positioned[0].stackRow).toBe(0)
         expect(positioned[1].stackRow).toBe(1)
         expect(positioned[2].stackRow).toBe(0)
     })
 
-    it('also dodges purely visual overlap caused by the minimum width', () => {
-        // Zwei dauerlose Läufe eine Minute auseinander auf einer Stunde Achse: zeitlich
-        // überschneidungsfrei, gezeichnet (Mindestbreite!) übereinander -> zweite Spur.
+    it('keeps sequential short races in ONE lane - only real time overlap stacks', () => {
+        // Das Nutzer-Feedback vom 12.08.: 7-10-Minuten-Läufe im 10-Minuten-Takt stapelten
+        // sich durch die prozentuale Mindestbreite in 4-5 Scheinspuren. Zeitlich überlappt
+        // hier nichts -> alles Spur 0.
         const entries = scheduleSlotsToEntries([
-            slot('2026-08-17T08:00:00'),
-            slot('2026-08-17T08:01:00'),
+            slot('2026-08-17T08:00:00', {durationMinutes: 8}),
+            slot('2026-08-17T08:10:00', {durationMinutes: 7}),
+            slot('2026-08-17T08:20:00', {durationMinutes: 9}),
+            slot('2026-08-17T08:30:00', {durationMinutes: 10}),
+            slot('2026-08-17T08:40:00', {durationMinutes: 8}),
         ])
-        const positioned = computeTimelinePositions(entries)
-        expect(positioned[0].stackRow).toBe(0)
-        expect(positioned[1].stackRow).toBe(1)
+        const positioned = computeTimelinePositions(entries, PX)
+        expect(positioned.map(p => p.stackRow)).toEqual([0, 0, 0, 0, 0])
+    })
+
+    it('gives every block a comfortable hit area that always covers the block', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {durationMinutes: 8}),
+            slot('2026-08-17T14:00:00', {durationMinutes: 8}),
+        ])
+        const positioned = computeTimelinePositions(entries, PX)
+        for (const p of positioned) {
+            const hitPx = (p.hitWidthPercent / 100) * PX
+            expect(hitPx).toBeGreaterThanOrEqual(24)
+            // Hitbox deckt den sichtbaren Block vollständig ab
+            expect(p.hitLeftPercent).toBeLessThanOrEqual(p.leftPercent)
+            expect(p.hitLeftPercent + p.hitWidthPercent).toBeGreaterThanOrEqual(
+                p.leftPercent + p.widthPercent,
+            )
+        }
+    })
+
+    it('splits the hit boundary between dense neighbours at the middle of the gap', () => {
+        // Zwei dauerlose Einträge eine Minute auseinander auf 1 h Achse: die aufgeweiteten
+        // Hitboxen (je min. 24 px) liefen ineinander - beide klemmen an der Lückenmitte,
+        // damit der Klick immer den nächstgelegenen Block trifft.
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {durationMinutes: 0}),
+            slot('2026-08-17T08:01:00', {durationMinutes: 0}),
+        ])
+        const [a, b] = computeTimelinePositions(entries, PX)
+        const midGap = (a.leftPercent + a.widthPercent + b.leftPercent) / 2
+        expect(a.hitLeftPercent + a.hitWidthPercent).toBeCloseTo(midGap, 5)
+        expect(b.hitLeftPercent).toBeCloseTo(midGap, 5)
+    })
+
+    it('leaves hit areas of far-apart neighbours untouched by the mid-gap rule', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {durationMinutes: 0}),
+            slot('2026-08-17T08:30:00', {durationMinutes: 0}),
+        ])
+        const [a, b] = computeTimelinePositions(entries, PX)
+        // Genug Abstand: keine Klemmung, beide behalten ihre symmetrischen 24 px.
+        expect(a.hitLeftPercent + a.hitWidthPercent).toBeLessThan(b.hitLeftPercent)
+        expect((b.hitWidthPercent / 100) * PX).toBeCloseTo(24, 5)
+    })
+
+    it('clamps hit areas to the axis at both ends', () => {
+        const entries = scheduleSlotsToEntries([
+            slot('2026-08-17T08:00:00', {durationMinutes: 0}),
+            slot('2026-08-17T08:59:00', {durationMinutes: 1}),
+        ])
+        const positioned = computeTimelinePositions(entries, PX)
+        expect(positioned[0].hitLeftPercent).toBeGreaterThanOrEqual(0)
+        const last = positioned[positioned.length - 1]
+        expect(last.hitLeftPercent + last.hitWidthPercent).toBeLessThanOrEqual(100)
     })
 
     it('returns an empty array for no entries', () => {
-        expect(computeTimelinePositions([])).toEqual([])
+        expect(computeTimelinePositions([], PX)).toEqual([])
     })
 })
 

@@ -62,9 +62,18 @@ import {
 import StatusChip from '@components/event/match/StatusChip.tsx'
 import {useNow} from '@components/event/match/useNow.ts'
 
+/**
+ * DOM-Id der Lauf-Karte — Ankerpunkt für den Sprung aus dem Zeitplan (Veranstaltungs-Modus):
+ * Der Klick auf eine Lauf-Zeile lädt den Wettkampf rechts und scrollt dann zu genau dieser
+ * Karte. Dasselbe Prinzip wie die Karten-Ids der „Läufe"-Spalte des Schiedsrichter-Boards.
+ */
+export const executionMatchDomId = (matchId: string): string => `execution-match-${matchId}`
+
 type Props = CompetitionScopeProps & {
     round: CompetitionRoundDto
     roundIndex: number
+    /** Kurz hervorgehobener Lauf nach dem Sprung aus dem Zeitplan (Veranstaltungs-Modus). */
+    highlightedMatchId?: string | null
     filteredMatches: CompetitionMatchDto[]
     reloadRoundDto: () => void
     setSubmitting: (value: boolean) => void
@@ -97,6 +106,7 @@ const CompetitionExecutionRound = ({
     competitionId: competitionIdProp,
     round,
     roundIndex,
+    highlightedMatchId,
     filteredMatches,
     submitting,
     smallScreenLayout,
@@ -532,6 +542,7 @@ const CompetitionExecutionRound = ({
                     {filteredMatches.map((match, matchIndex) => (
                         <Card
                             key={match.id}
+                            id={executionMatchDomId(match.id)}
                             sx={{
                                 p: 2,
                                 flex: 1,
@@ -543,6 +554,12 @@ const CompetitionExecutionRound = ({
                                     borderWidth: 2,
                                     borderStyle: 'solid',
                                 }),
+                                // Kurzes Aufleuchten nach dem Sprung aus dem Zeitplan — derselbe
+                                // Hintergrund-Fade wie bei der Zeilen-Hervorhebung dort.
+                                ...(highlightedMatchId === match.id && {
+                                    backgroundColor: 'action.selected',
+                                }),
+                                transition: 'background-color 0.5s ease',
                             }}>
                             <Stack
                                 direction={'row'}

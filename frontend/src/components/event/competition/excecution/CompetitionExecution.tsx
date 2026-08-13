@@ -67,7 +67,9 @@ import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import SyncProblemIcon from '@mui/icons-material/SyncProblem'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
-import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
+import CompetitionExecutionRound, {
+    executionMatchDomId,
+} from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
 import RoundProgressionSetting from '@components/event/competition/excecution/RoundProgressionSetting.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
@@ -98,6 +100,10 @@ import {
     CompetitionScopeProps,
     useCompetitionScope,
 } from '@components/event/competition/excecution/competitionScope.ts'
+import {
+    centeredScrollTop,
+    scrollContainerOf,
+} from '@components/event/liveDashboard/common.ts'
 
 type EnterResultsTeam = {
     registrationId: string
@@ -128,9 +134,23 @@ type Props = CompetitionScopeProps & {
      * Einstellung, die sich am Renntag nicht ändert, verdient keinen zweiten Request.
      */
     autoRefresh: AutoRefreshConfig
+    /**
+     * Lauf, zu dessen Karte die Seite nach dem Laden springen soll — gesetzt nur im
+     * eingebetteten Einsatz (Veranstaltungs-Modus des Zeitplan-Tabs), wenn dort eine Zeile mit
+     * materialisiertem Lauf angeklickt wurde. Auf der Wettkampf-Seite bleibt das Prop leer und
+     * alles beim Alten.
+     */
+    focusMatchId?: string | null
+    /**
+     * Meldet, dass eine schreibende Aktion die Daten verändert hat (Lauf aktiviert/beendet,
+     * Ergebnis eingetragen, Runde erzeugt/gelöscht, …). Der Veranstaltungs-Modus lädt darüber
+     * den Zeitplan links sofort nach, statt auf dessen 30-Sekunden-Takt zu warten. Auf der
+     * Wettkampf-Seite bleibt das Prop leer — keine Verhaltensänderung.
+     */
+    onDataChanged?: () => void
 }
 
-const CompetitionExecution = ({autoRefresh, ...scope}: Props) => {
+const CompetitionExecution = ({autoRefresh, focusMatchId, onDataChanged, ...scope}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
@@ -144,6 +164,24 @@ const CompetitionExecution = ({autoRefresh, ...scope}: Props) => {
     const [submitting, setSubmitting] = useState(false)
 
     const [reloadData, setReloadData] = useState(false)
+
+    // Ein Trichter für alle schreibenden Aktionen: Jede von ihnen stößt ihren Neu-Abruf über
+    // das Umschalten von [reloadData] an — die eigenen Handler hier ebenso wie die der
+    // Runden-Kinder, deren reloadRoundDto genau dieses Umschalten ist. Deshalb meldet dieser
+    // eine Effekt die Änderung nach draußen (siehe [onDataChanged]), statt an jeder
+    // Aktionsstelle einzeln aufzurufen. Der erste Durchlauf beim Mount ist keine Änderung.
+    // Einzige schreibende Stelle ohne diesen Trichter ist das Speichern der Folgerunden-
+    // Einstellung (RoundProgressionSetting) — sie ändert am Zeitplan nichts.
+    const onDataChangedRef = useRef(onDataChanged)
+    onDataChangedRef.current = onDataChanged
+    const reloadDataMountRef = useRef(true)
+    useEffect(() => {
+        if (reloadDataMountRef.current) {
+            reloadDataMountRef.current = false
+            return
+        }
+        onDataChangedRef.current?.()
+    }, [reloadData])
 
     // Die drei Dialoge stehen hier oben, weil der automatische Abgleich sie kennen muss: Solange
     // einer offen ist, ruht der Takt (siehe `paused` weiter unten). Ihre Öffnen/Schließen-Helfer
@@ -260,6 +298,76 @@ const CompetitionExecution = ({autoRefresh, ...scope}: Props) => {
         return () => window.removeEventListener('online', reloadProgress)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    /** Nach dem Sprung kurz aufleuchtende Lauf-Karte (siehe [focusMatchId]). */
+    const [highlightedMatchId, setHighlightedMatchId] = useState<string | null>(null)
+    /** Der zuletzt angefahrene Lauf — verhindert, dass jeder Abgleich den Sprung wiederholt. */
+    const focusScrolledRef = useRef<string | null>(null)
+    const focusHighlightTimeoutRef = useRef<number | null>(null)
+
+    // Sprung zum angeklickten Lauf: erst wenn die Runden gerendert sind (progressDto), und je
+    // matchId genau einmal. Wechselt der Zeitplan-Klick nur den Lauf im schon geladenen
+    // Wettkampf, ändert sich [focusMatchId] und der Effekt fährt sofort los. Gescrollt wird nur
+    // der eigene Scroll-Container (die rechte Split-Spalte) — scrollIntoView nähme das Fenster
+    // mit und zöge den Zeitplan links aus dem Bild; dasselbe Muster wie der Zeitstrahl-Sprung
+    // des Schiedsrichter-Boards (LiveDashboardPage).
+    useEffect(() => {
+        if (focusMatchId == null || progressDto === null) {
+            return
+        }
+        if (focusScrolledRef.current === focusMatchId) {
+            return
+        }
+        // Kurz warten statt sofort messen: Direkt nach dem ersten Datenstand können die
+        // Nebenabrufe (Zeitnahme-Warnung über den Runden, Folgerunden-Einstellung) das Layout
+        // noch nach unten schieben — die Messung soll den fertigen Stand sehen. Läuft ein neuer
+        // Datenstand ein, räumt das Cleanup den alten Versuch ab und der Effekt setzt einen
+        // frischen an.
+        const timeoutId = window.setTimeout(() => {
+            const el = document.getElementById(executionMatchDomId(focusMatchId))
+            if (!el) {
+                // Lauf (noch) nicht im DOM — der nächste Datenstand versucht es erneut.
+                return
+            }
+            focusScrolledRef.current = focusMatchId
+            const container = scrollContainerOf(el)
+            if (container) {
+                const elementTop =
+                    el.getBoundingClientRect().top -
+                    container.getBoundingClientRect().top +
+                    container.scrollTop
+                container.scrollTo({
+                    top: centeredScrollTop(
+                        elementTop,
+                        el.offsetHeight,
+                        container.clientHeight,
+                        container.scrollHeight,
+                    ),
+                    behavior: 'smooth',
+                })
+            } else {
+                el.scrollIntoView({behavior: 'smooth', block: 'center'})
+            }
+            setHighlightedMatchId(focusMatchId)
+            if (focusHighlightTimeoutRef.current != null) {
+                window.clearTimeout(focusHighlightTimeoutRef.current)
+            }
+            focusHighlightTimeoutRef.current = window.setTimeout(
+                () => setHighlightedMatchId(null),
+                1500,
+            )
+        }, 300)
+        return () => window.clearTimeout(timeoutId)
+    }, [focusMatchId, progressDto])
+
+    useEffect(
+        () => () => {
+            if (focusHighlightTimeoutRef.current != null) {
+                window.clearTimeout(focusHighlightTimeoutRef.current)
+            }
+        },
+        [],
+    )
 
     const connection = syncStatus({failures, hasData: progressDto !== null})
     /**
@@ -998,6 +1106,7 @@ const CompetitionExecution = ({autoRefresh, ...scope}: Props) => {
                         key={round.setupRoundId}
                         eventId={eventId}
                         competitionId={competitionId}
+                        highlightedMatchId={highlightedMatchId}
                         round={round}
                         roundIndex={roundIndex}
                         filteredMatches={raceableMatches(round)}

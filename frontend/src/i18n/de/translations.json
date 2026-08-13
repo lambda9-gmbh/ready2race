@@ -730,8 +730,6 @@
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
       "navigation": {
-        "modeCompetitions": "Rennen",
-        "modeSchedule": "Zeitplan",
         "backToEvent": "Zurück zur Veranstaltung",
         "filter": "Filtern",
         "showShortNames": "Kurznamen zeigen",
@@ -1829,7 +1827,8 @@
         "format": {
           "label": "Format",
           "zip": "ZIP – eine CSV je Wettkampf",
-          "csv": "Eine große CSV – nach Startzeit sortiert"
+          "csv": "Eine große CSV – nach Startzeit sortiert",
+          "pdf": "PDF – Startlisten als Aushang/Meldeergebnis"
         },
         "skipByes": {
           "label": "Freilose überspringen",

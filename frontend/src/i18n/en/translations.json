@@ -730,8 +730,6 @@
       "competition": "Competition",
       "competitions": "Competitions",
       "navigation": {
-        "modeCompetitions": "Races",
-        "modeSchedule": "Schedule",
         "backToEvent": "Back to the event",
         "filter": "Filter",
         "showShortNames": "Show short names",
@@ -1829,7 +1827,8 @@
         "format": {
           "label": "Format",
           "zip": "ZIP – one CSV per competition",
-          "csv": "One big CSV – sorted by start time"
+          "csv": "One big CSV – sorted by start time",
+          "pdf": "PDF – start lists as notice board / registration report"
         },
         "skipByes": {
           "label": "Skip byes",

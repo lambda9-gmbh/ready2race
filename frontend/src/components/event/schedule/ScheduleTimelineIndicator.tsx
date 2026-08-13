@@ -3,11 +3,15 @@ import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import {useEffect, useRef, useState} from 'react'
 import {
+    axisLabelAnchor,
+    axisLabelPx,
     computeHourMarks,
     computeNowMarkerPercent,
     computeTimelinePositions,
     computeTimelineProjection,
     labelFitsWidth,
+    nowLabelHidesHourLabel,
+    NOW_LABEL_PX,
     PositionedTimelineEntry,
     TimelineAppearance,
     timelineEntryAppearance,
@@ -34,11 +38,14 @@ const SIZES = {
 } as const
 
 /**
- * Zentrierung eines Achsen-Labels auf seiner Marke — an den Rändern einseitig, damit "08:00" am
- * linken und "18:00" am rechten Ende nicht aus der Fläche hinausragen.
+ * Der Anker eines Achsen-Labels (siehe axisLabelAnchor) als CSS-Transform: mittig auf der Marke,
+ * an den Rändern nach innen geklappt, damit nichts aus der Fläche clippt.
  */
-const axisLabelTransform = (percent: number): string =>
-    percent < 2 ? 'none' : percent > 98 ? 'translateX(-100%)' : 'translateX(-50%)'
+const ANCHOR_TRANSFORM: Record<ReturnType<typeof axisLabelAnchor>, string> = {
+    start: 'none',
+    center: 'translateX(-50%)',
+    end: 'translateX(-100%)',
+}
 
 /**
  * Compact "where are we right now" bar for one race day: every slot/match as a time-proportional
@@ -72,8 +79,13 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
         return null
     }
 
-    const positioned = computeTimelinePositions(entries)
-    const hourMarks = computeHourMarks(entries)
+    // Auch die Blockgeometrie rechnet gegen die gemessene Breite: die Mindest-Zeichenbreite
+    // (gegen Unsichtbarkeit) und die Mindest-Klickbreite sind Pixel, keine Achsenprozente.
+    const positioned = computeTimelinePositions(entries, containerWidth)
+    // Die Marken werden gegen die gemessene Breite geplant (Format und Schrittweite, siehe
+    // computeHourMarks) — auf dem Handy nackte Stunden statt ineinanderlaufender "08:00"-Labels.
+    const hourMarkPlan = computeHourMarks(entries, containerWidth)
+    const markLabelPx = axisLabelPx(hourMarkPlan.format)
     const nowPercent = computeNowMarkerPercent(entries, now)
     // Soll vs. Ist: Ist-Start-Striche und die halbtransparente Erwartungs-Andeutung (siehe
     // computeTimelineProjection — dort steht auch, warum das nur eine Andeutung sein darf).
@@ -195,7 +207,7 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                     backgroundColor: 'action.hover',
                 }}
             />
-            {hourMarks.map(mark => (
+            {hourMarkPlan.marks.map(mark => (
                 <Box key={mark.timeMs} sx={{pointerEvents: 'none'}}>
                     <Box
                         sx={{
@@ -208,20 +220,32 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                         }}
                     />
                     {/* Läge das Stunden-Label unter dem Jetzt-Label, blieben von "22:00" nur
-                        angeschnittene Ziffern übrig — dann lieber gar keins, "jetzt" gewinnt. */}
-                    {(nowPercent == null || Math.abs(mark.percent - nowPercent) > 4) && (
+                        angeschnittene Ziffern übrig — dann lieber gar keins, "jetzt" gewinnt
+                        (in Pixeln gerechnet, damit das auch auf schmalen Flächen greift). */}
+                    {(nowPercent == null ||
+                        !nowLabelHidesHourLabel(
+                            mark.percent,
+                            nowPercent,
+                            markLabelPx,
+                            containerWidth,
+                        )) && (
                         <Box
                             sx={{
                                 position: 'absolute',
                                 left: `${mark.percent}%`,
                                 top: barHeight + 2,
-                                transform: axisLabelTransform(mark.percent),
+                                transform:
+                                    ANCHOR_TRANSFORM[
+                                        axisLabelAnchor(mark.percent, markLabelPx, containerWidth)
+                                    ],
                                 fontSize: '0.65rem',
                                 lineHeight: 1.2,
                                 color: 'text.secondary',
                                 whiteSpace: 'nowrap',
                             }}>
-                            {format(new Date(mark.timeMs), t('format.time'))}
+                            {hourMarkPlan.format === 'hour'
+                                ? String(new Date(mark.timeMs).getHours())
+                                : format(new Date(mark.timeMs), t('format.time'))}
                         </Box>
                     )}
                 </Box>
@@ -258,53 +282,72 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                                 }}
                             />
                         )}
+                        {/* Klickfläche und Zeichnung sind getrennt: die ButtonBase ist die
+                            unsichtbare, mindestens 24 px breite Hitbox (Geometrie siehe
+                            computeTimelinePositions), der zeittreue Block liegt als Kind darin.
+                            Der Tooltip hängt an der Hitbox — die weicht vom sichtbaren Block um
+                            höchstens die halbe Mindest-Klickbreite ab, der Anker bleibt also
+                            praktisch der Block. */}
                         <Tooltip title={entryTooltip(entry)}>
                             <ButtonBase
                                 onClick={() => onEntryClick?.(entry.id)}
                                 aria-label={`${entry.label}, ${format(new Date(entry.startTime), t('format.time'))}, ${stateLabel(entry)}`}
                                 sx={{
                                     position: 'absolute',
-                                    left: `${entry.leftPercent}%`,
-                                    width: `${entry.widthPercent}%`,
+                                    left: `${entry.hitLeftPercent}%`,
+                                    width: `${entry.hitWidthPercent}%`,
                                     top: entry.stackRow * (rowHeight + rowGap),
                                     height: rowHeight,
-                                    borderRadius: 0.75,
-                                    overflow: 'hidden',
-                                    ...segmentSx(a),
-                                    animation:
-                                        entry.state === 'running'
-                                            ? 'r2r-timeline-pulse 2s infinite'
-                                            : 'none',
-                                    transition: 'filter 0.15s ease',
-                                    '&:hover': {
+                                    '&:hover .r2r-timeline-block': {
                                         filter: 'brightness(0.92)',
                                     },
-                                    '&:focus-visible': {
+                                    '&:focus-visible .r2r-timeline-block': {
                                         outline: `2px solid ${theme.palette.primary.dark}`,
                                         outlineOffset: 1,
                                     },
                                 }}>
-                                {showLabel && (
-                                    <Box
-                                        component={'span'}
-                                        sx={{
-                                            fontSize: '0.65rem',
-                                            lineHeight: 1,
-                                            px: 0.5,
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            // Auf Füllungen die Kontrastfarbe der Palette, auf
-                                            // Umrissen die normale Textfarbe der Fläche.
-                                            color:
-                                                a.variant === 'outlined'
-                                                    ? 'text.primary'
-                                                    : theme.palette.getContrastText(
-                                                          a.muted ? pal.light : pal.main,
-                                                      ),
-                                        }}>
-                                        {shortLabel}
-                                    </Box>
-                                )}
+                                <Box
+                                    className={'r2r-timeline-block'}
+                                    sx={{
+                                        position: 'absolute',
+                                        left: `${((entry.leftPercent - entry.hitLeftPercent) / entry.hitWidthPercent) * 100}%`,
+                                        width: `${(entry.widthPercent / entry.hitWidthPercent) * 100}%`,
+                                        top: 0,
+                                        bottom: 0,
+                                        borderRadius: 0.75,
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        ...segmentSx(a),
+                                        animation:
+                                            entry.state === 'running'
+                                                ? 'r2r-timeline-pulse 2s infinite'
+                                                : 'none',
+                                        transition: 'filter 0.15s ease',
+                                    }}>
+                                    {showLabel && (
+                                        <Box
+                                            component={'span'}
+                                            sx={{
+                                                fontSize: '0.65rem',
+                                                lineHeight: 1,
+                                                px: 0.5,
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                // Auf Füllungen die Kontrastfarbe der Palette, auf
+                                                // Umrissen die normale Textfarbe der Fläche.
+                                                color:
+                                                    a.variant === 'outlined'
+                                                        ? 'text.primary'
+                                                        : theme.palette.getContrastText(
+                                                              a.muted ? pal.light : pal.main,
+                                                          ),
+                                            }}>
+                                            {shortLabel}
+                                        </Box>
+                                    )}
+                                </Box>
                             </ButtonBase>
                         </Tooltip>
                         {/* Die Ist-Ebene: dünner Strich am unteren Rand der Spur, positioniert am
@@ -350,7 +393,11 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
                             position: 'absolute',
                             left: `${nowPercent}%`,
                             top: barHeight + 2,
-                            transform: axisLabelTransform(nowPercent),
+                            // Auch das Jetzt-Label klappt am Rand nach innen statt zu clippen.
+                            transform:
+                                ANCHOR_TRANSFORM[
+                                    axisLabelAnchor(nowPercent, NOW_LABEL_PX, containerWidth)
+                                ],
                             fontSize: '0.65rem',
                             lineHeight: 1.2,
                             fontWeight: 700,
