@@ -72,13 +72,28 @@ object BoardLogic {
             .filter { it.type == BoardElementType.MATCH || it.type == BoardElementType.MATCH_DETAIL }
             .mapNotNull { it.offset }
             .toSet()
+        // Das Stream-Overlay hängt sich an dieselbe Timeline: Offset 0 ist der zuletzt
+        // gestartete laufende Lauf (genau die Regel „bei mehreren gewinnt der zuletzt
+        // gestartete" aus der Spec), −1 das jüngste Ergebnis, +1 der nächste anstehende.
+        val streamOffsets = elements
+            .filter { it.type == BoardElementType.STREAM }
+            .flatMap {
+                when (it.streamMode ?: StreamOverlayMode.AUTO) {
+                    StreamOverlayMode.AUTO -> listOf(0, -1)
+                    StreamOverlayMode.RUNNING -> listOf(0)
+                    StreamOverlayMode.RESULTS -> listOf(-1)
+                    StreamOverlayMode.UPCOMING -> listOf(1)
+                }
+            }
+            .toSet()
+        val allOffsets = offsets + streamOffsets
         val listLimits = elements
             .filter { it.type == BoardElementType.MATCH_LIST && it.listMode != null }
             .groupBy { it.listMode!! }
             .mapValues { (_, es) -> es.maxOf { it.limit ?: BoardLimits.MIN_LIST_LIMIT } }
 
-        val maxNegative = offsets.filter { it < 0 }.minOrNull()?.let { -it } ?: 0
-        val maxPositive = offsets.filter { it > 0 }.maxOrNull() ?: 0
+        val maxNegative = allOffsets.filter { it < 0 }.minOrNull()?.let { -it } ?: 0
+        val maxPositive = allOffsets.filter { it > 0 }.maxOrNull() ?: 0
 
         val matchElements = elements.filter { it.type == BoardElementType.MATCH }
         // MATCH_DETAIL ist maximale Detailtiefe ohne Schalter: Crew-Details, Weiterkommens-Regel
@@ -100,7 +115,7 @@ object BoardLogic {
             runningLimit = maxOf(1, maxNegative + 1, listLimits[BoardListMode.RUNNING] ?: 0),
             upcomingLimit = maxOf(1, maxPositive, listLimits[BoardListMode.UPCOMING] ?: 0),
             resultsLimit = maxOf(1, maxNegative, listLimits[BoardListMode.RESULTS] ?: 0),
-            offsets = offsets,
+            offsets = allOffsets,
             listLimits = listLimits,
             crewDetails = crewDetails,
             advancement = advancement,

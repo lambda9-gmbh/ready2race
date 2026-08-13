@@ -223,4 +223,20 @@ class BoardLogicTest {
         assertEquals(true, needs.advancement)
         assertEquals(true, needs.requirements)
     }
+
+    @Test
+    fun `dataNeeds meldet die Slots des Stream-Overlays an`() {
+        fun config(mode: StreamOverlayMode?) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(elements = listOf(BoardElement(type = BoardElementType.STREAM, streamMode = mode)))
+            ),
+        )
+        // AUTO (auch als null): laufender Lauf + Ergebnis-Rückfall.
+        assertEquals(setOf(0, -1), BoardLogic.dataNeeds(config(null)).offsets)
+        assertEquals(setOf(0, -1), BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO)).offsets)
+        assertEquals(setOf(0), BoardLogic.dataNeeds(config(StreamOverlayMode.RUNNING)).offsets)
+        assertEquals(setOf(-1), BoardLogic.dataNeeds(config(StreamOverlayMode.RESULTS)).offsets)
+        assertEquals(setOf(1), BoardLogic.dataNeeds(config(StreamOverlayMode.UPCOMING)).offsets)
+    }
 }
