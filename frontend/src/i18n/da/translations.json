@@ -3148,5 +3148,9 @@
     "team": "Hold",
     "deregistered": "Afmeldt",
     "noMatches": "Der er endnu ikke planlagt noget løb for dig."
+  },
+  "legal": {
+    "privacy": "Privatlivspolitik",
+    "privacyTitle": "Privatlivspolitik"
   }
 }

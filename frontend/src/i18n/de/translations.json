@@ -3161,5 +3161,9 @@
     "team": "Mannschaft",
     "deregistered": "Abgemeldet",
     "noMatches": "Für dich ist noch kein Lauf eingetragen."
+  },
+  "legal": {
+    "privacy": "Datenschutz",
+    "privacyTitle": "Datenschutzerklärung"
   }
 }
