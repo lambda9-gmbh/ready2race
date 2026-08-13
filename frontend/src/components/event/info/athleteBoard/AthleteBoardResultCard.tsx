@@ -9,6 +9,7 @@ import {
     AthleteBoardBoatRow,
     AthleteBoardBoatStatus,
     AthleteBoardBoatSubline,
+    AthleteBoardLapTimes,
     AthleteBoardSectionHeading,
     BoatListRow,
 } from './AthleteBoardBoatRow'
@@ -171,10 +172,16 @@ const AthleteBoardResultCard = ({
                                                 }
                                             />
                                             {!team.deregistered && showTimes && (
-                                                <AthleteBoardPenaltyNote
-                                                    penaltySeconds={team.penaltySeconds}
-                                                    penaltyNote={team.penaltyNote}
-                                                />
+                                                <>
+                                                    <AthleteBoardPenaltyNote
+                                                        penaltySeconds={team.penaltySeconds}
+                                                        penaltyNote={team.penaltyNote}
+                                                    />
+                                                    {/* Rundenzeiten prominent unter der Endzeit
+                                                        (12.08.2026) — identisch zur Lauf-Karte;
+                                                        vorher eine Crew-Subline links. */}
+                                                    <AthleteBoardLapTimes laps={team.laps} />
+                                                </>
                                             )}
                                         </>
                                     )
@@ -226,17 +233,6 @@ const AthleteBoardResultCard = ({
                                         })}
                                     </AthleteBoardBoatSubline>
                                 )}
-                                {/* Zwischenzeiten aus RaceClocker — nur wenn Zeiten überhaupt
-                                    gezeigt werden und das Boot nicht abgemeldet ist. */}
-                                {showTimes &&
-                                    !team.deregistered &&
-                                    (team.laps ?? []).length > 0 && (
-                                        <AthleteBoardBoatSubline>
-                                            {(team.laps ?? [])
-                                                .map(lap => `${lap.name} ${lap.timeString}`)
-                                                .join(' · ')}
-                                        </AthleteBoardBoatSubline>
-                                    )}
                             </AthleteBoardBoatRow>
                         ))}
                     </Fragment>

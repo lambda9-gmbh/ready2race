@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {TFunction} from 'i18next'
-import {COUNTDOWN_MAX_SECONDS, finishComplete, formatClockTimeWithSeconds, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
+import {COUNTDOWN_MAX_SECONDS, compactLapLabel, finishComplete, formatClockTimeWithSeconds, formatRemaining, isSameDay, scaled, sortRunningTeams, teamLabel} from './common'
 
 // Gibt den letzten Abschnitt des Schlüssels zurück, damit die Erwartungen unabhängig
 // von den echten Übersetzungen lesbar bleiben: "…hoursUnit" -> "hoursUnit".
@@ -89,6 +89,34 @@ describe('teamLabel', () => {
 describe('COUNTDOWN_MAX_SECONDS', () => {
     test('entspricht einem Tag', () => {
         expect(COUNTDOWN_MAX_SECONDS).toBe(86400)
+    })
+})
+
+// Die Kurzform der Rundennamen an der Zeit: nur „ein Wort plus Zahl" wird eingedampft,
+// freier Text aus RaceClocker bleibt unangetastet.
+describe('compactLapLabel', () => {
+    test('Runde 1 wird zu R1', () => {
+        expect(compactLapLabel('Runde 1')).toBe('R1')
+        expect(compactLapLabel('Runde 12')).toBe('R12')
+    })
+
+    test('englische Namen ebenso', () => {
+        expect(compactLapLabel('Lap 2')).toBe('L2')
+    })
+
+    test('ohne Leerzeichen zwischen Wort und Zahl', () => {
+        expect(compactLapLabel('Runde2')).toBe('R2')
+    })
+
+    // Eine Marke wie „500m" beginnt mit einer Zahl und passt nicht ins Muster —
+    // sie bleibt stehen, bevor eine zu forsche Kürzung den Sinn kostet.
+    test('freie Namen bleiben unverändert', () => {
+        expect(compactLapLabel('500m')).toBe('500m')
+        expect(compactLapLabel('Boje Ost')).toBe('Boje Ost')
+    })
+
+    test('kleingeschriebene Namen liefern ein grosses Kürzel', () => {
+        expect(compactLapLabel('runde 3')).toBe('R3')
     })
 })
 
