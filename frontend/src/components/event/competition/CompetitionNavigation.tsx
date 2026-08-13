@@ -62,10 +62,23 @@ const storedNavShortNames = (): boolean =>
  */
 const LIST_WIDTH = 240
 /**
+ * Die Schubladen-Breite in der Kurzform: „11 CF 4x+" braucht keine 240px — die bisherige
+ * Breite ist seit dem 13.08.2026 das Maximum der Langform (Nutzer-Feedback: viel Leerraum
+ * neben den Kürzeln).
+ */
+const LIST_WIDTH_SHORT = 190
+/**
  * Die mitwachsende Breite der Leiste: ein Fünftel des Fensters, gedeckelt - die Inhalte rechts
  * behalten Vorfahrt, aber „Zeitfahren – Z…" bei freiem Platz daneben muss nicht sein.
  */
 const RAIL_WIDTH_SX = {width: 'clamp(240px, 20vw, 380px)'}
+/**
+ * Die Kurzform kommt mit deutlich weniger aus (rund zwei Drittel der Langform): Rennnummer plus
+ * Kürzel füllen keine 20vw, und der gewonnene Platz gehört dem Inhalt rechts. Einträge ohne
+ * gepflegtes Kürzel zeigen weiterhin den langen Namen — der läuft wie bisher in die
+ * Ellipse (noWrap), es clippt also nichts. Die Langform behält die bisherige Breite als Maximum.
+ */
+const RAIL_WIDTH_SHORT_SX = {width: 'clamp(190px, 13vw, 260px)'}
 /** Abstand der mitlaufenden Leiste zum Fensterrand, in Pixeln. */
 const STICKY_TOP = 16
 
@@ -386,7 +399,10 @@ const CompetitionNavigation = ({
                         ref={railRef}
                         variant={'outlined'}
                         sx={{
-                            ...RAIL_WIDTH_SX,
+                            // Die Breite folgt der Kurzform-Wahl (kein eigener Schalter):
+                            // Kürzel brauchen die volle Leiste nicht.
+                            ...(shortNames ? RAIL_WIDTH_SHORT_SX : RAIL_WIDTH_SX),
+                            transition: 'width 0.2s ease',
                             flex: 'none',
                             position: 'sticky',
                             top: `${STICKY_TOP}px`,
@@ -408,7 +424,9 @@ const CompetitionNavigation = ({
                     sx={{
                         '& .MuiDrawer-paper': {
                             boxSizing: 'border-box',
-                            width: LIST_WIDTH,
+                            // Auch die Schublade folgt der Kurzform-Wahl.
+                            width: shortNames ? LIST_WIDTH_SHORT : LIST_WIDTH,
+                            transition: 'width 0.2s ease',
                             display: 'flex',
                             flexDirection: 'column',
                         },
