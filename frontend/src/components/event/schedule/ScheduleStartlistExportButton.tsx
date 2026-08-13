@@ -25,10 +25,11 @@ import {format} from 'date-fns'
 import {
     downloadEventStartlists,
     getEventTimingConfig,
+    getExportBundle,
     getRaceClockerRaces,
     previewEventStartlists,
 } from '@api/sdk.gen.ts'
-import {EventStartlistFileType, EventStartlistPreviewMatchDto} from '@api/types.gen.ts'
+import {EventStartlistPreviewMatchDto} from '@api/types.gen.ts'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getFilename} from '@utils/helpers.ts'
 import LoadingButton from '@components/form/LoadingButton.tsx'
@@ -39,6 +40,12 @@ import {
     toggleAll,
     toggleMatch,
 } from './startlistPreviewSelection.ts'
+import {
+    excludedItemsParam,
+    initialBundleSelection,
+    isPdfName,
+    toggleBundleItem,
+} from '@components/event/document/exportBundle.ts'
 
 type Props = {
     eventId: string
@@ -96,15 +103,28 @@ const matchLabel = (match: NoStartTimeMatch): string =>
  * geplante Startzeit gesondert und nicht anwählbar - sie würden den Export blockieren. Der
  * Voll-Export bleibt bewusst ohne Vorschau: sein Inhalt ist vorhersagbar (je Wettkampf die erste
  * Runde).
+ *
+ * Oberste Verzweigung ist seit der Regatta-Mappe (12.08.2026) PDF gegen CSV/ZIP: CSV/ZIP ist der
+ * Import ins Zeitnahme-System (Aufteilung wie gehabt wählbar), PDF der Aushang bzw. die Mappe -
+ * dort kommen „Amtspapier mitdrucken" und das Anhängen der Mappen-Dokumente dazu (je Eintrag
+ * abwählbar, auch der Startlisten-Platzhalter). Freilose, Rennen-Filter und Delta gelten in
+ * beiden Zweigen - sie bestimmen den generierten Startlisten-Teil.
  */
 const ScheduleStartlistExportButton = ({eventId}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
     const [open, setOpen] = useState(false)
-    const [fileType, setFileType] = useState<EventStartlistFileType>('ZIP')
+    // Die oberste Verzweigung (PDF | CSV/ZIP) und die Aufteilung des Datenzweigs getrennt: so
+    // überlebt die ZIP/CSV-Wahl einen Ausflug in den PDF-Zweig.
+    const [pdfMode, setPdfMode] = useState(false)
+    const [dataFileType, setDataFileType] = useState<'ZIP' | 'CSV'>('ZIP')
     const [skipByes, setSkipByes] = useState(true)
     const [onlyMissing, setOnlyMissing] = useState(false)
+    // PDF-Zweig: Amtspapier (Vorlagen-Design) mitdrucken und Mappen-Dokumente anhängen.
+    const [withBackground, setWithBackground] = useState(true)
+    const [attachBundle, setAttachBundle] = useState(false)
+    const [bundleSelected, setBundleSelected] = useState<Set<string>>(new Set())
     // ALL_RACES = alle Rennen, sonst die Id des gewählten RaceClocker-Rennens (Import Rennen für
     // Rennen). Ein benannter Platzhalter statt '' - bei leerem Wert hielte MUI das Select für
     // leer und ließe das Label über der Anzeige „Alle" stehen.
@@ -117,13 +137,15 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
+    const fileType = pdfMode ? 'PDF' : dataFileType
+
     // Nur für die Vorauswahl - der Dialog funktioniert auch, solange die Antwort noch aussteht.
     const {data: timingConfig} = useFetch(
         signal => getEventTimingConfig({signal, path: {eventId}}),
         {
             onResponse: ({data}) => {
                 if (data?.timingSystem === 'RACECLOCKER') {
-                    setFileType('CSV')
+                    setDataFileType('CSV')
                 }
             },
             deps: [eventId],
@@ -131,6 +153,21 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
     )
     const isRaceClocker = timingConfig?.timingSystem === 'RACECLOCKER'
     const previewActive = isRaceClocker && onlyMissing
+
+    // Die Mappe des PDF-Zweigs - schon beim Öffnen des Zweigs geholt (nicht erst beim Anhaken),
+    // damit die Checkbox-Liste sofort dasteht. Jede Antwort wählt alles vor.
+    const {data: bundleItems} = useFetch(
+        signal => getExportBundle({signal, path: {eventId}}),
+        {
+            preCondition: () => open && pdfMode,
+            onResponse: ({data}) => {
+                if (data) {
+                    setBundleSelected(initialBundleSelection(data))
+                }
+            },
+            deps: [eventId, open, pdfMode],
+        },
+    )
 
     // Die konfigurierten Rennen der Veranstaltung - Optionen des Rennen-Filters. Nur bei
     // Zeitnahme über RaceClocker geholt, anderswo gibt es weder Rennen noch das Select dazu.
@@ -188,6 +225,14 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                 // mitschicken kann die Auswahl also nur verkleinern, nie erweitern.
                 matchIds:
                     previewActive && preview ? matchIdsParam(selected, preview) : undefined,
+                // PDF-Zweig: Amtspapier und Mappe. Serverseitig zählt die ABWAHL der
+                // Mappen-Einträge - neu hinzugekommene Dokumente fallen so nie still heraus.
+                withBackground: pdfMode ? withBackground : undefined,
+                includeBundleDocuments: pdfMode && attachBundle ? true : undefined,
+                excludedBundleItems:
+                    pdfMode && attachBundle && bundleItems
+                        ? excludedItemsParam(bundleItems, bundleSelected)
+                        : undefined,
             },
         })
         setDownloading(false)
@@ -235,35 +280,136 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                 <DialogTitle>{t('event.schedule.startlistExport.title')}</DialogTitle>
                 <DialogContent>
                     <Stack spacing={2} sx={{mt: 1}}>
+                        {/* Oberste Verzweigung: PDF (Aushang/Mappe) gegen CSV/ZIP (Import ins
+                            Zeitnahme-System). PDF immer nur von Hand - die Vorauswahl folgt
+                            weiterhin dem Zeitnahmesystem (Webscorer → ZIP, RaceClocker → CSV). */}
                         <FormControl>
-                            <FormLabel id={'startlist-export-format-label'}>
-                                {t('event.schedule.startlistExport.format.label')}
+                            <FormLabel id={'startlist-export-kind-label'}>
+                                {t('event.schedule.startlistExport.kind.label')}
                             </FormLabel>
                             <RadioGroup
-                                aria-labelledby={'startlist-export-format-label'}
-                                value={fileType}
-                                onChange={(_, value) =>
-                                    setFileType(value as EventStartlistFileType)
-                                }>
+                                aria-labelledby={'startlist-export-kind-label'}
+                                value={pdfMode ? 'PDF' : 'DATA'}
+                                onChange={(_, value) => setPdfMode(value === 'PDF')}>
                                 <FormControlLabel
-                                    value={'ZIP'}
+                                    value={'DATA'}
                                     control={<Radio />}
-                                    label={t('event.schedule.startlistExport.format.zip')}
+                                    label={t('event.schedule.startlistExport.kind.data')}
                                 />
-                                <FormControlLabel
-                                    value={'CSV'}
-                                    control={<Radio />}
-                                    label={t('event.schedule.startlistExport.format.csv')}
-                                />
-                                {/* Immer nur von Hand wählbar - die Vorauswahl folgt weiterhin
-                                    dem Zeitnahmesystem (Webscorer → ZIP, RaceClocker → CSV). */}
                                 <FormControlLabel
                                     value={'PDF'}
                                     control={<Radio />}
-                                    label={t('event.schedule.startlistExport.format.pdf')}
+                                    label={t('event.schedule.startlistExport.kind.pdf')}
                                 />
                             </RadioGroup>
                         </FormControl>
+                        {!pdfMode && (
+                            <FormControl>
+                                <FormLabel id={'startlist-export-format-label'}>
+                                    {t('event.schedule.startlistExport.format.label')}
+                                </FormLabel>
+                                <RadioGroup
+                                    aria-labelledby={'startlist-export-format-label'}
+                                    value={dataFileType}
+                                    onChange={(_, value) =>
+                                        setDataFileType(value as 'ZIP' | 'CSV')
+                                    }>
+                                    <FormControlLabel
+                                        value={'ZIP'}
+                                        control={<Radio />}
+                                        label={t('event.schedule.startlistExport.format.zip')}
+                                    />
+                                    <FormControlLabel
+                                        value={'CSV'}
+                                        control={<Radio />}
+                                        label={t('event.schedule.startlistExport.format.csv')}
+                                    />
+                                </RadioGroup>
+                            </FormControl>
+                        )}
+                        {pdfMode && (
+                            <FormControl>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={withBackground}
+                                            onChange={(_, checked) => setWithBackground(checked)}
+                                        />
+                                    }
+                                    label={t('event.schedule.startlistExport.background.label')}
+                                />
+                                <FormHelperText>
+                                    {t('event.schedule.startlistExport.background.hint')}
+                                </FormHelperText>
+                            </FormControl>
+                        )}
+                        {pdfMode && (
+                            <FormControl>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={attachBundle}
+                                            onChange={(_, checked) => setAttachBundle(checked)}
+                                        />
+                                    }
+                                    label={t('event.schedule.startlistExport.bundle.label')}
+                                />
+                                <FormHelperText>
+                                    {t('event.schedule.startlistExport.bundle.hint')}
+                                </FormHelperText>
+                                {attachBundle && (
+                                    <Stack sx={{pl: 1}}>
+                                        {(bundleItems ?? []).map(item => {
+                                            const isPlaceholder =
+                                                item.kind === 'GENERATED_STARTLISTS'
+                                            // Ein Nicht-PDF in der Mappe (die Auswahl bietet nur
+                                            // .pdf an, Altbestand kann abweichen) überspringt der
+                                            // Server tolerant - der Hinweis macht das VOR dem
+                                            // Download sichtbar.
+                                            const skipped =
+                                                !isPlaceholder &&
+                                                !isPdfName(item.documentName ?? '')
+                                            return (
+                                                <FormControlLabel
+                                                    key={item.id}
+                                                    control={
+                                                        <Checkbox
+                                                            size={'small'}
+                                                            checked={bundleSelected.has(item.id)}
+                                                            onChange={() =>
+                                                                setBundleSelected(
+                                                                    toggleBundleItem(
+                                                                        bundleSelected,
+                                                                        item.id,
+                                                                    ),
+                                                                )
+                                                            }
+                                                        />
+                                                    }
+                                                    label={
+                                                        <Typography
+                                                            variant={'body2'}
+                                                            fontStyle={
+                                                                isPlaceholder
+                                                                    ? 'italic'
+                                                                    : undefined
+                                                            }>
+                                                            {isPlaceholder
+                                                                ? t(
+                                                                      'event.document.exportBundle.startlistsPlaceholder',
+                                                                  )
+                                                                : (item.documentName ?? '')}
+                                                            {skipped &&
+                                                                ` – ${t('event.schedule.startlistExport.bundle.skippedNonPdf')}`}
+                                                        </Typography>
+                                                    }
+                                                />
+                                            )
+                                        })}
+                                    </Stack>
+                                )}
+                            </FormControl>
+                        )}
                         <FormControl>
                             <FormControlLabel
                                 control={
@@ -456,10 +602,13 @@ const ScheduleStartlistExportButton = ({eventId}: Props) => {
                         pending={downloading}
                         variant={'contained'}
                         // Solange die Vorschau lädt, wüsste der Export nicht, was abgewählt ist;
-                        // mit leerer Auswahl gäbe es nichts zu exportieren.
+                        // mit leerer Auswahl gäbe es nichts zu exportieren - dasselbe gilt für
+                        // eine Mappe, in der ALLES abgewählt ist.
                         disabled={
-                            previewActive &&
-                            (previewPending || (preview !== null && selected.size === 0))
+                            (previewActive &&
+                                (previewPending ||
+                                    (preview !== null && selected.size === 0))) ||
+                            (pdfMode && attachBundle && bundleSelected.size === 0)
                         }
                         onClick={handleDownload}>
                         {t('event.schedule.startlistExport.download')}

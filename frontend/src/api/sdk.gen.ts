@@ -282,6 +282,18 @@ import type {
     DeleteDocumentData,
     DeleteDocumentError,
     DeleteDocumentResponse,
+    GetExportBundleData,
+    GetExportBundleError,
+    GetExportBundleResponse,
+    AddExportBundleDocumentData,
+    AddExportBundleDocumentError,
+    AddExportBundleDocumentResponse,
+    ReorderExportBundleData,
+    ReorderExportBundleError,
+    ReorderExportBundleResponse,
+    RemoveExportBundleItemData,
+    RemoveExportBundleItemError,
+    RemoveExportBundleItemResponse,
     GetParticipantTrackingsData,
     GetParticipantTrackingsError,
     GetParticipantTrackingsResponse,
@@ -2149,6 +2161,70 @@ export const deleteDocument = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDocument/{eventDocumentId}',
+    })
+}
+
+/**
+ * The event's export bundle in order: uploaded event documents plus exactly one placeholder for the generated start lists. The placeholder is created lazily on first access (default position: last), so every event has one. The PDF bulk start list export concatenates the entries in this order.
+ */
+export const getExportBundle = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetExportBundleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetExportBundleResponse,
+        GetExportBundleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle',
+    })
+}
+
+/**
+ * Adds an event document to the end of the export bundle. Fails with 409 (EXPORT_BUNDLE_DUPLICATE_DOCUMENT) if the document is already part of the bundle, and with 404 if the document does not belong to this event.
+ */
+export const addExportBundleDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddExportBundleDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddExportBundleDocumentResponse,
+        AddExportBundleDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle',
+    })
+}
+
+/**
+ * Writes the complete new order of the bundle. The submitted ids must contain exactly the current bundle items (each exactly once) - otherwise the request fails with 409 (EXPORT_BUNDLE_ORDER_MISMATCH), typically a second browser tab with a stale state.
+ */
+export const reorderExportBundle = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ReorderExportBundleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ReorderExportBundleResponse,
+        ReorderExportBundleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle/order',
+    })
+}
+
+/**
+ * Removes a document entry from the bundle. The generated-startlists placeholder cannot be removed (400, EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE) - it can only be reordered, and deselected per export in the export dialog.
+ */
+export const removeExportBundleItem = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RemoveExportBundleItemData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RemoveExportBundleItemResponse,
+        RemoveExportBundleItemError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/exportBundle/{itemId}',
     })
 }
 

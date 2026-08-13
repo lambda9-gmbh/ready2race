@@ -1460,6 +1460,17 @@
       },
       "error": {
         "emptyList": "Please add one or more documents"
+      },
+      "exportBundle": {
+        "title": "Export bundle",
+        "hint": "The order of the regatta bundle: the PDF start list export on the schedule tab can concatenate these documents and the collected start lists into one file in exactly this order.",
+        "startlistsPlaceholder": "Collected start lists",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "addDocument": "Add document",
+        "add": "Add",
+        "noAddableDocuments": "No further PDF documents available",
+        "onlyPdfHint": "Only PDF files are offered – the bundle cannot include other formats."
       }
     },
     "registration": {
@@ -1829,11 +1840,24 @@
       "startlistExport": {
         "button": "Start lists",
         "title": "Export start lists",
+        "kind": {
+          "label": "Export type",
+          "data": "CSV/ZIP – import into the timing system",
+          "pdf": "PDF – notice board or regatta bundle"
+        },
         "format": {
-          "label": "Format",
+          "label": "Split",
           "zip": "ZIP – one CSV per competition",
-          "csv": "One big CSV – sorted by start time",
-          "pdf": "PDF – start lists as notice board / registration report"
+          "csv": "One big CSV – sorted by start time"
+        },
+        "background": {
+          "label": "Print official paper",
+          "hint": "Prints the start list template's design as background. Turn off for printing on pre-printed paper – page format and margins stay the same. Attached bundle documents are not affected."
+        },
+        "bundle": {
+          "label": "Attach bundle documents",
+          "hint": "Assembles the event's export bundle – documents and collected start lists in the order configured under settings, each deselectable.",
+          "skippedNonPdf": "not a PDF, will be skipped"
         },
         "skipByes": {
           "label": "Skip byes",

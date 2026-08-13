@@ -399,8 +399,17 @@ fun document(
     return pdf
 }
 
+/**
+ * Baut das Dokument im Seitenformat (und mit dem Seitenrand) der Vorlage.
+ *
+ * @param withBackground legt die Vorlagenseite als Layer unter jede Seite - derselbe Schalter wie
+ * bei [gapDocuments]: Für den Druck auf vorgedrucktes „Amtspapier" bleibt er aus, sonst läge das
+ * Design doppelt auf dem Blatt. Format und Rand der Vorlage gelten in BEIDEN Fällen - nur so
+ * passt der Ausdruck ohne Hintergrund deckungsgleich auf das vorgedruckte Papier.
+ */
 fun document(
     pageTemplate: PageTemplate?,
+    withBackground: Boolean = true,
     builder: DocumentBuilder.() -> Unit,
 ): PDDocument {
 
@@ -412,6 +421,12 @@ fun document(
     val templatePage = templateDoc.getPage(0)
     val format = templatePage.mediaBox
     val doc = document(format, pageTemplate.pagepadding, builder)
+
+    if (!withBackground) {
+        // Geometrie der Vorlage, aber ohne ihr Design: das Dokument ist schon fertig.
+        templateDoc.close()
+        return doc
+    }
 
     val pages = doc.pages
 

@@ -17,6 +17,21 @@ import java.util.UUID
 enum class EventStartlistFileType { ZIP, CSV, PDF }
 
 /**
+ * Ein Teil der PDF-Regatta-Mappe, in Mappen-Reihenfolge: entweder ein hochgeladenes
+ * Veranstaltungs-Dokument (unverändert übernommene Bytes) oder die an dieser Stelle generierten
+ * Startlisten. Aufgelöst wird die Mappe im Aufrufer (downloadEventStartlists) - der Bau
+ * ([CompetitionExecutionService.buildEventStartlists]) bekommt fertige Bytes und bleibt damit
+ * gegen Fixtures prüfbar, dasselbe Muster wie bei den RaceClocker-Feeds.
+ */
+sealed interface StartlistBundlePart {
+    /** Ein Dokument aus dem Dokumentenspeicher; [name] nur für Log und Fehlersuche. */
+    data class Document(val name: String, val bytes: ByteArray) : StartlistBundlePart
+
+    /** Die Platzhalter-Position: hier stehen die generierten Startlisten. */
+    data object GeneratedStartlists : StartlistBundlePart
+}
+
+/**
  * Ein Lauf des Sammelexports, so weit Delta-Abgleich, Sortierung, Dateiname und Vorschau ihn
  * brauchen.
  */

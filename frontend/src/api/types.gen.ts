@@ -14,6 +14,10 @@ export type ActionColors = {
     info: string
 }
 
+export type AddEventExportBundleItemRequest = {
+    document: string
+}
+
 /**
  * Only the target slot: start slot and delta are derived from the cancelled slot by the server.
  */
@@ -1514,6 +1518,9 @@ export type ErrorCode =
     | 'DEREGISTRATION_RESULTS_ALREADY_EXIST'
     | 'DEREGISTRATION_NOT_IN_CURRENT_ROUND'
     | 'DEREGISTRATION_REGISTRATION_STILL_OPEN'
+    | 'EXPORT_BUNDLE_DUPLICATE_DOCUMENT'
+    | 'EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE'
+    | 'EXPORT_BUNDLE_ORDER_MISMATCH'
 
 export type EventDayDto = {
     id: string
@@ -1601,6 +1608,25 @@ export type EventDto = {
     executionAutoRefreshSeconds: number
     challengesFinished?: boolean
     notice?: EventNoticeDto
+}
+
+export type EventExportBundleItemDto = {
+    id: string
+    kind: EventExportBundleItemKind
+    /**
+     * Only set for kind DOCUMENT - the event document's id.
+     */
+    document?: string | null
+    /**
+     * Only set for kind DOCUMENT - the document's file name, for display.
+     */
+    documentName?: string | null
+}
+
+export type EventExportBundleItemKind = 'DOCUMENT' | 'GENERATED_STARTLISTS'
+
+export type EventExportBundleOrderRequest = {
+    itemIds: Array<string>
 }
 
 export type EventForExportDto = {
@@ -5387,6 +5413,49 @@ export type DeleteDocumentResponse = void
 
 export type DeleteDocumentError = BadRequestError | ApiError
 
+export type GetExportBundleData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetExportBundleResponse = Array<EventExportBundleItemDto>
+
+export type GetExportBundleError = BadRequestError | ApiError
+
+export type AddExportBundleDocumentData = {
+    body: AddEventExportBundleItemRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type AddExportBundleDocumentResponse = string
+
+export type AddExportBundleDocumentError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ReorderExportBundleData = {
+    body: EventExportBundleOrderRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type ReorderExportBundleResponse = void
+
+export type ReorderExportBundleError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type RemoveExportBundleItemData = {
+    path: {
+        eventId: string
+        itemId: string
+    }
+}
+
+export type RemoveExportBundleItemResponse = void
+
+export type RemoveExportBundleItemError = BadRequestError | ApiError
+
 export type GetParticipantTrackingsData = {
     path: {
         eventId: string
@@ -7633,7 +7702,15 @@ export type DownloadEventStartlistsData = {
         eventId: string
     }
     query: {
+        /**
+         * Deselected bundle entries (event_export_bundle_item ids, repeatable parameter) - also the generated-startlists placeholder can be deselected. Foreign ids match nothing and are ignored. Only meaningful with includeBundleDocuments=true.
+         */
+        excludedBundleItems?: Array<string>
         fileType: EventStartlistFileType
+        /**
+         * PDF only: assemble the event's export bundle (default false) - the bundle documents and the generated start lists in bundle order instead of the start lists alone. Non-PDF documents in the bundle are skipped tolerantly.
+         */
+        includeBundleDocuments?: boolean
         /**
          * Restrict the export to these setup match ids (repeatable parameter) - the deselection made in the export preview. Safety rule: this only ever INTERSECTS the plan - ids the plan does not yield (foreign competitions, other events, matches excluded by the bye or race filter) are silently ignored, so the parameter can only narrow the export, never widen it. Omitted means everything the plan yields.
          */
@@ -7650,6 +7727,10 @@ export type DownloadEventStartlistsData = {
          * Skip bye matches (default true). Matches flagged as 'bye must race' (competition_match.bye_must_race) are ALWAYS exported, overriding this flag - they are raced and need their wave in the timing tooling.
          */
         skipByes?: boolean
+        /**
+         * PDF only: print the assigned start list template's design as background (default true). false omits the design for printing on pre-printed 'official paper' - page format and padding of the template still apply. Bundle documents are never touched by this flag, they are always taken over unchanged.
+         */
+        withBackground?: boolean
     }
 }
 

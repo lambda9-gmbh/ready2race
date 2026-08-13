@@ -37,16 +37,37 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACECLOCKER_RACE
 import de.lambda9.ready2race.backend.database.generated.tables.references.STARTLIST_EXPORT_CONFIG
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.app.eventExportBundle.boundary.EventExportBundleService
+import de.lambda9.ready2race.backend.app.eventExportBundle.control.EventExportBundleItemRepo
+import de.lambda9.ready2race.backend.app.eventExportBundle.entity.AddEventExportBundleItemRequest
+import de.lambda9.ready2race.backend.app.eventExportBundle.entity.EventExportBundleItemDto
+import de.lambda9.ready2race.backend.app.eventExportBundle.entity.EventExportBundleItemKind
+import de.lambda9.ready2race.backend.app.eventExportBundle.entity.EventExportBundleOrderRequest
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDataRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventExportBundleItemRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_DATA
+import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.testing.kio.TestComprehensionScope
 import de.lambda9.ready2race.testing.testComprehension
 import org.apache.pdfbox.Loader
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.PDPage
+import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.common.PDRectangle
+import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import org.apache.pdfbox.text.PDFTextStripper
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.zip.ZipInputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -823,5 +844,256 @@ class EventStartlistBulkExportTest {
         )
         val restored = (!CompetitionMatchTeamRepo.getByMatch(matchId)).single()
         assertEquals(1, restored.place)
+    }
+
+    // ---- Regatta-Mappe: Zusammenbau des PDF-Exports aus Dokumenten und Startlisten ----
+
+    /** Einseitige PDF mit einem erkennbaren Text - ein Mappen-Dokument bzw. eine Vorlage. */
+    private fun pdfBytes(marker: String, format: PDRectangle = PDRectangle.A4): ByteArray {
+        val doc = PDDocument()
+        val page = PDPage(format)
+        doc.addPage(page)
+        val content = PDPageContentStream(doc, page)
+        content.beginText()
+        content.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA), 12f)
+        content.newLineAtOffset(50f, 50f)
+        content.showText(marker)
+        content.endText()
+        content.close()
+
+        val out = ByteArrayOutputStream()
+        doc.save(out)
+        doc.close()
+        return out.toByteArray()
+    }
+
+    private fun TestComprehensionScope<JEnv>.insertDocument(
+        eventId: UUID,
+        name: String,
+        bytes: ByteArray,
+    ): UUID {
+        val documentId = UUID.randomUUID()
+        !EVENT_DOCUMENT.insert(
+            EventDocumentRecord(
+                id = documentId,
+                event = eventId,
+                name = name,
+                createdAt = now,
+                updatedAt = now,
+            )
+        )
+        !EVENT_DOCUMENT_DATA.insert(EventDocumentDataRecord(eventDocument = documentId, data = bytes))
+        return documentId
+    }
+
+    private fun TestComprehensionScope<JEnv>.bundleItems(eventId: UUID): List<EventExportBundleItemDto> {
+        val response = !EventExportBundleService.getBundle(eventId)
+        @Suppress("UNCHECKED_CAST")
+        return (response as ApiResponse.ListDto<EventExportBundleItemDto>).data
+    }
+
+    /**
+     * Die Regatta-Mappe (Wunsch 12.08.2026, Vorbild das handgebaute Vorjahres-PDF): Dokument A,
+     * an der Platzhalter-Position die generierten Startlisten, Dokument B - der Zusammenbau folgt
+     * exakt der an der Veranstaltung gepflegten Reihenfolge, belegt per Textextraktion je Seite.
+     */
+    @Test
+    fun bundleMergesDocumentsAndStartlistsInBundleOrder() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        insertCompetition(eventId, "1", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(0))
+
+        val docA = insertDocument(eventId, "Hinweise.pdf", pdfBytes("DOKUMENT ALPHA"))
+        val docB = insertDocument(eventId, "Regelwerk.pdf", pdfBytes("DOKUMENT BRAVO"))
+        !EventExportBundleService.addDocument(eventId, AddEventExportBundleItemRequest(docA), SYSTEM_USER)
+        !EventExportBundleService.addDocument(eventId, AddEventExportBundleItemRequest(docB), SYSTEM_USER)
+
+        // Gepflegte Reihenfolge: A, Startlisten, B (der Platzhalter entstand ganz vorn).
+        val items = bundleItems(eventId)
+        val placeholder = items.single { it.kind == EventExportBundleItemKind.GENERATED_STARTLISTS }
+        val itemA = items.single { it.document == docA }
+        val itemB = items.single { it.document == docB }
+        !EventExportBundleService.reorder(
+            eventId,
+            EventExportBundleOrderRequest(listOf(itemA.id, placeholder.id, itemB.id)),
+            SYSTEM_USER,
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+        val parts = !CompetitionExecutionService.resolveBundleParts(eventId, emptySet())
+        val file = !CompetitionExecutionService.buildEventStartlists(
+            plan, EventStartlistFileType.PDF, bundleParts = parts,
+        )
+
+        val pages = pdfPageTexts((file as ApiResponse.File).bytes)
+        assertEquals(3, pages.size)
+        assertTrue(pages[0].contains("DOKUMENT ALPHA"), pages[0])
+        assertTrue(pages[1].contains("10:00:00") && pages[1].contains("Wettkampf 1"), pages[1])
+        assertTrue(pages[2].contains("DOKUMENT BRAVO"), pages[2])
+        assertTrue(file.name.startsWith("exportBundle-") && file.name.endsWith(".pdf"), file.name)
+    }
+
+    /**
+     * Die Abwahl einzelner Mappen-Einträge: ein abgewähltes Dokument fehlt, und ein abgewählter
+     * Startlisten-Platzhalter lässt sogar den Startzeit-Wächter los - wo keine Startliste
+     * gerendert wird, darf auch keine fehlende Startzeit blockieren.
+     */
+    @Test
+    fun bundleDeselectionDropsEntriesIncludingTheStartlistsPlaceholder() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        // Ein Lauf OHNE Startzeit: Mit Startlisten im Bündel blockiert er, ohne nicht.
+        insertCompetition(eventId, "1", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(null))
+
+        val docA = insertDocument(eventId, "Hinweise.pdf", pdfBytes("DOKUMENT ALPHA"))
+        val docB = insertDocument(eventId, "Regelwerk.pdf", pdfBytes("DOKUMENT BRAVO"))
+        !EventExportBundleService.addDocument(eventId, AddEventExportBundleItemRequest(docA), SYSTEM_USER)
+        !EventExportBundleService.addDocument(eventId, AddEventExportBundleItemRequest(docB), SYSTEM_USER)
+
+        val items = bundleItems(eventId)
+        val placeholder = items.single { it.kind == EventExportBundleItemKind.GENERATED_STARTLISTS }
+        val itemB = items.single { it.document == docB }
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+
+        // Startlisten im Bündel: der Lauf ohne Startzeit blockiert wie ohne Mappe.
+        val withStartlists = !CompetitionExecutionService.resolveBundleParts(eventId, setOf(itemB.id))
+        assertKIOFails {
+            CompetitionExecutionService.buildEventStartlists(
+                plan, EventStartlistFileType.PDF, bundleParts = withStartlists,
+            )
+        }
+
+        // Platzhalter abgewählt: nur die Dokumente, kein Wächter - Dokument B bleibt abgewählt.
+        val withoutStartlists = !CompetitionExecutionService.resolveBundleParts(
+            eventId,
+            setOf(placeholder.id, itemB.id),
+        )
+        val file = !CompetitionExecutionService.buildEventStartlists(
+            plan, EventStartlistFileType.PDF, bundleParts = withoutStartlists,
+        )
+        val pages = pdfPageTexts((file as ApiResponse.File).bytes)
+        assertEquals(1, pages.size)
+        assertTrue(pages[0].contains("DOKUMENT ALPHA"), pages[0])
+    }
+
+    /**
+     * "Amtspapier mitdrucken": Mit withBackground trägt jede Startlisten-Seite das
+     * Vorlagen-Design, ohne nicht - Format und Inhalt bleiben gleich (Druck auf vorgedrucktes
+     * Papier). Mappen-Dokumente sind vom Schalter nie betroffen.
+     */
+    @Test
+    fun officialPaperToggleControlsTheTemplateLayerOfGeneratedStartlistsOnly() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        insertCompetition(eventId, "1", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(0))
+
+        val docA = insertDocument(eventId, "Hinweise.pdf", pdfBytes("DOKUMENT ALPHA"))
+        !EventExportBundleService.addDocument(eventId, AddEventExportBundleItemRequest(docA), SYSTEM_USER)
+
+        // A5 quer statt A4: belegt zusätzlich, dass das Vorlagen-FORMAT auch ohne Hintergrund gilt.
+        val landscapeA5 = PDRectangle(PDRectangle.A5.height, PDRectangle.A5.width)
+        val template = PageTemplate(
+            bytes = pdfBytes("AMTSPAPIER", landscapeA5),
+            pagepadding = Padding.defaultPagePadding,
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+        val parts = !CompetitionExecutionService.resolveBundleParts(eventId, emptySet())
+
+        val with = !CompetitionExecutionService.buildEventStartlists(
+            plan, EventStartlistFileType.PDF,
+            startListTemplate = template, withBackground = true, bundleParts = parts,
+        )
+        val withPages = pdfPageTexts((with as ApiResponse.File).bytes)
+        assertEquals(2, withPages.size)
+        assertTrue(withPages[0].contains("AMTSPAPIER") && withPages[0].contains("10:00:00"), withPages[0])
+        // Das Mappen-Dokument bleibt unangetastet - kein Amtspapier auf Seite 2.
+        assertTrue(withPages[1].contains("DOKUMENT ALPHA") && !withPages[1].contains("AMTSPAPIER"), withPages[1])
+
+        val without = !CompetitionExecutionService.buildEventStartlists(
+            plan, EventStartlistFileType.PDF,
+            startListTemplate = template, withBackground = false, bundleParts = parts,
+        )
+        val withoutBytes = (without as ApiResponse.File).bytes
+        val withoutPages = pdfPageTexts(withoutBytes)
+        assertEquals(2, withoutPages.size)
+        assertFalse(withoutPages[0].contains("AMTSPAPIER"), withoutPages[0])
+        assertTrue(withoutPages[0].contains("10:00:00"), withoutPages[0])
+
+        // Geometrie-Zusage: Auch ohne Hintergrund hat die Startlisten-Seite das Vorlagenformat -
+        // nur so passt der Ausdruck deckungsgleich auf das vorgedruckte Papier.
+        Loader.loadPDF(withoutBytes).use { doc ->
+            val box = doc.getPage(0).mediaBox
+            assertEquals(landscapeA5.width, box.width)
+            assertEquals(landscapeA5.height, box.height)
+        }
+    }
+
+    /**
+     * Toleranz beim Zusammenbau: Ein Mappen-Eintrag, dessen Datei kein lesbares PDF ist
+     * (Altbestand - die Oberfläche bietet nur .pdf an), wird übersprungen statt den Export zu
+     * reißen; die übrigen Teile kommen vollständig.
+     */
+    @Test
+    fun nonPdfBundleDocumentsAreSkippedTolerantly() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        insertCompetition(eventId, "1", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(0))
+
+        val xlsx = insertDocument(eventId, "zeitplan.xlsx", "kein PDF".toByteArray())
+        val pdf = insertDocument(eventId, "Hinweise.pdf", pdfBytes("DOKUMENT ALPHA"))
+        !EventExportBundleService.addDocument(eventId, AddEventExportBundleItemRequest(xlsx), SYSTEM_USER)
+        !EventExportBundleService.addDocument(eventId, AddEventExportBundleItemRequest(pdf), SYSTEM_USER)
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+        val parts = !CompetitionExecutionService.resolveBundleParts(eventId, emptySet())
+        val file = !CompetitionExecutionService.buildEventStartlists(
+            plan, EventStartlistFileType.PDF, bundleParts = parts,
+        )
+
+        val pages = pdfPageTexts((file as ApiResponse.File).bytes)
+        // Startlisten (Platzhalter vorn), dann NUR das echte PDF - das xlsx fehlt kommentarlos.
+        assertEquals(2, pages.size)
+        assertTrue(pages[0].contains("10:00:00"), pages[0])
+        assertTrue(pages[1].contains("DOKUMENT ALPHA"), pages[1])
+    }
+
+    /**
+     * Eine nie geöffnete Mappe hat keinen Platzhalter-Datensatz - die Startlisten stehen dann am
+     * Default-Platz ganz hinten, ohne dass der Export etwas schreiben müsste. (Gesät wird direkt
+     * über das Repo: der Service-Weg würde den Platzhalter ja anlegen.)
+     */
+    @Test
+    fun bundleWithoutPlaceholderRecordAppendsStartlistsLast() = testComprehension {
+        val configId = insertStartlistConfig()
+        val eventId = insertEvent(configId)
+        insertCompetition(eventId, "1", matchTeamCounts = listOf(2), startOffsetsMinutes = listOf(0))
+
+        val doc = insertDocument(eventId, "Hinweise.pdf", pdfBytes("DOKUMENT ALPHA"))
+        !EventExportBundleItemRepo.create(
+            EventExportBundleItemRecord(
+                id = UUID.randomUUID(),
+                event = eventId,
+                position = 10,
+                kind = EventExportBundleItemKind.DOCUMENT.name,
+                document = doc,
+                createdAt = now,
+                createdBy = SYSTEM_USER,
+                updatedAt = now,
+                updatedBy = SYSTEM_USER,
+            )
+        )
+
+        val plan = !CompetitionExecutionService.eventStartlistPlan(eventId, allRounds = false, skipByes = true)
+        val parts = !CompetitionExecutionService.resolveBundleParts(eventId, emptySet())
+        val file = !CompetitionExecutionService.buildEventStartlists(
+            plan, EventStartlistFileType.PDF, bundleParts = parts,
+        )
+
+        val pages = pdfPageTexts((file as ApiResponse.File).bytes)
+        assertEquals(2, pages.size)
+        assertTrue(pages[0].contains("DOKUMENT ALPHA"), pages[0])
+        assertTrue(pages[1].contains("10:00:00"), pages[1])
     }
 }

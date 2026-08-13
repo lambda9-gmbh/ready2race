@@ -61,6 +61,14 @@ fun Route.eventSchedule() {
                 val matchIds = call.request.queryParameters.getAll("matchIds")
                     ?.let { raw -> !raw.traverse { uuid.param("matchIds", it, UUID::class) } }
                     ?.toSet()
+                // Nur für PDF: Amtspapier mitdrucken (Default ja - das bisherige Verhalten) und
+                // die Export-Mappe der Veranstaltung anhängen (Default nein).
+                val withBackground = !optionalQueryParam("withBackground", boolean)
+                val includeBundle = !optionalQueryParam("includeBundleDocuments", boolean)
+                // Abgewählte Mappen-Einträge - dasselbe Mehrfach-Parameter-Muster wie matchIds.
+                val excludedBundleItems = call.request.queryParameters.getAll("excludedBundleItems")
+                    ?.let { raw -> !raw.traverse { uuid.param("excludedBundleItems", it, UUID::class) } }
+                    ?.toSet()
 
                 downloadEventStartlists(
                     eventId = eventId,
@@ -69,6 +77,9 @@ fun Route.eventSchedule() {
                     onlyMissingInRaceClocker = onlyMissing ?: false,
                     raceclockerRaceId = raceclockerRaceId,
                     matchIds = matchIds,
+                    withBackground = withBackground ?: true,
+                    includeBundleDocuments = includeBundle ?: false,
+                    excludedBundleItems = excludedBundleItems,
                 )
             }
         }

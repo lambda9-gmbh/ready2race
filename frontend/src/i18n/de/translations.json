@@ -1460,6 +1460,17 @@
       },
       "error": {
         "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
+      },
+      "exportBundle": {
+        "title": "Export-Mappe",
+        "hint": "Die Reihenfolge der Regatta-Mappe: Der PDF-Startlisten-Export am Zeitplan kann diese Dokumente und die gesammelten Startlisten in genau dieser Reihenfolge zu einer Datei zusammenhängen.",
+        "startlistsPlaceholder": "Gesammelte Startlisten",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "addDocument": "Dokument hinzufügen",
+        "add": "Hinzufügen",
+        "noAddableDocuments": "Keine weiteren PDF-Dokumente vorhanden",
+        "onlyPdfHint": "Angeboten werden nur PDF-Dateien – andere Formate kann die Mappe nicht aufnehmen."
       }
     },
     "registration": {
@@ -1829,11 +1840,24 @@
       "startlistExport": {
         "button": "Startlisten",
         "title": "Startlisten exportieren",
+        "kind": {
+          "label": "Export-Art",
+          "data": "CSV/ZIP – Import ins Zeitnahme-System",
+          "pdf": "PDF – Aushang oder Regatta-Mappe"
+        },
         "format": {
-          "label": "Format",
+          "label": "Aufteilung",
           "zip": "ZIP – eine CSV je Wettkampf",
-          "csv": "Eine große CSV – nach Startzeit sortiert",
-          "pdf": "PDF – Startlisten als Aushang/Meldeergebnis"
+          "csv": "Eine große CSV – nach Startzeit sortiert"
+        },
+        "background": {
+          "label": "Amtspapier mitdrucken",
+          "hint": "Druckt das Design der Startlisten-Vorlage als Hintergrund mit. Für den Druck auf vorgedrucktem Papier abschalten – Format und Ränder bleiben gleich. Angehängte Mappen-Dokumente sind nicht betroffen."
+        },
+        "bundle": {
+          "label": "Mappen-Dokumente anhängen",
+          "hint": "Baut die Export-Mappe der Veranstaltung zusammen – Dokumente und gesammelte Startlisten in der unter Einstellungen festgelegten Reihenfolge, einzeln abwählbar.",
+          "skippedNonPdf": "kein PDF, wird übersprungen"
         },
         "skipByes": {
           "label": "Freilose überspringen",

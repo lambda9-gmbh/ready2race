@@ -2509,6 +2509,127 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/exportBundle:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getExportBundle
+      description: >-
+        The event's export bundle in order: uploaded event documents plus exactly one placeholder
+        for the generated start lists. The placeholder is created lazily on first access
+        (default position: last), so every event has one. The PDF bulk start list export
+        concatenates the entries in this order.
+      responses:
+        200:
+          description: The bundle items in bundle order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventExportBundleItemDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addExportBundleDocument
+      description: >-
+        Adds an event document to the end of the export bundle. Fails with 409
+        (EXPORT_BUNDLE_DUPLICATE_DOCUMENT) if the document is already part of the bundle, and
+        with 404 if the document does not belong to this event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEventExportBundleItemRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/exportBundle/order:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    put:
+      operationId: reorderExportBundle
+      description: >-
+        Writes the complete new order of the bundle. The submitted ids must contain exactly the
+        current bundle items (each exactly once) - otherwise the request fails with 409
+        (EXPORT_BUNDLE_ORDER_MISMATCH), typically a second browser tab with a stale state.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventExportBundleOrderRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/exportBundle/{itemId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: removeExportBundleItem
+      description: >-
+        Removes a document entry from the bundle. The generated-startlists placeholder cannot be
+        removed (400, EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE) - it can only be reordered, and
+        deselected per export in the export dialog.
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/participantTracking:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7103,6 +7224,39 @@ paths:
           items:
             type: string
             format: uuid
+      - name: withBackground
+        in: query
+        required: false
+        description: >-
+          PDF only: print the assigned start list template's design as background (default true).
+          false omits the design for printing on pre-printed 'official paper' - page format and
+          padding of the template still apply. Bundle documents are never touched by this flag,
+          they are always taken over unchanged.
+        schema:
+          type: boolean
+      - name: includeBundleDocuments
+        in: query
+        required: false
+        description: >-
+          PDF only: assemble the event's export bundle (default false) - the bundle documents and
+          the generated start lists in bundle order instead of the start lists alone. Non-PDF
+          documents in the bundle are skipped tolerantly.
+        schema:
+          type: boolean
+      - name: excludedBundleItems
+        in: query
+        required: false
+        style: form
+        explode: true
+        description: >-
+          Deselected bundle entries (event_export_bundle_item ids, repeatable parameter) - also
+          the generated-startlists placeholder can be deselected. Foreign ids match nothing and
+          are ignored. Only meaningful with includeBundleDocuments=true.
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
     get:
       operationId: downloadEventStartlists
       description: >-
@@ -9635,6 +9789,9 @@ components:
         - DEREGISTRATION_RESULTS_ALREADY_EXIST
         - DEREGISTRATION_NOT_IN_CURRENT_ROUND
         - DEREGISTRATION_REGISTRATION_STILL_OPEN
+        - EXPORT_BUNDLE_DUPLICATE_DOCUMENT
+        - EXPORT_BUNDLE_PLACEHOLDER_NOT_REMOVABLE
+        - EXPORT_BUNDLE_ORDER_MISMATCH
 
     Gender:
       type: string
@@ -11933,6 +12090,53 @@ components:
           format: date-time
         updatedBy:
           $ref: '#/components/schemas/AppUserNameDto'
+
+    EventExportBundleItemKind:
+      type: string
+      enum:
+        - DOCUMENT
+        - GENERATED_STARTLISTS
+
+    EventExportBundleItemDto:
+      type: object
+      required:
+        - id
+        - kind
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/EventExportBundleItemKind'
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          description: Only set for kind DOCUMENT - the event document's id.
+        documentName:
+          type: string
+          nullable: true
+          description: Only set for kind DOCUMENT - the document's file name, for display.
+
+    AddEventExportBundleItemRequest:
+      type: object
+      required:
+        - document
+      properties:
+        document:
+          type: string
+          format: uuid
+
+    EventExportBundleOrderRequest:
+      type: object
+      required:
+        - itemIds
+      properties:
+        itemIds:
+          type: array
+          items:
+            type: string
+            format: uuid
 
 
     # club

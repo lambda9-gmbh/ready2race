@@ -21,6 +21,9 @@ object EventDocumentRepo {
 
     fun create(record: EventDocumentRecord) = EVENT_DOCUMENT.insertReturning(record) { ID }
 
+    /** Der nackte Datensatz ohne Datei-Bytes - reicht der Export-Mappe für die Zugehörigkeitsprüfung. */
+    fun get(id: UUID): JIO<EventDocumentRecord?> = EVENT_DOCUMENT.selectOne { ID.eq(id) }
+
     fun update(id: UUID, f: EventDocumentRecord.() -> Unit) = EVENT_DOCUMENT.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = EVENT_DOCUMENT.delete { ID.eq(id) }
