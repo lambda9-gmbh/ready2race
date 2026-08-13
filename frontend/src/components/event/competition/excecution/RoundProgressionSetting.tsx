@@ -29,8 +29,10 @@ const choiceLabelKeys = {
 
 /**
  * Übersteuert für diesen Wettkampf, ob nach einer beendeten Runde die Paarungen der nächsten Runde
- * automatisch entstehen. Bewusst hier neben dem Knopf für die nächste Runde und nicht in einer
- * eigenen Karte: die Einstellung betrifft genau das, was daneben angestoßen wird.
+ * automatisch entstehen. Bewusst im Zahnrad-Popover neben dem Knopf für die nächste Runde: die
+ * Einstellung betrifft genau das, was daneben angestoßen wird — aber sie ist ein Ausnahmefall-
+ * Override, und als offenes Formular thronte sie über der ganzen Durchführung (Nutzer-Feedback
+ * aus dem Veranstaltungs-Modus, 12.08.2026).
  *
  * Erben (`INHERIT`) ist der Normalfall - die Veranstaltung entscheidet dann für alle ihre
  * Wettkämpfe auf einmal (siehe `EventDialog.tsx`). Das Backend liefert beim Laden bereits fertig
