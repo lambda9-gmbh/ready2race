@@ -43,7 +43,7 @@ enum class BoardLayout(val tileCount: Int, val columns: Int) {
  * einzige Kachel eines Boards gültig ([BoardRequest.validate]): sie ist für den zweiten
  * Bildschirm bzw. Browser-Tab der Sprecherin gedacht, nicht als Raster-Baustein.
  */
-enum class BoardElementType { MATCH, MATCH_DETAIL, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY, DELAY }
+enum class BoardElementType { MATCH, MATCH_DETAIL, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY, DELAY, STREAM }
 
 /** SCHEDULE = Tagesprogramm: alle Slots des Zeitplans mit Status, für Sprecherinnen und Aushänge. */
 enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }
@@ -55,6 +55,14 @@ enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }
  * Fehlt das Feld (Alt-Konfigurationen), gilt FOLLOW.
  */
 enum class BoardScheduleMode { FOLLOW, FULL }
+
+/**
+ * Inhalt der Stream-Overlay-Kachel: AUTO = laufender Lauf, sonst letztes Ergebnis (der
+ * Rückfall, mit dem der Stream fast immer eine sinnvolle Einblendung hat); die übrigen
+ * Modi zeigen genau eine Quelle und sonst nichts — für Streamer, die sich je Quelle ein
+ * eigenes Board bauen. Fehlt das Feld, gilt AUTO.
+ */
+enum class StreamOverlayMode { AUTO, RUNNING, RESULTS, UPCOMING }
 
 /**
  * Ein Element einer Kachel. Bewusst flach statt sealed: das Schema geht 1:1 durch das
@@ -93,6 +101,8 @@ data class BoardElement(
     val limit: Int? = null,
     /** Nur für [BoardListMode.SCHEDULE]: mitlaufender Ausschnitt oder ganzer Tag — siehe [BoardScheduleMode]. */
     val scheduleMode: BoardScheduleMode? = null,
+    // STREAM: was das Livestream-Overlay einblendet — siehe StreamOverlayMode.
+    val streamMode: StreamOverlayMode? = null,
     /** Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale Listen. */
     val useShortNames: Boolean? = null,
     // AWARD_CEREMONY: die Ehrung (Wettkampf + optionale Wertung), deren Podium die Kachel zeigt.
