@@ -158,13 +158,11 @@ const stateChipProps = (
 }
 
 type Props = {
-    /** Die geladene Veranstaltung — das Einstellungs-Popover schreibt seine Felder an ihr fest. */
+    /** Die geladene Veranstaltung — der Veranstaltungs-Modus liest daraus den Auto-Refresh-Takt. */
     event: EventDto
-    /** Lädt die Event-Daten der Seite neu, nachdem das Popover gespeichert hat. */
-    reloadEvent: () => void
 }
 
-const EventSchedule = ({event, reloadEvent}: Props) => {
+const EventSchedule = ({event}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const user = useUser()
@@ -638,9 +636,6 @@ const EventSchedule = ({event, reloadEvent}: Props) => {
                         </Box>
                     </Tooltip>
                     <ScheduleSettingsPopover
-                        event={event}
-                        reloadEvent={reloadEvent}
-                        canEdit={canEdit}
                         shortLabels={shortLabels}
                         toggleShortLabels={toggleShortLabels}
                         openExecutionInNewTab={openExecutionInNewTab}
