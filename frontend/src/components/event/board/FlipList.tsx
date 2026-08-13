@@ -46,21 +46,36 @@ export const sameKeySequence = (a: readonly string[], b: readonly string[]): boo
  * Ein neuer Schlüssel hat keine alte Position und startet direkt mit `enterOffset`
  * statt an seinem Ziel — er schiebt sich sichtbar herein statt einfach aufzutauchen.
  *
- * Zwei Kniffe halten das robust gegen einen Re-Render MITTEN in einer laufenden
+ * Ein Kniff hält das robust gegen einen Re-Render MITTEN in einer laufenden
  * 350-ms-Animation (z. B. der 1-Sekunden-Countdown-Ticker in UpcomingPanel, der neu
  * rendert, ohne dass sich an Reihenfolge oder Bestand der Liste etwas ändert):
  *
- * a) Vor jeder Messung wird der Knoten neutralisiert: Inline-`transition`/`transform`
- *    sichern, auf `none`/`none` setzen, `getBoundingClientRect()` lesen, Inline-Style
- *    sofort wiederherstellen. So liefert die Messung immer die WAHRE Layout-Position,
- *    unabhängig davon, ob gerade eine Animation läuft — und weil Setzen+Restore
- *    synchron vor dem nächsten Paint passiert, ist davon nichts sichtbar; eine laufende
- *    Animation läuft unbeeinflusst weiter.
- * b) Ist die gerenderte Schlüsselfolge seit dem letzten Durchgang UNVERÄNDERT
- *    (`sameKeySequence`), wird nur die Basislinie (die neu gemessene wahre Position)
- *    nachgeführt — der komplette Sprung-und-Transition-Tanz entfällt. Nur eine
- *    tatsächliche Umsortierung oder ein neuer/entfernter Schlüssel löst eine Animation
- *    aus, ein reiner Inhalts-Re-Render tut das nie.
+ * Ist die gerenderte Schlüsselfolge seit dem letzten Durchgang UNVERÄNDERT
+ * (`sameKeySequence`), ist das der heiße, häufige Pfad (jeder Tick, jede Inhalts-
+ * Aktualisierung ohne Umsortierung) — und genau da gilt die Garantie: auf dem heißen
+ * Pfad wird WEDER Stil angefasst NOCH gemessen, laufende Animationen bleiben komplett
+ * unberührt. Die zuletzt gemessene Basislinie (`lastPositions`) bleibt einfach stehen,
+ * sie ist noch die wahre Layout-Position — keiner der Verbraucher verschiebt Zeilen
+ * ohne eine echte Listenänderung. (Eine frühere Fassung maß hier per
+ * `getBoundingClientRect()` trotzdem "nur zur Basislinien-Pflege" — das erzwang pro
+ * Tick einen Reflow UND riss dabei jede noch laufende CSS-Transition ab: `transition:
+ * 'none'` + Messen springt sofort auf den Zielwert, und das Wiederherstellen des alten
+ * Inline-Werts kann eine einmal unterbrochene Transition nicht zurückholen. Deshalb
+ * jetzt: auf dem unveränderten Pfad gar nichts tun.)
+ *
+ * Nur eine tatsächliche Umsortierung oder ein neuer/entfernter Schlüssel läuft den
+ * vollen FLIP-Tanz: pro betroffenem Knoten wird VOR dem Messen neutralisiert (Inline-
+ * `transition`/`transform` sichern, auf `none`/`none` setzen, `getBoundingClientRect()`
+ * lesen, Inline-Style sofort wiederherstellen) — das liefert die wahre Layout-Position
+ * unabhängig vom bisherigen Animationszustand. Eine dadurch möglicherweise gekappte
+ * alte Transition ist hier in Ordnung: die Liste hat sich echt geändert, jeder Knoten
+ * bekommt sowieso gerade eine frische, korrekte Animation verpasst, die die alte
+ * ersetzt. Springt die Position, springt das Element per Transform SOFORT — ohne
+ * Transition — an die alte Stelle zurück; im nächsten Frame (rAF) wird die Transition
+ * wieder aktiviert und der Transform auf `none` gesetzt. Der Browser animiert diesen
+ * "Rücksprung zur Identität" als sichtbare Bewegung von alt nach neu. Ein neuer
+ * Schlüssel hat keine alte Position und startet direkt mit `enterOffset` statt an
+ * seinem Ziel — er schiebt sich sichtbar herein statt einfach aufzutauchen.
  */
 function FlipList<T>({items, keyOf, render, axis = 'y', enterOffset = 24, itemStyle}: FlipListProps<T>) {
     const nodes = useRef(new Map<string, HTMLDivElement>())
@@ -71,14 +86,20 @@ function FlipList<T>({items, keyOf, render, axis = 'y', enterOffset = 24, itemSt
         const keysNow = items.map(keyOf)
         const keysChanged = !sameKeySequence(keysNow, lastKeys.current)
 
+        if (!keysChanged) {
+            // Heißer Pfad — siehe KDoc: weder Stil anfassen noch messen, laufende
+            // Animationen bleiben unberührt. Die alte Basislinie ist weiterhin korrekt.
+            return
+        }
+
         items.forEach(item => {
             const key = keyOf(item)
             const node = nodes.current.get(key)
             if (!node) return
 
-            // Neutralisieren VOR dem Messen (siehe KDoc, Punkt a): sonst würde ein
-            // Tick-Re-Render während laufender Animation die durch den aktiven Transform
-            // verschobene Position statt der wahren Layout-Position lesen.
+            // Neutralisieren VOR dem Messen (siehe KDoc): liefert die wahre
+            // Layout-Position unabhängig vom aktuellen Animationszustand. Eine dadurch
+            // gekappte alte Transition ist hier bewusst in Kauf genommen, siehe KDoc.
             const savedTransition = node.style.transition
             const savedTransform = node.style.transform
             node.style.transition = 'none'
@@ -89,15 +110,6 @@ function FlipList<T>({items, keyOf, render, axis = 'y', enterOffset = 24, itemSt
 
             const current = axis === 'y' ? rect.top : rect.left
             const previous = lastPositions.current.get(key)
-
-            if (!keysChanged) {
-                // Punkt b: Reihenfolge unverändert — nur Basislinie nachführen, keine
-                // Animation. Eine noch laufende Transition (Eintritt oder vorheriger
-                // FLIP-Sprung) bleibt durch die Wiederherstellung oben unangetastet.
-                lastPositions.current.set(key, current)
-                return
-            }
-
             const delta = previous === undefined ? enterOffset : previous - current
 
             if (delta !== 0) {

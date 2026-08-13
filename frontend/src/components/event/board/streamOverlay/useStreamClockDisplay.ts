@@ -41,9 +41,21 @@ export interface StreamClockDisplay {
  * OHNE eigenen Start (Kette schaltet weiter, RaceClocker hat den Start noch nicht
  * bestätigt), gibt es nichts zum Ausfaden — die alte Uhr gehörte zum alten Lauf. Der
  * matchId/hasStart-Reset-Effekt unten räumt `mounted`/`visible` in diesem Fall deshalb
- * SOFORT, statt sich auf den Fade-out-Timer zu verlassen: der armt nur, wenn
- * `wasVisible.current` beim Wechsel auf `visible=false` noch `true` ist — genau das
- * verhindert der Reset aber, sonst bliebe ein opacity:0-Knoten für immer im DOM stehen.
+ * SOFORT, statt sich auf den Fade-out-Timer zu verlassen.
+ *
+ * Übergang VISIBLE(A) → VISIBLE(B) — Kette springt auf einen NEUEN Match, der SOFORT
+ * einen eigenen Start trägt: `visible` bleibt hier während des ganzen Wechsels `true`
+ * (kein Fade dazwischen, siehe fade-in-Effekt weiter unten, der bei `hasStart` erneut
+ * no-opt). Der Reset-Effekt läuft trotzdem (matchId hat sich geändert) und muss
+ * `wasVisible.current` deshalb auf den AKTUELLEN `visible`-Wert setzen — nicht blind auf
+ * `false`: die Uhr IST ja gerade sichtbar, nur eben schon für den neuen Match B. Ein
+ * blindes `false` würde die „war schon sichtbar"-Markierung löschen, während `visible`
+ * (Zustand) weiterhin `true` bleibt und der Unmount-Effekt (deps `[visible, mounted]`)
+ * durch diesen Wechsel gar nicht neu läuft, also auch nichts zum Zurücksetzen hat —
+ * `wasVisible.current` bliebe für den Rest von B's Sichtbarkeitsphase bei `false`
+ * hängen. Fadet B später aus, prüft der Unmount-Effekt `wasVisible.current` und findet
+ * `false` vor, obwohl die Uhr die ganze Zeit sichtbar war: der Timer armt nie, der
+ * Knoten bleibt für immer bei `opacity:0` im DOM.
  */
 const useStreamClockDisplay = (match: AthleteBoardMatch, clockOffsetMs: number): StreamClockDisplay => {
     const matchId = match.matchId
@@ -57,22 +69,32 @@ const useStreamClockDisplay = (match: AthleteBoardMatch, clockOffsetMs: number):
     // einem echten Fade-OUT feuern, nicht vor dem allerersten Fade-in.
     const wasVisible = useRef(false)
 
-    // Ein anderer (oder gar kein) Lauf verwirft einen alten Freeze-Wert und die
-    // "war schon sichtbar"-Markierung — der nächste echte Start fängt wieder bei einem
-    // sauberen Fade-in von null an.
+    // Ein anderer (oder gar kein) Lauf verwirft einen alten Freeze-Wert. Die
+    // "war schon sichtbar"-Markierung wird NICHT blind auf `false` geworfen, sondern auf
+    // den aktuellen `visible`-Zustand gesetzt (siehe KDoc, Übergang VISIBLE→VISIBLE):
+    // bleibt die Uhr über den Match-Wechsel hinweg durchgehend sichtbar (Kette springt
+    // auf einen Match mit sofortigem eigenem Start), muss der spätere Fade-out von B
+    // weiterhin als „echter" Fade-out erkannt werden — sonst armt der Unmount-Timer nie
+    // und ein opacity:0-Knoten bleibt für immer stehen.
     useEffect(() => {
         setFrozenElapsedMs(null)
-        wasVisible.current = false
+        wasVisible.current = visible
         if (!hasStart) {
             // Sofortiger Sprung UNMOUNTED (siehe KDoc oben) — kein Fade-out für eine Uhr,
-            // die zum neuen, startlosen Lauf nie sichtbar war. `hasStart` bewusst mit in
-            // den Deps: die frühere Fassung reagierte nur auf `matchId` und ließ
-            // `mounted`/`visible` unangetastet, wodurch der Fade-out-Timer unten nie
-            // anspringen konnte (der braucht `wasVisible.current===true`, das der Reset
-            // gerade eben auf `false` gesetzt hat) — ein opacity:0-Knoten blieb stehen.
+            // die zum neuen, startlosen Lauf nie sichtbar war. `mounted`/`visible` werden
+            // hier direkt geräumt statt über den Fade-out-Timer unten: der hängt an
+            // `wasVisible.current`, dessen korrekter Wert für DIESEN Übergang gar nicht
+            // relevant ist, weil wir gar nicht erst auf ihn warten. `hasStart` bewusst mit
+            // in den Deps: die frühere Fassung reagierte nur auf `matchId` und ließ
+            // `mounted`/`visible` unangetastet — der Timer wäre nie angesprungen, ein
+            // opacity:0-Knoten wäre für immer stehen geblieben.
             setVisible(false)
             setMounted(false)
         }
+        // `visible` bewusst NICHT in den Deps: wir wollen nur eine EINMALIGE Momentauf-
+        // nahme des aktuellen Werts beim matchId/hasStart-Wechsel, keinen Effekt, der bei
+        // jeder Sichtbarkeitsänderung erneut den Freeze-Wert verwirft.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [matchId, hasStart])
 
     const now = useTicker(CLOCK_TICK_MS, hasStart && frozenElapsedMs === null)
