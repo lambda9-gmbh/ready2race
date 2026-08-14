@@ -40,7 +40,22 @@
         "invalid": "Bitte geben Sie einen gültigen Betrag ein."
       },
       "dateTime": {
-        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
+        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt.",
+        "error": {
+          "disableFuture": "Bitte wählen Sie einen Zeitpunkt in der Vergangenheit.",
+          "disablePast": "Bitte wählen Sie einen Zeitpunkt in der Zukunft.",
+          "minDate": "Der Zeitpunkt liegt vor dem frühesten erlaubten Datum.",
+          "maxDate": "Der Zeitpunkt liegt nach dem spätesten erlaubten Datum.",
+          "minTime": "Die Uhrzeit liegt vor der frühesten erlaubten Zeit.",
+          "maxTime": "Die Uhrzeit liegt nach der spätesten erlaubten Zeit.",
+          "shouldDisableDate": "Dieses Datum ist nicht erlaubt.",
+          "shouldDisableMonth": "Dieser Monat ist nicht erlaubt.",
+          "shouldDisableYear": "Dieses Jahr ist nicht erlaubt.",
+          "shouldDisableTimeHours": "Diese Stunde ist nicht erlaubt.",
+          "shouldDisableTimeMinutes": "Diese Minute ist nicht erlaubt.",
+          "shouldDisableTimeSeconds": "Diese Sekunde ist nicht erlaubt.",
+          "minutesStep": "Diese Minute passt nicht zur erlaubten Schrittweite."
+        }
       },
       "email": {
         "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."

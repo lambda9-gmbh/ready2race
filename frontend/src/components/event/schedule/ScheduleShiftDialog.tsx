@@ -21,6 +21,7 @@ import BaseDialog from '@components/BaseDialog.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
+import {nowAsFormValue} from '@components/form/input/dateTimeValue.ts'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {shiftEventSchedule} from '@api/sdk.gen.ts'
@@ -51,7 +52,7 @@ const blankValues = (slots: EventScheduleSlotDto[]): ShiftForm => ({
     fromSlotId: defaultFromSlotId(slots) ?? '',
     mode: 'PLUS_MINUTES',
     minutes: '',
-    newTime: new Date().toLocaleString(),
+    newTime: nowAsFormValue(),
     targetSlotId: '',
 })
 

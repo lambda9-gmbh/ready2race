@@ -7,6 +7,7 @@ import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioBu
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
+import {nowAsFormValue} from '@components/form/input/dateTimeValue.ts'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {createScheduleSlot, updateScheduleSlot} from '@api/sdk.gen.ts'
 import {
@@ -49,7 +50,7 @@ const blankValues = (
     roundName: presetMatch?.roundName ?? '',
     setupMatchId: presetMatch?.setupMatchId ?? '',
     name: '',
-    startTime: new Date().toLocaleString(),
+    startTime: nowAsFormValue(),
     durationMinutes: null,
 })
 
