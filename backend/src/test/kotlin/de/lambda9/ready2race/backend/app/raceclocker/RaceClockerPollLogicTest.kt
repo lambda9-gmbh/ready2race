@@ -149,6 +149,44 @@ class RaceClockerPollLogicTest {
         assertFalse(RaceClockerPollLogic.startDetected(emptyList()))
     }
 
+    /**
+     * Der Vorfall vom 14.08.2026 (CRF): Eine Abmeldung für den Samstag stand in RaceClocker als
+     * DNS in der Welle - und weil DNS als "Ergebnis" zählte, hat der Abruf den Lauf am Freitag
+     * aktiviert UND gestartet. Er war beobachtet, weil das Vorlauf-Fenster der Veranstaltung groß
+     * eingestellt war; getroffen hat es genau die Läufe mit Abmeldung, denn nur sie hatten
+     * überhaupt eine Zeile, die durch den Filter kam.
+     *
+     * DNS ist die eine Statusangabe, die das Gegenteil eines Starts behauptet, und sie wird
+     * regelmäßig VOR dem Rennen gesetzt. Sie belegt hier deshalb nichts.
+     */
+    @Test
+    fun aDeregisteredBoatIsNotAStart() {
+        assertFalse(RaceClockerPollLogic.startDetected(listOf(row(result = "DNS"))))
+        assertFalse(RaceClockerPollLogic.startDetected(listOf(row(result = " dns "))))
+        assertFalse(
+            RaceClockerPollLogic.startDetected(listOf(row(result = "DNS"), row(result = "DNS"))),
+        )
+    }
+
+    /**
+     * Die Gegenprobe: Sobald irgendetwas im Feld wirklich gefahren ist, zählt der Lauf als
+     * gestartet - eine einzelne Abmeldung daneben ändert daran nichts.
+     */
+    @Test
+    fun aDeregistrationNextToRealRacingStillCounts() {
+        assertTrue(
+            RaceClockerPollLogic.startDetected(
+                listOf(row(result = "DNS"), row(start = LocalTime.of(10, 3))),
+            ),
+        )
+        assertTrue(
+            RaceClockerPollLogic.startDetected(listOf(row(result = "DNS"), row(result = "3:21.4"))),
+        )
+        assertTrue(
+            RaceClockerPollLogic.startDetected(listOf(row(result = "DNS"), row(result = "DNF"))),
+        )
+    }
+
     @Test
     fun aBoatOnTheWaterIsAStartWhenItsStartWasTimed() {
         assertTrue(

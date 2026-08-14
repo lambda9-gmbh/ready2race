@@ -70,9 +70,17 @@ object RaceClockerPollLogic {
      * `Not started` steht direkt nach dem Startlisten-Import in jeder Zeile, und `In race...` setzt
      * RaceClocker mit dem Start — aber dann liegt auch eine Startzeit vor, die hier zählt. Der
      * Umweg über [RaceClockerFeedRow.hasResult] hält diese Unterscheidung an genau einer Stelle.
+     *
+     * **DNS zählt ausdrücklich NICHT** ([RaceClockerFeedRow.saysDidNotStart]). Es ist der einzige
+     * Ausscheidungsgrund, der behauptet, die Mannschaft sei gar nicht losgefahren, und er steht
+     * regelmäßig schon vor dem Rennen fest. Am 14.08.2026 hat genau das auf der Coastal-Regatta
+     * einen Lauf des Folgetages am Vorabend aktiviert UND gestartet: Der Lauf war beobachtet, weil
+     * das Vorlauf-Fenster der Veranstaltung groß eingestellt war, und die einzige Zeile, die durch
+     * diesen Filter kam, war eine Abmeldung. DNF und DQ bleiben Belege — sie setzen voraus, dass
+     * das Boot auf dem Wasser war.
      */
     fun startDetected(rows: List<RaceClockerFeedRow>): Boolean =
-        rows.any { it.start != null || it.hasResult }
+        rows.any { it.start != null || (it.hasResult && !it.saysDidNotStart) }
 
     /**
      * Ob der Feed den Ist-Start dieses Laufs zurückgenommen hat — die Gegenrichtung zu
