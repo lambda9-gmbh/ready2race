@@ -31,7 +31,10 @@ const StreamPanelShell = ({panelKey, stateLabel, title, roundLine, headerTrailin
             <Box
                 key={panelKey}
                 sx={{
-                    maxWidth: '70vw',
+                    // Feste Breite statt Inhaltsbreite: Alle zentrierten Panels (Ergebnis,
+                    // Als Nächstes, Nächste Läufe) teilen sich dieselbe TV-Grafik-Größe —
+                    // so bekommen auch Lang-Vereinsnamen und lange Wettkampfnamen Platz.
+                    width: 'min(72rem, 78vw)',
                     maxHeight: '70vh',
                     overflow: 'hidden',
                     borderRadius: 3,
@@ -53,8 +56,11 @@ const StreamPanelShell = ({panelKey, stateLabel, title, roundLine, headerTrailin
                         backgroundColor: solidOr(theme.palette.primary.main, '#1976d2'),
                     }}
                 />
-                <Stack sx={{p: 4, gap: 2, overflow: 'hidden'}}>
-                    <Stack direction="row" alignItems="center" gap={2}>
+                <Stack sx={{p: 4, gap: 2, overflow: 'hidden', minHeight: 0}}>
+                    {/* Kopf und Unterzeile dürfen nie schrumpfen: noWrap gibt die min-height
+                        frei, und der Spalten-Flex würde sie unter maxHeight sonst zu einem
+                        Streifen pressen (dieselbe Falle wie im Lower-Third). */}
+                    <Stack direction="row" alignItems="center" gap={2} sx={{flexShrink: 0}}>
                         {stateLabel && <StreamStateBadge label={stateLabel} />}
                         <Typography variant="h3" noWrap sx={{fontWeight: 700, minWidth: 0, flex: 1}}>
                             {title}
@@ -62,7 +68,7 @@ const StreamPanelShell = ({panelKey, stateLabel, title, roundLine, headerTrailin
                         {headerTrailing}
                     </Stack>
                     {roundLine && (
-                        <Typography variant="h5" noWrap sx={{fontWeight: 500}}>
+                        <Typography variant="h5" noWrap sx={{fontWeight: 500, flexShrink: 0}}>
                             {roundLine}
                         </Typography>
                     )}
