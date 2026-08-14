@@ -2015,6 +2015,11 @@
         }
       },
       "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
+      "planTarget": "Einplanen auf",
+      "planTargetNew": "Neuer Slot",
+      "planTargetExisting": "Vorhandener freier Slot",
+      "planTargetSlot": "Freier Slot",
+      "planTargetHint": "Startzeit und Dauer werden vom gewählten Slot übernommen. Der freie Slot wird dabei zum Lauf-Slot, sein Name entfällt.",
       "goToExecution": "Zur Durchführung",
       "eventMode": {
         "enable": "Veranstaltungs-Modus einschalten: Zeitplan und Durchführung nebeneinander",
