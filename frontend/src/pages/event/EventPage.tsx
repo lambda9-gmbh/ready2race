@@ -47,6 +47,7 @@ import ParticipantForEventTable from '@components/participant/ParticipantForEven
 import {useUser} from '@contexts/user/UserContext.ts'
 import {
     createInvoiceGlobal,
+    readBoardGlobal,
     readClubOwn,
     readEventGlobal,
     readLiveDashboardGlobal,
@@ -412,7 +413,9 @@ const EventPage = () => {
                                             />
                                         )}
                                 </Card>
-                                {user.checkPrivilege(readEventGlobal) && !data.challengeEvent && (
+                                {(user.checkPrivilege(readEventGlobal) ||
+                                    user.checkPrivilege(readBoardGlobal)) &&
+                                    !data.challengeEvent && (
                                     <Card sx={{p: 2}}>
                                         <Typography variant="h6" sx={{mb: 1}}>
                                             {t('event.info.sectionTitle')}
@@ -431,14 +434,18 @@ const EventPage = () => {
                                                 {t('event.info.manageInfoViews')}
                                             </Button>
                                         </Link>
-                                        <Button
-                                            startIcon={<PlayCircleOutlined/>}
-                                            variant="outlined"
-                                            fullWidth
-                                            sx={{mt: 1}}
-                                            onClick={() => setManageRunningMatchesOpen(true)}>
-                                            {t('event.competition.execution.match.manageRunning')}
-                                        </Button>
+                                        {/* Die laufenden Läufe sind Sache der Veranstaltung, nicht
+                                            der Anzeigen - eine reine Board-Rolle sieht sie nicht. */}
+                                        {user.checkPrivilege(readEventGlobal) && (
+                                            <Button
+                                                startIcon={<PlayCircleOutlined/>}
+                                                variant="outlined"
+                                                fullWidth
+                                                sx={{mt: 1}}
+                                                onClick={() => setManageRunningMatchesOpen(true)}>
+                                                {t('event.competition.execution.match.manageRunning')}
+                                            </Button>
+                                        )}
                                     </Card>
                                 )}
                                 {user.checkPrivilege(readLiveDashboardGlobal) && !data.challengeEvent && (
