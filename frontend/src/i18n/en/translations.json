@@ -40,7 +40,22 @@
         "invalid": "Please select a valid amount."
       },
       "dateTime": {
-        "invalid": "Please select a valid date and time."
+        "invalid": "Please select a valid date and time.",
+        "error": {
+          "disableFuture": "Please select a date and time in the past.",
+          "disablePast": "Please select a date and time in the future.",
+          "minDate": "The date is earlier than the earliest allowed date.",
+          "maxDate": "The date is later than the latest allowed date.",
+          "minTime": "The time is earlier than the earliest allowed time.",
+          "maxTime": "The time is later than the latest allowed time.",
+          "shouldDisableDate": "This date is not allowed.",
+          "shouldDisableMonth": "This month is not allowed.",
+          "shouldDisableYear": "This year is not allowed.",
+          "shouldDisableTimeHours": "This hour is not allowed.",
+          "shouldDisableTimeMinutes": "This minute is not allowed.",
+          "shouldDisableTimeSeconds": "This second is not allowed.",
+          "minutesStep": "This minute does not match the allowed step."
+        }
       },
       "email": {
         "invalid": "Please enter a valid email adress."

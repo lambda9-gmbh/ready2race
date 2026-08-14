@@ -40,7 +40,22 @@
         "invalid": "Angiv venligst et gyldigt beløb."
       },
       "dateTime": {
-        "invalid": "Vælg venligst et gyldigt tidspunkt."
+        "invalid": "Vælg venligst et gyldigt tidspunkt.",
+        "error": {
+          "disableFuture": "Vælg venligst et tidspunkt i fortiden.",
+          "disablePast": "Vælg venligst et tidspunkt i fremtiden.",
+          "minDate": "Datoen ligger før den tidligst tilladte dato.",
+          "maxDate": "Datoen ligger efter den senest tilladte dato.",
+          "minTime": "Tidspunktet ligger før det tidligst tilladte tidspunkt.",
+          "maxTime": "Tidspunktet ligger efter det senest tilladte tidspunkt.",
+          "shouldDisableDate": "Denne dato er ikke tilladt.",
+          "shouldDisableMonth": "Denne måned er ikke tilladt.",
+          "shouldDisableYear": "Dette år er ikke tilladt.",
+          "shouldDisableTimeHours": "Denne time er ikke tilladt.",
+          "shouldDisableTimeMinutes": "Dette minut er ikke tilladt.",
+          "shouldDisableTimeSeconds": "Dette sekund er ikke tilladt.",
+          "minutesStep": "Dette minut passer ikke til det tilladte interval."
+        }
       },
       "email": {
         "invalid": "Angiv venligst en gyldig e-mailadresse."
