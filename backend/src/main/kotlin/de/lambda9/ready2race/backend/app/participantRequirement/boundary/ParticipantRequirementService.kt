@@ -161,9 +161,7 @@ object ParticipantRequirementService {
         }.orDie()
 
         !forUpdate.traverse {
-            ParticipantHasRequirementForEventRepo.update(it.id, eventId, dto.requirementId) {
-                note = it.note
-            }
+            ParticipantHasRequirementForEventRepo.updateNote(it.id, eventId, dto.requirementId, it.note)
         }.orDie()
 
         noData
@@ -339,6 +337,8 @@ object ParticipantRequirementService {
             optional = request.optional ?: false
             checkInApp = request.checkInApp ?: false
             publiclyVisible = request.publiclyVisible ?: false
+            perEventDay = request.perEventDay ?: false
+            perCompetition = request.perCompetition ?: false
             checkEarliestMinutesBefore = request.checkEarliestMinutesBefore
             checkLatestMinutesBefore = request.checkLatestMinutesBefore
             updatedAt = LocalDateTime.now()

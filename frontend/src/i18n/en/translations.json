@@ -2321,6 +2321,10 @@
     "checkLatestMinutesBefore": "Latest (minutes before start)",
     "publicNote": "Public note (My Event)",
     "publicNoteHint": "Shown verbatim to the athletes — the description above stays internal.",
+    "perEventDay": "Applies per event day",
+    "perEventDayHint": "The requirement has to be met again on every day. Without the tick, meeting it once covers the whole event.",
+    "perCompetition": "Applies per competition",
+    "perCompetitionHint": "The requirement has to be met for each competition separately. Both ticks together mean: per competition and day.",
     "namedParticipantRequirements": {
       "title": "Named Participant Requirements",
       "description": "Manage specific requirements for named participants",

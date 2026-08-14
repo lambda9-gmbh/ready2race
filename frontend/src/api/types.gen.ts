@@ -2964,6 +2964,14 @@ export type ParticipantRequirementDto = {
      */
     publiclyVisible: boolean
     /**
+     * Muss je Wettkampftag erfuellt werden
+     */
+    perEventDay: boolean
+    /**
+     * Muss je Wettkampf erfuellt werden
+     */
+    perCompetition: boolean
+    /**
      * Check must be at most this many minutes before match start
      */
     checkEarliestMinutesBefore?: number | null
@@ -3006,6 +3014,14 @@ export type ParticipantRequirementUpsertDto = {
      * Im oeffentlichen Dashboard Mein Event sichtbar
      */
     publiclyVisible?: boolean
+    /**
+     * Muss je Wettkampftag erfuellt werden
+     */
+    perEventDay?: boolean
+    /**
+     * Muss je Wettkampf erfuellt werden
+     */
+    perCompetition?: boolean
     /**
      * Check must be at most this many minutes before match start
      */

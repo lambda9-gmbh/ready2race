@@ -905,10 +905,25 @@ object LiveDashboardService {
 
         val requirementInfos = requirementRecords.distinctBy { it[PARTICIPANT_REQUIREMENT.ID] }
 
-        val checksByKey = checkRecords.associateBy {
-            it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT]!! to
-                it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT]!!
-        }
+        /**
+         * (Person, Bedingung) -> die maßgebliche abgehakte Zeile.
+         *
+         * Seit V202608141900 kann es je Kombination mehrere Zeilen geben - eine je Tag bzw. je
+         * Wettkampf. Bis die Schiedsrichter-Ansicht die Dimension des gezeigten Laufs selbst
+         * heranzieht (dafür liegt [de.lambda9.ready2race.backend.app.participantRequirement.boundary.RequirementScopeLogic]
+         * bereit), gewinnt hier die zuletzt eingetragene: `associateBy` allein nähme
+         * kommentarlos die letzte Zeile der Abfrage und wäre damit von der Sortierung der
+         * Datenbank abhängig. Für den Vorgabefall "gilt je Veranstaltung" bleibt es bei genau
+         * einer Zeile und damit beim bisherigen Verhalten.
+         */
+        val checksByKey = checkRecords
+            .groupBy {
+                it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT]!! to
+                    it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT]!!
+            }
+            .mapValues { (_, rows) ->
+                rows.maxBy { it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.CREATED_AT]!! }
+            }
 
         /** (round, registration) -> substitutions applying to that team in that round, ordered */
         val substitutionsByKey = substitutionRecords

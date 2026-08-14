@@ -2321,6 +2321,10 @@
     "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "publicNote": "Öffentlicher Hinweis (Mein Event)",
     "publicNoteHint": "Wird den Athletinnen und Athleten wörtlich angezeigt — die Beschreibung darüber bleibt intern.",
+    "perEventDay": "Gilt je Wettkampftag",
+    "perEventDayHint": "Die Bedingung muss an jedem Tag neu erfüllt werden. Ohne Haken genügt einmal für die gesamte Veranstaltung.",
+    "perCompetition": "Gilt je Wettkampf",
+    "perCompetitionHint": "Die Bedingung muss für jeden Wettkampf einzeln erfüllt werden. Beide Haken zusammen bedeuten: je Wettkampf und Tag.",
     "namedParticipantRequirements": {
       "title": "Named Participant Bedingungen",
       "description": "Verwalten Sie spezifische Bedingungen für Named Participants",

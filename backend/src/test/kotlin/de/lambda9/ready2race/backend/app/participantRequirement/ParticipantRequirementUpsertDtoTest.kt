@@ -15,6 +15,8 @@ class ParticipantRequirementUpsertDtoTest {
         optional = false,
         checkInApp = false,
         publiclyVisible = false,
+        perEventDay = false,
+        perCompetition = false,
         checkEarliestMinutesBefore = earliest,
         checkLatestMinutesBefore = latest,
     )

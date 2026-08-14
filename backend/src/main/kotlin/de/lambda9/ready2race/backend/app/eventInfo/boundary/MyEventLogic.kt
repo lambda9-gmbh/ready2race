@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventMatchDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventResultDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventTeamMemberDto
+import de.lambda9.ready2race.backend.app.participantRequirement.boundary.RequirementScopeLogic
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
@@ -125,13 +126,16 @@ object MyEventLogic {
      * Eine Grenze des Erledigungsfensters einer Bedingung: [minutesBefore] Minuten vor dem
      * ersten künftigen Start. null, sobald eine der beiden Größen fehlt — ein halbes Fenster
      * gibt es, ein erfundenes nicht.
+     *
+     * Gerechnet wird seit dem 14.08.2026 in [RequirementScopeLogic.windowBound], das den
+     * Bezugszeitpunkt als Argument nimmt statt ihn festzulegen. Der Grund steht dort: Bei
+     * einer Bedingung, die je Wettkampf gilt, muss das Fenster gegen den Lauf gelten, um den
+     * es geht — wer an einem Tag zweimal startet, bekäme sonst die Grenzen des falschen
+     * Rennens. "Mein Event" reicht unverändert den ersten künftigen Start der Person herein
+     * und behält damit sein Verhalten.
      */
     fun checkWindowBound(firstFutureStart: LocalDateTime?, minutesBefore: Int?): LocalDateTime? =
-        if (firstFutureStart != null && minutesBefore != null) {
-            firstFutureStart.minusMinutes(minutesBefore.toLong())
-        } else {
-            null
-        }
+        RequirementScopeLogic.windowBound(firstFutureStart, minutesBefore)
 
     private fun RawMatch.toMatchDto(now: LocalDateTime, showCountdown: Boolean) = MyEventMatchDto(
         matchId = matchId,

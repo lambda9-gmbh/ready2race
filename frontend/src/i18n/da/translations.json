@@ -2315,6 +2315,10 @@
     "checkLatestMinutesBefore": "Senest (minutter før start)",
     "publicNote": "Offentlig bemærkning (Min begivenhed)",
     "publicNoteHint": "Vises ordret for atleterne — beskrivelsen ovenfor forbliver intern.",
+    "perEventDay": "Gælder pr. stævnedag",
+    "perEventDayHint": "Betingelsen skal opfyldes på ny hver dag. Uden flueben er én gang nok for hele arrangementet.",
+    "perCompetition": "Gælder pr. konkurrence",
+    "perCompetitionHint": "Betingelsen skal opfyldes for hver konkurrence for sig. Begge flueben sammen betyder: pr. konkurrence og dag.",
     "namedParticipantRequirements": {
       "title": "Named Participant-betingelser",
       "description": "Administrer specifikke betingelser for Named Participants",

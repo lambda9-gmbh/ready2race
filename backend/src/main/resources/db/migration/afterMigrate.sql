@@ -471,11 +471,17 @@ from event_registration er
          join participant p on crnp.participant = p.id
 group by er.event, p.id;
 
+-- Seit V202608141900 kann eine Bedingung je Tag und/oder je Wettkampf gelten; die Sicht
+-- reicht die beiden Dimensionen deshalb mit durch (null = gilt ohne diese Einschränkung).
+-- Damit kann eine Person hier mehrere Zeilen zu derselben Bedingung haben - wer nur wissen
+-- will, ob überhaupt etwas abgehakt ist, bekommt weiterhin dieselbe Antwort wie vorher.
 create view checked_participant_requirement as
 select pr.*,
        phrfe.note,
        phrfe.participant,
-       phrfe.event
+       phrfe.event,
+       phrfe.event_day,
+       phrfe.competition
 from participant_requirement pr
          join participant_has_requirement_for_event phrfe on pr.id = phrfe.participant_requirement
 ;

@@ -11894,6 +11894,8 @@ components:
         - name
         - optional
         - checkInApp
+        - perEventDay
+        - perCompetition
       properties:
         id:
           type: string
@@ -11914,6 +11916,12 @@ components:
         publiclyVisible:
           type: boolean
           description: "Im oeffentlichen Dashboard Mein Event sichtbar"
+        perEventDay:
+          type: boolean
+          description: "Muss je Wettkampftag erfuellt werden"
+        perCompetition:
+          type: boolean
+          description: "Muss je Wettkampf erfuellt werden"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
@@ -12002,6 +12010,12 @@ components:
         publiclyVisible:
           type: boolean
           description: "Im oeffentlichen Dashboard Mein Event sichtbar"
+        perEventDay:
+          type: boolean
+          description: "Muss je Wettkampftag erfuellt werden"
+        perCompetition:
+          type: boolean
+          description: "Muss je Wettkampf erfuellt werden"
         checkEarliestMinutesBefore:
           type: integer
           nullable: true
