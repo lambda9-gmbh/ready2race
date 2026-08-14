@@ -29,6 +29,7 @@ export const eventDtoToUpdateRequest = (dto: EventDto): UpdateEventRequest => ({
     chainProgressionMode: dto.chainProgressionMode,
     autoCreateFollowingRounds: dto.autoCreateFollowingRounds,
     showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards,
+    allowCrossClubRegistration: dto.allowCrossClubRegistration,
     publicResultsVisibility: dto.publicResultsVisibility,
     executionAutoRefresh: dto.executionAutoRefresh,
     executionAutoRefreshSeconds: dto.executionAutoRefreshSeconds,

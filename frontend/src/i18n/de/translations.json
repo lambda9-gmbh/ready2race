@@ -552,6 +552,20 @@
       "external": "Extern",
       "externalClub": "Externer Verein",
       "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
+      "clubs": "Vereine",
+      "additionalClubs": {
+        "manage": "Weitere Vereine verwalten",
+        "title": "Weitere Vereine von {{name}}",
+        "hint": "Eine Person bleibt ein Datensatz. Weitere Vereine dürfen sie zusätzlich melden — ändern oder löschen darf sie nur der Stammverein.",
+        "homeClub": "Stammverein",
+        "current": "Weitere Vereine",
+        "none": "Bisher keine weiteren Vereine.",
+        "add": "Verein suchen",
+        "addSuccess": "Verein hinzugefügt",
+        "addError": "Der Verein konnte nicht hinzugefügt werden",
+        "removeSuccess": "Verein entfernt",
+        "removeError": "Der Verein konnte nicht entfernt werden"
+      },
       "usedInRegistration": "In Meldung",
       "qrCodeId": "Qr Code Wert",
       "qrCodeEdit": "QR Code Wert bearbeiten",
@@ -683,6 +697,8 @@
         "DISABLED": "Es gilt: Folgerunden werden nicht automatisch erzeugt."
       }
     },
+    "allowCrossClubRegistration": "Meldende dürfen Personen anderer Vereine sehen und melden",
+    "allowCrossClubRegistrationHint": "Erlaubt Meldenden, über eine Suche (ab zwei Zeichen) auch Personen anderer Vereine zu finden und zu melden. Die Stammdaten bleiben immer beim Stammverein. Standardmäßig aus.",
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
     "publicResultsVisibility": {
@@ -869,6 +885,11 @@
         },
         "isLate": "als Nachmeldung",
         "ratingCategory": "Wertungskategorie",
+        "crossClub": {
+          "label": "Person eines anderen Vereins suchen",
+          "hint": "Ab zwei Zeichen. Treffer erscheinen unten in der Auswahl, gruppiert nach Verein.",
+          "searching": "Suche läuft …"
+        },
         "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
         "infos": "Infos",
         "delete": {

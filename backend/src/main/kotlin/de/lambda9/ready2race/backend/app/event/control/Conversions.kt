@@ -47,6 +47,7 @@ fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 autoCreateFollowingRounds = false,
                 showBreaksOnPublicBoards = showBreaksOnPublicBoards,
                 publicResultsVisibility = publicResultsVisibility.name,
+                crossClubRegistration = allowCrossClubRegistration,
                 executionAutoRefresh = true,
                 executionAutoRefreshSeconds = ExecutionAutoRefresh.DEFAULT_SECONDS,
                 createdAt = now,
@@ -91,6 +92,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         showBreaksOnPublicBoards = showBreaksOnPublicBoards ?: false,
         publicResultsVisibility = publicResultsVisibility?.let { PublicResultsVisibility.valueOf(it) }
             ?: PublicResultsVisibility.FINISHED_ONLY,
+        allowCrossClubRegistration = crossClubRegistration ?: false,
         executionAutoRefresh = executionAutoRefresh ?: true,
         executionAutoRefreshSeconds = executionAutoRefreshSeconds ?: ExecutionAutoRefresh.DEFAULT_SECONDS,
         challengesFinished = challengeEnd?.let { it < LocalDateTime.now() },

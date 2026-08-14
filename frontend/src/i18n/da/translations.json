@@ -552,6 +552,20 @@
       "external": "Ekstern",
       "externalClub": "Ekstern klub",
       "externalHint": "Vælg denne mulighed, hvis du vil tilmelde et medlem af en anden klub.",
+      "clubs": "Klubber",
+      "additionalClubs": {
+        "manage": "Administrer yderligere klubber",
+        "title": "Yderligere klubber for {{name}}",
+        "hint": "En person forbliver én post. Yderligere klubber må også tilmelde personen — kun hjemklubben må redigere eller slette den.",
+        "homeClub": "Hjemklub",
+        "current": "Yderligere klubber",
+        "none": "Endnu ingen yderligere klubber.",
+        "add": "Søg klub",
+        "addSuccess": "Klub tilføjet",
+        "addError": "Klubben kunne ikke tilføjes",
+        "removeSuccess": "Klub fjernet",
+        "removeError": "Klubben kunne ikke fjernes"
+      },
       "usedInRegistration": "I tilmelding",
       "qrCodeId": "QR-kodeværdi",
       "qrCodeEdit": "Rediger QR-kodeværdi",
@@ -683,6 +697,8 @@
         "DISABLED": "Der gælder: Følgende runder oprettes ikke automatisk."
       }
     },
+    "allowCrossClubRegistration": "Tilmeldere må se og tilmelde personer fra andre klubber",
+    "allowCrossClubRegistrationHint": "Lader tilmeldere finde og tilmelde personer fra andre klubber via en søgning (fra to tegn). Stamdata bliver altid hos hjemklubben. Slået fra som standard.",
     "showBreaksOnPublicBoards": "Vis pauser på offentlige skærme",
     "showBreaksOnPublicBoardsHint": "Viser pauser og programpunkter fra tidsplanen (f.eks. \"Frokostpause\") også på kiosk-visningen og atletskærmen. Slået fra som standard, så offentlige skærme forbliver sparsomme.",
     "publicResultsVisibility": {
@@ -869,6 +885,11 @@
         },
         "isLate": "som eftertilmelding",
         "ratingCategory": "Rangeringskategori",
+        "crossClub": {
+          "label": "Søg en person fra en anden klub",
+          "hint": "Fra to tegn. Træf vises i valglisten nedenfor, grupperet efter klub.",
+          "searching": "Søger …"
+        },
         "ratingCategoryInvalid": "Den valgte rangeringskategori er ikke gyldig for deltagerne på dette hold",
         "infos": "Info",
         "delete": {

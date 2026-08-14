@@ -216,7 +216,8 @@ object EventRegistrationService {
                     singleCompetitionMultipleCounts,
                     type,
                     ratingCategoryAgeRestrictions,
-                    ratingCategoryExistsForEvent
+                    ratingCategoryExistsForEvent,
+                    crossClubRegistration = event.crossClubRegistration == true,
                 )
 
                 if (
@@ -363,16 +364,34 @@ object EventRegistrationService {
         type: OpenForRegistrationType,
         ratingCategoryAgeRestrictions: Map<UUID, AgeRestriction>?,
         ratingCategoryExistsForEvent: Boolean,
+        crossClubRegistration: Boolean,
     ): App<EventRegistrationError, Pair<UUID, PersistedIdAndGender>> = KIO.comprehension {
         val persistedUserInfo = if (pDto.isNew == true) {
             !ParticipantRepo.create(!pDto.toRecord(userId, clubId)).orDie().map {
                 PersistedIdAndGender(it, pDto.gender, pDto.year)
             }
         } else {
-            val participantExists = !ParticipantRepo.existsByIdAndClub(pDto.id, clubId).orDie()
+            // Die Vereinspruefung beim Melden (Migration V202608142000) - dieselbe Regel wie in
+            // CompetitionRegistrationService: mit Schalter jede Person, ohne Schalter der eigene
+            // Vereinsbestand (Stammverein ODER eingetragener Zweitverein).
+            val participantExists = if (crossClubRegistration) {
+                !ParticipantRepo.exists(pDto.id).orDie()
+            } else {
+                !ParticipantRepo.existsByIdAndClub(pDto.id, clubId).orDie()
+            }
             !KIO.failOn(!participantExists) { EventRegistrationError.UpsertParticipantNotFound(pDto.id) }
 
-            if (pDto.hasChanged == true) {
+            // Stammdatenschutz. Dieser Aufruf von ParticipantRepo.update kennt keinen
+            // Vereinsfilter - er hat ihn nie gebraucht, weil bis hierher nur der eigene Verein
+            // kam. Sobald ein fremder Verein melden darf, ist das ein offenes Scheunentor:
+            // hasChanged=true wuerde ihm die Stammdaten der fremden Person ueberschreiben.
+            // Deshalb aendert nur der STAMMVEREIN. Fremde Aenderungen fallen still weg statt
+            // die ganze Meldung abzuweisen - das Formular schickt hasChanged auch dann, wenn
+            // nur die Auswahl angefasst wurde, und eine abgewiesene Meldung waere die haertere
+            // Ueberraschung als eine nicht uebernommene Namenskorrektur.
+            val isHomeClub = !ParticipantRepo.existsByIdAndHomeClub(pDto.id, clubId).orDie()
+
+            if (pDto.hasChanged == true && isHomeClub) {
                 !ParticipantRepo.update(pDto.id) {
                     firstname = pDto.firstname
                     lastname = pDto.lastname

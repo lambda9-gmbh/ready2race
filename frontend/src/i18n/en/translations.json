@@ -552,6 +552,20 @@
       "external": "External",
       "externalClub": "External club",
       "externalHint": "Select this option if you want to register a member of another club.",
+      "clubs": "Clubs",
+      "additionalClubs": {
+        "manage": "Manage additional clubs",
+        "title": "Additional clubs of {{name}}",
+        "hint": "A person stays one record. Additional clubs may register them as well — only the home club may edit or delete them.",
+        "homeClub": "Home club",
+        "current": "Additional clubs",
+        "none": "No additional clubs yet.",
+        "add": "Search club",
+        "addSuccess": "Club added",
+        "addError": "The club could not be added",
+        "removeSuccess": "Club removed",
+        "removeError": "The club could not be removed"
+      },
       "usedInRegistration": "In Registration",
       "qrCodeId": "Qr Code Value",
       "qrCodeEdit": "Edit QR Code value",
@@ -683,6 +697,8 @@
         "DISABLED": "Currently in effect: following rounds are not created automatically."
       }
     },
+    "allowCrossClubRegistration": "Registrants may see and register participants of other clubs",
+    "allowCrossClubRegistrationHint": "Lets registrants find and register participants of other clubs through a search (from two characters on). Master data always stays with the home club. Off by default.",
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
     "publicResultsVisibility": {
@@ -869,6 +885,11 @@
         },
         "isLate": "registered late",
         "ratingCategory": "Rating category",
+        "crossClub": {
+          "label": "Search a participant of another club",
+          "hint": "From two characters on. Matches appear in the selection below, grouped by club.",
+          "searching": "Searching …"
+        },
         "ratingCategoryInvalid": "The selected rating category is not valid for the participants in this team",
         "infos": "Infos",
         "delete": {

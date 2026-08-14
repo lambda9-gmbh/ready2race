@@ -584,6 +584,7 @@ select e.id,
        e.public_results_visibility,
        e.execution_auto_refresh,
        e.execution_auto_refresh_seconds,
+       e.cross_club_registration,
        e.notice_text,
        e.notice_severity,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
@@ -802,8 +803,26 @@ group by ws.id, ws.event, ws.time_from, ws.time_to, ws.remark, e.name, ws.work_t
 
 create view participant_view as
 select p.*,
-       exists(select * from competition_registration_named_participant where participant = p.id) as used_in_registration
-from participant p;
+       exists(select * from competition_registration_named_participant where participant = p.id) as used_in_registration,
+       -- Der Stammverein im Klartext. Die Personenliste eines Vereins zeigt seit der
+       -- Mehrfach-Zugehoerigkeit (V202608142000) auch Gaeste anderer Vereine; ohne diese
+       -- Spalte stuende dort nicht, WEM die Person eigentlich gehoert -- und genau daran
+       -- haengt, wer ihre Stammdaten aendern darf.
+       hc.name                                                                                   as club_name,
+       -- Die weiteren Vereine als zwei gleich sortierte Felder (id und name, beide nach
+       -- Vereinsname). Zwei Arrays statt eines Verbunds, weil jOOQ zusammengesetzte
+       -- Array-Typen nur umstaendlich abbildet; die Reihenfolge ist in beiden dieselbe,
+       -- deshalb duerfen sie im Konvertierer paarweise verbunden werden.
+       coalesce((select array_agg(ac.id order by ac.name)
+                 from participant_additional_club pac
+                          join club ac on ac.id = pac.club
+                 where pac.participant = p.id), '{}')                                            as additional_club_ids,
+       coalesce((select array_agg(ac.name order by ac.name)
+                 from participant_additional_club pac
+                          join club ac on ac.id = pac.club
+                 where pac.participant = p.id), '{}')                                            as additional_club_names
+from participant p
+         join club hc on hc.id = p.club;
 
 create view competition_match_team_with_registration as
 select cmt.id,
