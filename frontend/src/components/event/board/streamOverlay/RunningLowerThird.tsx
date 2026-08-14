@@ -7,7 +7,7 @@ import FlipList from '../FlipList.tsx'
 import StreamBoatRow from './StreamBoatRow.tsx'
 import StreamClockLabel from './StreamClockLabel.tsx'
 import StreamStateBadge from './StreamStateBadge.tsx'
-import {competitionLabel, roundMatchLabel, solidOr} from './streamDisplay.ts'
+import {competitionLabel, roundMatchLabel, solidOr, streamNameForms} from './streamDisplay.ts'
 
 interface RunningLowerThirdProps {
     match: AthleteBoardMatch
@@ -24,7 +24,7 @@ interface RunningLowerThirdProps {
 const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdProps) => {
     const {t} = useTranslation()
     const theme = useTheme()
-    const useShortNames = element.useShortNames !== false
+    const names = streamNameForms(element)
     const streamCrew = element.streamCrew ?? 'CLUBS_FIRST'
     const roundLine = roundMatchLabel(match.roundName, match.matchName)
     const teams = sortRunningTeams(match.teams)
@@ -64,7 +64,7 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                             {competitionLabel(
                                 match.competitionName,
                                 match.competitionShortName,
-                                useShortNames,
+                                names.competitions,
                             )}
                         </Typography>
                         <StreamClockLabel match={match} clockOffsetMs={clockOffsetMs} />
@@ -89,7 +89,7 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                                     <StreamBoatRow
                                         team={team}
                                         crewMode={streamCrew}
-                                        useShortNames={useShortNames}
+                                        useShortClubNames={names.clubs}
                                         failedFallback={t('event.info.athleteBoard.failed')}
                                         size="compact"
                                         showLaps={teams.length <= 4}

@@ -39,7 +39,14 @@ import {
     streamCrew,
     streamMode,
 } from '@api/types.gen'
-import {boardColumns, gridPlacement, hasMatchDetail, hasStreamOverlay, rowSizes, tileColor} from './boardView'
+import {
+    boardColumns,
+    gridPlacement,
+    hasMatchDetail,
+    hasStreamOverlay,
+    rowSizes,
+    tileColor,
+} from './boardView'
 
 /** Grenzen wie im Backend (BoardLimits) — die Maske soll zeigen, was tatsächlich gilt. */
 const MAX_OFFSET = 6
@@ -140,7 +147,9 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
     // Stream-Overlay rendert immer 1×1-vollflächig. `config.columns` bleibt dabei bewusst
     // UNVERÄNDERT stehen — das Rendering ignoriert es ohnehin, und wer die Vollbild-Kachel
     // wieder entfernt, bekommt seine alte Spaltenwahl zurück.
-    const fullscreenTile = config.tiles.length === 1 && (hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles))
+    const fullscreenTile =
+        config.tiles.length === 1 &&
+        (hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles))
     const columns = boardColumns(config)
 
     const changeColumns = (value: number) =>
@@ -409,7 +418,9 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         <MenuItem value="AUTO">{t('event.boards.stream.mode.auto')}</MenuItem>
                         <MenuItem value="RUNNING">{t('event.boards.stream.mode.running')}</MenuItem>
                         <MenuItem value="RESULTS">{t('event.boards.stream.mode.results')}</MenuItem>
-                        <MenuItem value="UPCOMING">{t('event.boards.stream.mode.upcoming')}</MenuItem>
+                        <MenuItem value="UPCOMING">
+                            {t('event.boards.stream.mode.upcoming')}
+                        </MenuItem>
                         <MenuItem value="LAPS">{t('event.boards.stream.mode.laps')}</MenuItem>
                         <MenuItem value="UPCOMING_LIST">
                             {t('event.boards.stream.mode.upcomingList')}
@@ -437,20 +448,41 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             {t('event.boards.stream.crew.clubsOnly')}
                         </MenuItem>
                     </TextField>
+                    {/* Zwei getrennte Schalter: Wettkampfname und Vereinsnamen. Bis dahin
+                        schaltete `useShortNames` beides gemeinsam um — wer „CF1x" wollte,
+                        bekam zwangsläufig auch die Vereinskürzel. Ein Board ohne
+                        `useShortClubNames` sieht unverändert aus (siehe streamNameForms). */}
                     <FormControlLabel
                         control={
                             <Checkbox
                                 size="small"
-                                checked={element.useShortNames === false}
+                                checked={element.useShortNames !== false}
                                 onChange={e =>
                                     updateElement(tileIndex, elementIndex, {
                                         ...element,
-                                        useShortNames: !e.target.checked,
+                                        useShortNames: e.target.checked,
                                     })
                                 }
                             />
                         }
-                        label={t('event.boards.stream.longClubNames')}
+                        label={t('event.boards.stream.shortCompetitionNames')}
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={
+                                    element.useShortClubNames ?? element.useShortNames !== false
+                                }
+                                onChange={e =>
+                                    updateElement(tileIndex, elementIndex, {
+                                        ...element,
+                                        useShortClubNames: e.target.checked,
+                                    })
+                                }
+                            />
+                        }
+                        label={t('event.boards.stream.shortClubNames')}
                     />
                     <FormControlLabel
                         control={
@@ -486,7 +518,9 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                 // auf eine andere Liste abräumen, sonst lehnt die
                                 // Backend-Validierung die Konfiguration ab.
                                 scheduleMode:
-                                    e.target.value === 'SCHEDULE' ? element.scheduleMode : undefined,
+                                    e.target.value === 'SCHEDULE'
+                                        ? element.scheduleMode
+                                        : undefined,
                             })
                         }>
                         <MenuItem value="UPCOMING">
@@ -711,9 +745,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
 
     return (
         <>
-            <DialogTitle>
-                {board ? t('event.boards.edit') : t('event.boards.create')}
-            </DialogTitle>
+            <DialogTitle>{board ? t('event.boards.edit') : t('event.boards.create')}</DialogTitle>
             <DialogContent>
                 <Stack gap={3} sx={{pt: 1}}>
                     <TextField
@@ -736,7 +768,9 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                                     exclusive
                                     size="small"
                                     value={columns}
-                                    onChange={(_, value) => value && changeColumns(value as number)}>
+                                    onChange={(_, value) =>
+                                        value && changeColumns(value as number)
+                                    }>
                                     {Array.from({length: MAX_COLUMNS}, (_, i) => i + 1).map(n => (
                                         <ToggleButton key={n} value={n} disabled={fullscreenTile}>
                                             {n}
@@ -787,7 +821,11 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             // auf die höchste Karte an; als Untergrenze min-content statt 0,
                             // denn die Karten sind Formulare und dürfen nie unter ihren
                             // Inhalt schrumpfen (die Bühnen-Zellen scrollen stattdessen innen).
-                            gridTemplateRows: rowSizes(config.tiles, placement.positions, placement.rows)
+                            gridTemplateRows: rowSizes(
+                                config.tiles,
+                                placement.positions,
+                                placement.rows,
+                            )
                                 .map(size => (size === '1fr' ? 'minmax(min-content, 1fr)' : 'auto'))
                                 .join(' '),
                         }}>
@@ -942,7 +980,9 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                             <Button
                                 startIcon={<AddIcon />}
                                 disabled={
-                                    config.tiles.length >= MAX_TILES || hasMatchDetail(config.tiles) || hasStreamOverlay(config.tiles)
+                                    config.tiles.length >= MAX_TILES ||
+                                    hasMatchDetail(config.tiles) ||
+                                    hasStreamOverlay(config.tiles)
                                 }
                                 onClick={() =>
                                     setConfig({...config, tiles: [...config.tiles, defaultTile()]})

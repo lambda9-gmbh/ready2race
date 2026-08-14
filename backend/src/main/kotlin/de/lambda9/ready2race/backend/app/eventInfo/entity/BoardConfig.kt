@@ -117,6 +117,12 @@ data class BoardElement(
     val streamCrew: StreamCrewDisplay? = null,
     /** Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale Listen. */
     val useShortNames: Boolean? = null,
+    /**
+     * STREAM: Vereins-Kurzform statt der vollen Vereinskette. Fehlt das Feld, gilt
+     * [useShortNames] auch für die Vereine — bis dahin schaltete ein einziger Schalter
+     * beides gemeinsam um, und bestehende Boards sollen unverändert aussehen.
+     */
+    val useShortClubNames: Boolean? = null,
     // AWARD_CEREMONY: die Ehrung (Wettkampf + optionale Wertung), deren Podium die Kachel zeigt.
     val competitionId: UUID? = null,
     val ratingCategoryId: UUID? = null,

@@ -14676,6 +14676,11 @@ components:
         useShortNames:
           type: boolean
           nullable: true
+          description: "competition short name (identifier) instead of the full name"
+        useShortClubNames:
+          type: boolean
+          nullable: true
+          description: "STREAM only: club short form instead of the full club chain; missing follows useShortNames, so existing boards keep their look"
         competitionId:
           type: string
           format: uuid

@@ -5,7 +5,7 @@ import {AthleteBoardMatch, BoardElement} from '@api/types.gen.ts'
 import FitToHeight from './FitToHeight.tsx'
 import FlipList from '../FlipList.tsx'
 import StreamPanelShell from './StreamPanelShell.tsx'
-import {competitionLabel, roundMatchLabel, solidOr} from './streamDisplay.ts'
+import {competitionLabel, roundMatchLabel, solidOr, streamNameForms} from './streamDisplay.ts'
 
 interface UpcomingListPanelProps {
     matches: AthleteBoardMatch[]
@@ -19,7 +19,7 @@ interface UpcomingListPanelProps {
 const UpcomingListPanel = ({matches, element}: UpcomingListPanelProps) => {
     const {t} = useTranslation()
     const theme = useTheme()
-    const useShortNames = element.useShortNames !== false
+    const names = streamNameForms(element)
 
     return (
         <StreamPanelShell
@@ -60,7 +60,7 @@ const UpcomingListPanel = ({matches, element}: UpcomingListPanelProps) => {
                                         {competitionLabel(
                                             match.competitionName,
                                             match.competitionShortName,
-                                            useShortNames,
+                                            names.competitions,
                                         )}
                                     </Typography>
                                     {round && (

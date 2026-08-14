@@ -26,7 +26,14 @@ interface StreamPanelShellProps {
  * die Zeilen auf einer 720p-Quelle nicht mehr zu lesen sind. Rutscht beim Erscheinen einmalig per
  * translateY-Slide-in herein (CSS-Keyframe, kein Opacity-Fade über der Key-Fläche).
  */
-const StreamPanelShell = ({panelKey, stateLabel, title, roundLine, headerTrailing, children}: StreamPanelShellProps) => {
+const StreamPanelShell = ({
+    panelKey,
+    stateLabel,
+    title,
+    roundLine,
+    headerTrailing,
+    children,
+}: StreamPanelShellProps) => {
     const theme = useTheme()
     return (
         <Box sx={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', p: 4}}>
@@ -64,7 +71,10 @@ const StreamPanelShell = ({panelKey, stateLabel, title, roundLine, headerTrailin
                         Streifen pressen (dieselbe Falle wie im Lower-Third). */}
                     <Stack direction="row" alignItems="center" gap={2} sx={{flexShrink: 0}}>
                         {stateLabel && <StreamStateBadge label={stateLabel} />}
-                        <Typography variant="h3" noWrap sx={{fontWeight: 700, minWidth: 0, flex: 1}}>
+                        <Typography
+                            variant="h3"
+                            noWrap
+                            sx={{fontWeight: 700, minWidth: 0, flex: 1}}>
                             {title}
                         </Typography>
                         {headerTrailing}

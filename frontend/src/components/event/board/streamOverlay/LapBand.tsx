@@ -2,7 +2,7 @@ import {Box, Stack, Typography, useTheme} from '@mui/material'
 import {BoardElement} from '@api/types.gen.ts'
 import FlipList from '../FlipList.tsx'
 import {StreamLapEntry} from '../streamOverlay.ts'
-import {solidOr} from './streamDisplay.ts'
+import {solidOr, streamNameForms} from './streamDisplay.ts'
 
 interface LapBandProps {
     laps: StreamLapEntry[]
@@ -20,10 +20,18 @@ const LAP_ENTER_OFFSET = 260
  */
 const LapBand = ({laps, element}: LapBandProps) => {
     const theme = useTheme()
-    const useShortNames = element.useShortNames !== false
+    const names = streamNameForms(element)
 
     return (
-        <Box sx={{position: 'absolute', left: 0, right: 0, bottom: 0, height: '10vh', display: 'flex'}}>
+        <Box
+            sx={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: '10vh',
+                display: 'flex',
+            }}>
             <Stack
                 direction="row"
                 sx={{
@@ -57,12 +65,16 @@ const LapBand = ({laps, element}: LapBandProps) => {
                             }}>
                             <Typography
                                 variant="h4"
-                                sx={{fontWeight: 800, fontVariantNumeric: 'tabular-nums', flexShrink: 0}}>
+                                sx={{
+                                    fontWeight: 800,
+                                    fontVariantNumeric: 'tabular-nums',
+                                    flexShrink: 0,
+                                }}>
                                 {lap.startNumber}
                             </Typography>
                             <Box sx={{minWidth: 0, flex: 1}}>
                                 <Typography variant="h6" noWrap sx={{fontWeight: 700}}>
-                                    {useShortNames
+                                    {names.clubs
                                         ? (lap.clubsShort ?? lap.clubsFull)
                                         : (lap.clubsFull ?? lap.clubsShort)}
                                 </Typography>
@@ -72,7 +84,11 @@ const LapBand = ({laps, element}: LapBandProps) => {
                             </Box>
                             <Typography
                                 variant="h5"
-                                sx={{fontWeight: 700, fontVariantNumeric: 'tabular-nums', flexShrink: 0}}>
+                                sx={{
+                                    fontWeight: 700,
+                                    fontVariantNumeric: 'tabular-nums',
+                                    flexShrink: 0,
+                                }}>
                                 {lap.timeString}
                             </Typography>
                         </Box>

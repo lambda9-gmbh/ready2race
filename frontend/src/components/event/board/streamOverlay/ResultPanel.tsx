@@ -5,7 +5,7 @@ import FitToHeight from './FitToHeight.tsx'
 import FlipList from '../FlipList.tsx'
 import StreamBoatRow from './StreamBoatRow.tsx'
 import StreamPanelShell from './StreamPanelShell.tsx'
-import {byNullsLast, competitionLabel, roundMatchLabel} from './streamDisplay.ts'
+import {byNullsLast, competitionLabel, roundMatchLabel, streamNameForms} from './streamDisplay.ts'
 
 interface ResultPanelProps {
     result: AthleteBoardResult
@@ -20,7 +20,7 @@ interface ResultPanelProps {
  */
 const ResultPanel = ({result, element}: ResultPanelProps) => {
     const {t} = useTranslation()
-    const useShortNames = element.useShortNames !== false
+    const names = streamNameForms(element)
     const streamCrew = element.streamCrew ?? 'CLUBS_FIRST'
     const teams = [...result.teams].sort(byNullsLast(team => team.place))
 
@@ -31,7 +31,7 @@ const ResultPanel = ({result, element}: ResultPanelProps) => {
             title={competitionLabel(
                 result.competitionName,
                 result.competitionShortName,
-                useShortNames,
+                names.competitions,
             )}
             roundLine={roundMatchLabel(result.roundName, result.matchName)}>
             {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie; passt das
@@ -46,7 +46,7 @@ const ResultPanel = ({result, element}: ResultPanelProps) => {
                             <StreamBoatRow
                                 team={team}
                                 crewMode={streamCrew}
-                                useShortNames={useShortNames}
+                                useShortClubNames={names.clubs}
                                 failedFallback={t('event.info.athleteBoard.failed')}
                                 size="large"
                             />

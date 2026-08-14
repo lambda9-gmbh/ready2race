@@ -4,7 +4,8 @@ import {crewLines, solidOr, StreamCrewMode, StreamTeam, teamTrailingLabel} from 
 interface StreamBoatRowProps {
     team: StreamTeam
     crewMode: StreamCrewMode
-    useShortNames: boolean
+    /** Vereins-Kurzform statt der vollen Vereinskette — siehe `streamNameForms`. */
+    useShortClubNames: boolean
     failedFallback: string
     /** 'compact' im Lower-Third, 'large' in den zentrierten Panels — dieselbe Zeile,
      *  nur mit der größeren TV-Grafik-Typografie statt der schmaleren Lower-Third-Schrift. */
@@ -32,7 +33,7 @@ interface StreamBoatRowProps {
 const StreamBoatRow = ({
     team,
     crewMode,
-    useShortNames,
+    useShortClubNames,
     failedFallback,
     size,
     showLaps = true,
@@ -40,7 +41,7 @@ const StreamBoatRow = ({
 }: StreamBoatRowProps) => {
     const theme = useTheme()
     const large = size === 'large'
-    const {primary, secondary} = crewLines(team, crewMode, useShortNames)
+    const {primary, secondary} = crewLines(team, crewMode, useShortClubNames)
     const trailing = teamTrailingLabel(team, failedFallback)
 
     return (

@@ -6,6 +6,7 @@ import {
     formatCountdownClock,
     roundMatchLabel,
     solidOr,
+    streamNameForms,
     teamTrailingLabel,
 } from './streamDisplay.ts'
 
@@ -67,7 +68,10 @@ describe('crewLines', () => {
 describe('teamTrailingLabel', () => {
     it('Platz + Zeit als Ordinal', () => {
         expect(
-            teamTrailingLabel({place: 1, timeString: '3:45.2', failed: false, failedReason: null}, 'DNF'),
+            teamTrailingLabel(
+                {place: 1, timeString: '3:45.2', failed: false, failedReason: null},
+                'DNF',
+            ),
         ).toBe('1st 3:45.2')
     })
 
@@ -82,7 +86,10 @@ describe('teamTrailingLabel', () => {
 
     it('ohne jedes Teilergebnis (Aufstellung) null', () => {
         expect(
-            teamTrailingLabel({place: null, timeString: null, failed: false, failedReason: null}, 'DNF'),
+            teamTrailingLabel(
+                {place: null, timeString: null, failed: false, failedReason: null},
+                'DNF',
+            ),
         ).toBeNull()
     })
 })
@@ -122,5 +129,43 @@ describe('competitionLabel', () => {
 
     it('useShortNames=false erzwingt die Langform', () => {
         expect(competitionLabel('Langer Name', 'Kurz', false)).toBe('Langer Name')
+    })
+})
+
+/**
+ * Wettkampfname und Vereinsnamen sind getrennt einstellbar; ein Board ohne den neuen
+ * Vereins-Schalter muss weiterhin genau so aussehen wie vorher (siehe streamDisplay.ts).
+ */
+describe('streamNameForms', () => {
+    it('nimmt ohne jede Angabe für beides die Kurzform', () => {
+        expect(streamNameForms({})).toEqual({competitions: true, clubs: true})
+    })
+
+    it('lässt die Vereine dem Wettkampf-Schalter folgen, solange sie nicht gesetzt sind', () => {
+        expect(streamNameForms({useShortNames: false})).toEqual({
+            competitions: false,
+            clubs: false,
+        })
+    })
+
+    it('erlaubt Wettkampf-Kürzel mit ausgeschriebenen Vereinen', () => {
+        expect(streamNameForms({useShortNames: true, useShortClubNames: false})).toEqual({
+            competitions: true,
+            clubs: false,
+        })
+    })
+
+    it('erlaubt auch die Gegenrichtung: voller Wettkampfname, Vereinskürzel', () => {
+        expect(streamNameForms({useShortNames: false, useShortClubNames: true})).toEqual({
+            competitions: false,
+            clubs: true,
+        })
+    })
+
+    it('behandelt null wie „nicht gesetzt"', () => {
+        expect(streamNameForms({useShortNames: null, useShortClubNames: null})).toEqual({
+            competitions: true,
+            clubs: true,
+        })
     })
 })

@@ -2215,7 +2215,8 @@
           "participantsFirst": "Participants prominent",
           "clubsOnly": "Clubs only"
         },
-        "longClubNames": "Full club names",
+        "shortCompetitionNames": "Competition abbreviation instead of full name",
+        "shortClubNames": "Club short form instead of the full club chain",
         "showCountdown": "Clock/countdown",
         "upcomingListTitle": "Upcoming matches",
         "inMinutes": "in {{time}}"

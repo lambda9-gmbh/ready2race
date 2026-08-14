@@ -12,6 +12,7 @@ import {
     formatCountdownClock,
     roundMatchLabel,
     solidOr,
+    streamNameForms,
 } from './streamDisplay.ts'
 import useTicker from './useTicker.ts'
 
@@ -32,7 +33,7 @@ const COUNTDOWN_TICK_MS = 1000
 const UpcomingPanel = ({match, element, clockOffsetMs}: UpcomingPanelProps) => {
     const {t} = useTranslation()
     const theme = useTheme()
-    const useShortNames = element.useShortNames !== false
+    const names = streamNameForms(element)
     const streamCrew = element.streamCrew ?? 'CLUBS_FIRST'
     // Aufstellung trägt nie Teilergebnisse (place/timeString sind im Upcoming-Block
     // immer null) — Startnummern-Reihenfolge reicht, aber deterministisch statt "wie
@@ -51,7 +52,7 @@ const UpcomingPanel = ({match, element, clockOffsetMs}: UpcomingPanelProps) => {
             title={competitionLabel(
                 match.competitionName,
                 match.competitionShortName,
-                useShortNames,
+                names.competitions,
             )}
             roundLine={roundMatchLabel(match.roundName, match.matchName)}
             headerTrailing={
@@ -106,7 +107,7 @@ const UpcomingPanel = ({match, element, clockOffsetMs}: UpcomingPanelProps) => {
                             <StreamBoatRow
                                 team={team}
                                 crewMode={streamCrew}
-                                useShortNames={useShortNames}
+                                useShortClubNames={names.clubs}
                                 failedFallback={t('event.info.athleteBoard.failed')}
                                 size="large"
                             />

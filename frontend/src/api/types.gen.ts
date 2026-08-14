@@ -503,7 +503,14 @@ export type BoardElement = {
      */
     streamCrew?: ('CLUBS_FIRST' | 'PARTICIPANTS_FIRST' | 'CLUBS_ONLY') | null
     limit?: number | null
+    /**
+     * competition short name (identifier) instead of the full name
+     */
     useShortNames?: boolean | null
+    /**
+     * STREAM only: club short form instead of the full club chain; missing follows useShortNames, so existing boards keep their look
+     */
+    useShortClubNames?: boolean | null
     competitionId?: string | null
     ratingCategoryId?: string | null
     showEventName?: boolean | null

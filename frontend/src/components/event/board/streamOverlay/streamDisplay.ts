@@ -1,8 +1,4 @@
-import {
-    AthleteBoardParticipant,
-    AthleteBoardResultTeam,
-    AthleteBoardTeam,
-} from '@api/types.gen.ts'
+import {AthleteBoardParticipant, AthleteBoardResultTeam, AthleteBoardTeam} from '@api/types.gen.ts'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {formatPlaceOrdinal} from '@utils/placeOrdinal.ts'
 
@@ -21,7 +17,7 @@ export const solidOr = (color: string, fallback: string): string =>
 
 /** Sortierschlüssel mit Nullen am Ende — weder Platz noch Startnummer dürfen NULL nach vorne ziehen. */
 export const byNullsLast =
-    <T,>(key: (team: T) => number | null | undefined) =>
+    <T>(key: (team: T) => number | null | undefined) =>
     (a: T, b: T): number => {
         const av = key(a)
         const bv = key(b)
@@ -50,6 +46,30 @@ export type StreamTeam = Pick<
 
 export type StreamCrewMode = 'CLUBS_FIRST' | 'PARTICIPANTS_FIRST' | 'CLUBS_ONLY'
 
+/** Kurz- oder Langform, getrennt für Wettkampfname und Vereinsnamen. */
+export interface StreamNameForms {
+    /** Wettkampf-Kürzel („CF1x") statt des vollen Namens. */
+    competitions: boolean
+    /** Vereins-Kurzform statt der vollen Vereinskette. */
+    clubs: boolean
+}
+
+/**
+ * Welche Namensform die Kachel zeigt. Beide Schalter sind getrennt einstellbar — „CF1x"
+ * mit ausgeschriebenen Vereinen ist auf einer breiten TV-Grafik eine sinnvolle Kombination.
+ *
+ * Fehlt `useShortClubNames` (jedes Board, das vor der Trennung angelegt wurde), folgen die
+ * Vereine weiterhin `useShortNames`: bis dahin schaltete dieser eine Schalter beides
+ * gemeinsam um, und ein Board soll durch das Update nicht anders aussehen.
+ */
+export const streamNameForms = (element: {
+    useShortNames?: boolean | null
+    useShortClubNames?: boolean | null
+}): StreamNameForms => {
+    const competitions = element.useShortNames !== false
+    return {competitions, clubs: element.useShortClubNames ?? competitions}
+}
+
 export interface StreamCrewSource {
     clubsShort?: string | null
     clubsFull?: string | null
@@ -59,7 +79,9 @@ export interface StreamCrewSource {
 
 /** Vereinskette (Kurz-/Langform nach `useShortNames`) + Teamname, wie überall auf dem Board. */
 export const clubLabel = (team: StreamCrewSource, useShortNames: boolean): string => {
-    const club = useShortNames ? (team.clubsShort ?? team.clubsFull) : (team.clubsFull ?? team.clubsShort)
+    const club = useShortNames
+        ? (team.clubsShort ?? team.clubsFull)
+        : (team.clubsFull ?? team.clubsShort)
     return [club, team.teamName].filter(Boolean).join(' | ')
 }
 
@@ -83,7 +105,9 @@ export const crewLines = (
     const club = clubLabel(team, useShortNames)
     if (mode === 'PARTICIPANTS_FIRST') {
         const participants = participantsLabel(team)
-        return participants ? {primary: participants, secondary: club} : {primary: club, secondary: null}
+        return participants
+            ? {primary: participants, secondary: club}
+            : {primary: club, secondary: null}
     }
     // CLUBS_FIRST (Default) und CLUBS_ONLY: der Verein bleibt vorn; CLUBS_ONLY lässt die
     // Besatzungszeile weg.
@@ -97,7 +121,10 @@ export const teamTrailingLabel = (
     failedFallback: string,
 ): string | null => {
     if (team.failed) return failedLabel(team.failedReason, failedFallback)
-    const parts = [team.place != null ? formatPlaceOrdinal(team.place) : null, team.timeString].filter(Boolean)
+    const parts = [
+        team.place != null ? formatPlaceOrdinal(team.place) : null,
+        team.timeString,
+    ].filter(Boolean)
     return parts.length > 0 ? parts.join(' ') : null
 }
 

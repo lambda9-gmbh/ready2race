@@ -2209,7 +2209,8 @@
           "participantsFirst": "Personer fremhævet",
           "clubsOnly": "Kun klubber"
         },
-        "longClubNames": "Fulde klubnavne",
+        "shortCompetitionNames": "Løbsforkortelse i stedet for fuldt navn",
+        "shortClubNames": "Klubbens korte form i stedet for hele klubkæden",
         "showCountdown": "Ur/nedtælling",
         "upcomingListTitle": "Næste løb",
         "inMinutes": "om {{time}}"
