@@ -195,25 +195,38 @@ export const matchControls = (
 }
 
 /**
- * Ein Boot ist erledigt, sobald Platz, Zeit oder ein Ausscheidungsgrund vorliegt. Abgemeldete
- * Boote sind es ebenfalls — auf ihr Ergebnis wartet niemand mehr.
+ * **Erledigt: wartet hier noch jemand auf ein Ergebnis?** Ein Boot ist es, sobald Platz, Zeit oder
+ * ein Ausscheidungsgrund vorliegt. Abgemeldete Boote sind es ebenfalls — auf ihr Ergebnis wartet
+ * niemand mehr, und ohne diesen Fall erreichte ein Lauf mit einer Abmeldung nie „alle gewertet".
+ *
+ * Nicht zu verwechseln mit [teamHasRaced]; die Trennung der beiden Fragen steht im KDoc von
+ * `LiveDashboardLogic.teamIsSettled` im Backend.
  */
-export const teamHasResult = (team: LiveDashboardTeamDto): boolean =>
+export const teamIsSettled = (team: LiveDashboardTeamDto): boolean =>
     team.deregistered || team.failed || team.place != null || team.time != null
 
 /**
+ * **Gefahren: liegt ein sportliches Ergebnis vor?** Eine Abmeldung zählt hier nicht — das Boot war
+ * nicht auf dem Wasser. Nur diese Zahl trägt die Ablesung „Teilweise gewertet".
+ */
+export const teamHasRaced = (team: LiveDashboardTeamDto): boolean =>
+    !team.deregistered && (team.failed || team.place != null || team.time != null)
+
+/**
  * Der Zustand eines Dashboard-Laufs als [MatchStatusDto] — dieselbe Form, die Durchführung und
- * Zeitplan lesen. Stand bis hierher inline im JSX der Karte und war damit nicht prüfbar; die
- * Ableitung selbst bleibt unverändert.
+ * Zeitplan lesen. Stand bis hierher inline im JSX der Karte und war damit nicht prüfbar.
  *
- * `teamsScored` zählt nach derselben Regel wie `MatchStatusLogic.scoredCount` im Backend (Platz,
- * ausgeschieden oder abgemeldet), damit „Teilweise gewertet" hier nichts anderes sagt als dort.
+ * Die drei Zähler beantworten drei verschiedene Fragen und dürfen nicht gegeneinander getauscht
+ * werden: `teamsScored` (erledigt, wie `MatchStatusLogic.scoredCount` im Backend) trägt den
+ * Zustand, `teamsRaced` die Teilwertung, `teamsDeregistered` den leisen Abmelde-Chip.
  */
 export const dashboardMatchStatus = (match: LiveDashboardMatchDto): MatchStatusDto => ({
     state: match.state,
     startedAt: match.startedAt ?? undefined,
     teamsTotal: match.teams.length,
-    teamsScored: match.teams.filter(teamHasResult).length,
+    teamsScored: match.teams.filter(teamIsSettled).length,
+    teamsRaced: match.teams.filter(teamHasRaced).length,
+    teamsDeregistered: match.teams.filter(team => team.deregistered).length,
     bye: match.bye,
 })
 
@@ -267,7 +280,7 @@ export const teamsInDisplayOrder = (teams: LiveDashboardTeamDto[]): LiveDashboar
 
 /** Die Boote, für die beim Beenden eines Laufs noch zu entscheiden ist. */
 export const openResultTeams = (match: {teams: LiveDashboardTeamDto[]}): LiveDashboardTeamDto[] =>
-    match.teams.filter(team => !teamHasResult(team))
+    match.teams.filter(team => !teamIsSettled(team))
 
 export const severityChipColor: Record<
     EffectiveSeverity,

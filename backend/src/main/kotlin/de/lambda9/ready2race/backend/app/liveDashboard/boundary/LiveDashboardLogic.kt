@@ -92,10 +92,6 @@ object LiveDashboardLogic {
     }
 
     /**
-     * Abgemeldete Mannschaften brauchen kein Ergebnis — für sie kommt keins mehr. Ohne diesen
-     * Fall erreicht ein Lauf mit einer Abmeldung nie den Zustand [LiveDashboardMatchState.FINISHED].
-     */
-    /**
      * Wann ist die Mannschaft in die Arena gegangen? Ein Boot gilt als "in der Arena", sobald
      * MINDESTENS EINE Person der Crew zuletzt eingecheckt ist (letzter Scan = ENTRY am Steg) -
      * dann zählt der früheste dieser Scans als Ablegezeit. Das Einchecken IST die Anmeldung
@@ -119,8 +115,38 @@ object LiveDashboardLogic {
             .filter { it.first == ParticipantScanType.ENTRY.name }
             .minOfOrNull { it.second }
 
-    fun teamHasResult(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
+    /**
+     * **Erledigt: wartet hier noch jemand auf ein Ergebnis?**
+     *
+     * Eine Abmeldung zählt mit — für ein abgemeldetes Boot kommt kein Ergebnis mehr, und ohne
+     * diesen Fall erreichte ein Lauf mit einer Abmeldung nie [LiveDashboardMatchState.AWAITING_FINISH]
+     * und wäre für die Aktivierungskette auf ewig offen. An dieser Frage hängen: die Kette
+     * (`ScheduleChain`, `EventScheduleRepo.getChainSlots`), "alle gewertet" und das Beenden-Dürfen.
+     *
+     * Das ist ausdrücklich NICHT dasselbe wie [teamHasRaced]. Bis zum 14.08.2026 beantwortete ein
+     * einziges Prädikat beide Fragen; auf dem Schiedsrichter-Board stand deshalb ein Lauf, von dem
+     * ein Boot von fünf abgemeldet und sonst nichts gefahren war, als "Teilweise gewertet 1/5" da —
+     * eine Wertung, die es nicht gab. Wer eine der beiden Stellen anfasst, muss sich entscheiden,
+     * welche der beiden Fragen sie stellt.
+     */
+    fun teamIsSettled(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
         deregistered || place != null || failed
+
+    /**
+     * **Gefahren: liegt ein sportliches Ergebnis vor?**
+     *
+     * Eine Abmeldung zählt hier NICHT — das Boot war gar nicht auf dem Wasser. Daran hängt allein
+     * die Ablesung "Teilweise gewertet"; eine Abmeldung darf über den Zustand eines Laufs nicht
+     * entscheiden, sondern wird als eigener, leiser Ausweis daneben angezeigt
+     * (`matchStatusChip.deregisteredChip` im Frontend).
+     *
+     * Ausgeschieden (`failed`, also DNF/DSQ) zählt als gefahren: das Boot ist gestartet, sein
+     * Ergebnis steht fest. Wer trotz Abmeldung einen Platz stehen hat — ein von Hand
+     * nachgetragener Sonderfall —, gilt hier bewusst als nicht gefahren: die Abmeldung ist die
+     * jüngere und ausdrückliche Aussage.
+     */
+    fun teamHasRaced(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
+        !deregistered && (place != null || failed)
 
     /**
      * Die Rolle, wie sie in der Crew-Zeile der breiten Karte hinter dem Namen steht. Fünf Personen

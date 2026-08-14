@@ -21,5 +21,12 @@ data class UpcomingMatchTeamInfo(
      */
     val clubsShort: String?,
     val clubsFull: String?,
+    /**
+     * Für diese Runde abgemeldet. Der anstehende Lauf zeigt das Boot weiter in seiner Aufstellung -
+     * eine Crew am Steg kann ein spurlos verschwundenes Boot nicht von einem Anzeigefehler
+     * unterscheiden -, weist es aber als abgemeldet aus.
+     */
+    val deregistered: Boolean = false,
+    val deregistrationReason: String? = null,
     val participants: List<UpcomingMatchParticipantInfo>
 )

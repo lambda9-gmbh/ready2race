@@ -7,7 +7,8 @@ import {format} from 'date-fns'
 import {LiveDashboardMatchDto, PendingSlotDto} from '@api/types.gen.ts'
 import {MatchResultStatus, matchResultStatus} from '@utils/matchResultStatus.ts'
 import {raceClockerPollStatus} from '@components/event/competition/excecution/raceClockerPollStatus.ts'
-import {matchStatusChip} from '@components/event/match/matchStatusChip.ts'
+import {deregisteredChip, matchStatusChip} from '@components/event/match/matchStatusChip.ts'
+import StatusChip from '@components/event/match/StatusChip.tsx'
 import {byeExplanation} from '@components/event/match/matchBye.ts'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 import {
@@ -103,11 +104,11 @@ const LiveDashboardMatchCard = ({
      * („läuft seit …", Lang-/Kurzform für „wartet auf Beenden"), die dieselbe Aussage anders
      * formulierte; genau daran ließ sich nicht mehr erkennen, ob zwei Ansichten dasselbe meinen.
      *
-     * `teamsScored` zählt nach derselben Regel wie `MatchStatusLogic.scoredCount` im Backend
-     * (Platz, ausgeschieden oder abgemeldet), damit „Teilweise gewertet" hier nichts anderes sagt
-     * als dort. Die Uhr ist die des Browsers: die Seite rendert bei jedem Abruf und mindestens alle
-     * 30 Sekunden neu (siehe `useLocalClock` in LiveDashboardPage), die Minutenangabe zählt also
-     * zwischen zwei Abrufen weiter.
+     * Die Zähler kommen aus `dashboardMatchStatus` und beantworten zwei verschiedene Fragen:
+     * `teamsScored` (erledigt, inklusive Abmeldungen) trägt den Zustand, `teamsRaced` (gefahren,
+     * ohne Abmeldungen) die Ablesung „Teilweise gewertet". Die Uhr ist die des Browsers: die Seite
+     * rendert bei jedem Abruf und mindestens alle 30 Sekunden neu (siehe `useLocalClock` in
+     * LiveDashboardPage), die Minutenangabe zählt also zwischen zwei Abrufen weiter.
      *
      * Die Zusammensetzung selbst liegt in `common.ts`, damit sie ohne Rendering prüfbar bleibt.
      */
@@ -222,7 +223,20 @@ const LiveDashboardMatchCard = ({
                             .filter(Boolean)
                             .join(' · ')}
                     </Typography>
-                    <Box sx={{justifySelf: 'end'}}>
+                    <Box
+                        sx={{
+                            justifySelf: 'end',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.75,
+                            flexWrap: 'wrap',
+                            justifyContent: 'flex-end',
+                        }}>
+                        {/* Der leise Abmelde-Ausweis steht VOR dem Zustand: der Zustand ist die
+                            Hauptaussage und behält den rechten Rand. Er sagt nur, dass Boote
+                            fehlen — über den Zustand des Laufs sagt er ausdrücklich nichts
+                            (siehe deregisteredChip). */}
+                        <StatusChip chip={deregisteredChip(status)} />
                         {/* Beim „muss gefahren werden"-Freilos erklärt der Tooltip am Chip,
                             warum das Boot allein fährt (Fairness, Zeit zählt nicht fürs
                             Weiterkommen). Ein leerer Titel schaltet den Tooltip ab. */}
@@ -373,6 +387,13 @@ const LiveDashboardMatchCard = ({
                                     borderRadius: 1,
                                     borderBottom: index < teams.length - 1 ? '1px solid' : 'none',
                                     borderBottomColor: 'divider',
+                                    // Abgemeldete Boote bleiben in der Aufstellung stehen — der
+                                    // Schiedsrichter soll sehen, WER fehlt — werden aber
+                                    // durchgestrichen und zurückgenommen. Bewusst nur die
+                                    // Textdeko: eine geringere Deckkraft auf der ganzen Zeile
+                                    // macht sie am Steg gegen die Sonne unlesbar.
+                                    textDecoration: team.deregistered ? 'line-through' : undefined,
+                                    color: team.deregistered ? 'text.secondary' : undefined,
                                     '&:active': {backgroundColor: 'action.selected'},
                                     '@media (hover: hover)': {
                                         '&:hover': {backgroundColor: 'action.hover'},

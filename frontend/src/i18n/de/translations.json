@@ -1675,6 +1675,7 @@
         "cancelled": "Abgesagt",
         "unscheduled": "Ungeplant",
         "inArena": "Arena {{inArena}}/{{total}}",
+        "deregistered": "{{n}} abgemeldet",
         "doesNotTakePlace": "Findet nicht statt",
         "bye": {
           "open": "Freilos{{seed}} · offen",

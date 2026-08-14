@@ -6,6 +6,12 @@ interface AthleteBoardTeamLabelProps {
     team: TeamWithClubs
     /** Wie bei Typography: abgemeldete und ausgeschiedene Boote stehen gedämpft in der Liste. */
     color?: string
+    /**
+     * Abgemeldete Boote werden durchgestrichen. Sie bleiben in der Aufstellung stehen — eine Crew
+     * am Steg kann ein spurlos verschwundenes Boot nicht von einem Anzeigefehler unterscheiden —,
+     * sollen aber auf einen Blick als „fährt nicht" erkennbar sein.
+     */
+    strikeThrough?: boolean
 }
 
 /**
@@ -24,7 +30,7 @@ interface AthleteBoardTeamLabelProps {
  * Namen wird: darunter füllt eine einzelne Karte ein Telefondisplay, darüber mindestens eine
  * halbe Bildschirmbreite.
  */
-const AthleteBoardTeamLabel = ({team, color}: AthleteBoardTeamLabelProps) => {
+const AthleteBoardTeamLabel = ({team, color, strikeThrough}: AthleteBoardTeamLabelProps) => {
     const {t} = useTranslation()
 
     return (
@@ -47,6 +53,7 @@ const AthleteBoardTeamLabel = ({team, color}: AthleteBoardTeamLabelProps) => {
                 // Zeile ragt es aus der Karte und wird vom overflow hart abgeschnitten,
                 // statt umzubrechen — im Sichttest am 09.08.2026 genau so aufgetreten.
                 overflowWrap: 'anywhere',
+                textDecoration: strikeThrough ? 'line-through' : undefined,
             }}
             color={color}>
             <Box component="span" sx={{display: {xs: 'inline', md: 'none'}}}>

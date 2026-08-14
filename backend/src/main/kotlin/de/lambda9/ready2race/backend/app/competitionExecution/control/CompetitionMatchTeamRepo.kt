@@ -160,9 +160,16 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.EXTERNAL_CLUB_NAME,
                 PARTICIPANT_CLUB.NAME.`as`(PARTICIPANT_CLUB_NAME),
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
-                EVENT.MIXED_TEAM_TERM
+                EVENT.MIXED_TEAM_TERM,
+                // Die Abmeldung gehört auch in die Startliste der öffentlichen Anzeigen: Ohne sie
+                // stand ein abgemeldetes Boot dort bis zum 14.08.2026 wie jedes andere in der
+                // Aufstellung, und am Steg war nicht zu erkennen, dass es nicht kommt.
+                COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
+                COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason")
             )
                 .from(COMPETITION_MATCH_TEAM)
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
                 .join(COMPETITION_REGISTRATION)
                 .on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
                 .leftJoin(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
@@ -172,6 +179,11 @@ object CompetitionMatchTeamRepo {
                 .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
                 .leftJoin(NAMED_PARTICIPANT)
                 .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
+                .leftJoin(COMPETITION_DEREGISTRATION)
+                .on(
+                    COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION)
+                        .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+                )
                 .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
                 .leftJoin(EVENT).on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID))
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
@@ -215,11 +227,18 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT_CLUB.NAME.`as`(PARTICIPANT_CLUB_NAME),
                 NAMED_PARTICIPANT.NAME.`as`("named_role"),
                 EVENT.MIXED_TEAM_TERM,
+                // Siehe getTeamsForUpcomingMatch: auch ein aktivierter Lauf kann ein abgemeldetes
+                // Boot in der Aufstellung führen, und die Anzeige soll es ausweisen statt es
+                // stillschweigend mitzuführen.
+                COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
+                COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason"),
                 TIMECODE.TIME,
                 TIMECODE.BASE_UNIT,
                 TIMECODE.MILLISECOND_PRECISION
             )
                 .from(COMPETITION_MATCH_TEAM)
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
                 .join(COMPETITION_REGISTRATION)
                 .on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
                 .leftJoin(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
@@ -229,6 +248,11 @@ object CompetitionMatchTeamRepo {
                 .leftJoin(PARTICIPANT_CLUB).on(PARTICIPANT_CLUB.ID.eq(PARTICIPANT.CLUB))
                 .leftJoin(NAMED_PARTICIPANT)
                 .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
+                .leftJoin(COMPETITION_DEREGISTRATION)
+                .on(
+                    COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION)
+                        .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+                )
                 .leftJoin(EVENT_REGISTRATION).on(EVENT_REGISTRATION.ID.eq(COMPETITION_REGISTRATION.EVENT_REGISTRATION))
                 .leftJoin(EVENT).on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID))
                 .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))

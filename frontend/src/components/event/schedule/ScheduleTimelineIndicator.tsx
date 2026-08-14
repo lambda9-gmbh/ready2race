@@ -177,6 +177,13 @@ const ScheduleTimelineIndicator = ({entries, now, onEntryClick, density = 'full'
             <Typography variant={'caption'} sx={{opacity: 0.85}}>
                 {stateLabel(entry)}
             </Typography>
+            {/* Hinter dem Status und in derselben leisen Rolle wie der Abmelde-Chip in den Listen:
+                eine Aussage über die Besetzung, keine über den Zustand des Laufs. */}
+            {(entry.deregisteredCount ?? 0) > 0 && (
+                <Typography variant={'caption'} sx={{opacity: 0.85}}>
+                    {t('event.match.status.deregistered', {n: entry.deregisteredCount})}
+                </Typography>
+            )}
         </Stack>
     )
 

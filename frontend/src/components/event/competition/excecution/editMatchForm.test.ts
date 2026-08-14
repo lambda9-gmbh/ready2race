@@ -20,7 +20,7 @@ const match = (overrides: Partial<CompetitionMatchDto>): CompetitionMatchDto => 
     executionOrder: 1,
     activatedAt: null,
     skipped: false,
-    status: {state: 'UPCOMING', teamsTotal: 0, teamsScored: 0},
+    status: {state: 'UPCOMING', teamsTotal: 0, teamsScored: 0, teamsRaced: 0, teamsDeregistered: 0},
     ...overrides,
 })
 

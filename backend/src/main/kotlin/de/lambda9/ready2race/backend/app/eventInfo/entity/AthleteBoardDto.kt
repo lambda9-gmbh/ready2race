@@ -103,6 +103,15 @@ data class AthleteBoardTeam(
     val penaltyNote: String? = null,
     val failed: Boolean = false,
     val failedReason: String? = null,
+    /**
+     * Für diese Runde abgemeldet. Bis zum 14.08.2026 kannte nur der Ergebnisblock diese Angabe;
+     * in den Blöcken `upcoming` und `running` stand ein abgemeldetes Boot wie jedes andere in der
+     * Aufstellung. Das Boot bleibt bewusst stehen (eine Crew am Steg kann ein spurlos
+     * verschwundenes Boot nicht von einem Anzeigefehler unterscheiden) und wird stattdessen als
+     * abgemeldet ausgewiesen.
+     */
+    val deregistered: Boolean = false,
+    val deregisteredReason: String? = null,
     /** Meldender Verein — nur befüllt, wenn ein Element showRegisteringClub anfordert. */
     val registeringClub: String? = null,
     /**

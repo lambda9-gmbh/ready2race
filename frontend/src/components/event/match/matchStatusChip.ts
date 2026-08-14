@@ -38,9 +38,29 @@ const MS_PER_MINUTE = 60_000
 const elapsedMinutes = (from: string, now: Date): number =>
     Math.max(0, Math.floor((now.getTime() - new Date(from).getTime()) / MS_PER_MINUTE))
 
-/** Nicht aktiv, nicht beendet, aber ein Teil der Boote hat schon ein Ergebnis. */
-const isPartiallyScored = (status: MatchStatusDto): boolean =>
-    status.teamsTotal > 0 && status.teamsScored > 0 && status.teamsScored < status.teamsTotal
+/**
+ * Wie viele Boote eines Laufs überhaupt ein Ergebnis liefern können: alle außer den abgemeldeten.
+ * Genau diese Zahl ist der Nenner der Teilwertung — sonst stünde ein fertig gefahrener Lauf mit
+ * einer Abmeldung dauerhaft auf „Teilweise gewertet 4/5".
+ */
+const teamsExpected = (status: MatchStatusDto): number =>
+    status.teamsTotal - (status.teamsDeregistered ?? 0)
+
+/**
+ * Nicht aktiv, nicht beendet, aber ein Teil der Boote ist schon **gefahren**.
+ *
+ * Bewusst `teamsRaced` und nicht `teamsScored`: „gewertet" im Sinne des Servers schließt
+ * Abmeldungen ein, weil die Kette wissen muss, ob noch jemand auf ein Ergebnis wartet. Für diese
+ * Ablesung ist eine Abmeldung dagegen keine Wertung — am 14.08.2026 stand auf dem
+ * Schiedsrichter-Board „Teilweise gewertet 1/5", weil eine einzige abgemeldete Mannschaft eines
+ * Fünferlaufs als gewertet mitzählte, obwohl niemand gefahren war. Die Abmeldung selbst zeigt
+ * seither [deregisteredChip] daneben, ohne sich als Zustand auszugeben.
+ */
+const isPartiallyScored = (status: MatchStatusDto): boolean => {
+    const raced = status.teamsRaced ?? 0
+    const expected = teamsExpected(status)
+    return expected > 0 && raced > 0 && raced < expected
+}
 
 /**
  * Der Chip eines Freiloses. Er ersetzt „Anstehend", „Überfällig" und „Teilweise gewertet" — genau
@@ -144,7 +164,9 @@ export const matchStatusChip = (
     if (isPartiallyScored(status)) {
         return {
             labelKey: 'event.match.status.partiallyScored',
-            values: {scored: status.teamsScored, total: status.teamsTotal},
+            // Zähler wie Nenner ohne die Abgemeldeten: „3/4" von fünf gemeldeten Booten, von denen
+            // eines abgemeldet ist, ist die ehrliche Aussage — wie viele noch fehlen.
+            values: {scored: status.teamsRaced ?? 0, total: teamsExpected(status)},
             color: 'warning',
         }
     }
@@ -200,6 +222,28 @@ export const arenaChip = (status: MatchStatusDto): MatchChip | null => {
         values: {inArena, total: status.teamsTotal},
         color: 'default',
     }
+}
+
+/**
+ * Der zweite, leise Chip für Abmeldungen: „1 abgemeldet".
+ *
+ * Dieselbe Kategorie wie [arenaChip] und aus demselben Grund KEIN eigener Zustand: Eine Abmeldung
+ * ist eine Eigenschaft der Besetzung, keine Phase des Laufs, und sie darf über den Zustand nichts
+ * aussagen. Genau daran ist es am 14.08.2026 schiefgegangen — ein Lauf mit einer Abmeldung und
+ * vier offenen Booten stand als „Teilweise gewertet 1/5" da. Der Lauf zeigt seither seinen
+ * normalen Zustand („Anstehend"), und dieser Chip sagt daneben leise, was mit der fünften
+ * Mannschaft ist.
+ *
+ * Er steht bewusst bei JEDEM Zustand, auch bei beendeten Läufen: Die Frage „warum sind es nur vier
+ * Boote?" stellt sich beim Ergebnis genauso wie am Steg. Er entfällt nur, wo er nichts aussagt:
+ * ohne Abmeldung und bei einem Freilos — dort erklärt der Freilos-Text (`byeExplanation`) die
+ * Abmeldung bereits mit Namen und Grund, und ein zweiter Chip wäre eine Wiederholung.
+ */
+export const deregisteredChip = (status: MatchStatusDto): MatchChip | null => {
+    const n = status.teamsDeregistered ?? 0
+    if (n <= 0) return null
+    if (status.bye) return null
+    return {labelKey: 'event.match.status.deregistered', values: {n}, color: 'default'}
 }
 
 /**
@@ -298,6 +342,8 @@ export const unplannedMatchStatus = (match: UnplannedSetupMatchDto): MatchStatus
         startedAt: match.matchStartedAt ?? undefined,
         teamsTotal: 0,
         teamsScored: 0,
+        teamsRaced: 0,
+        teamsDeregistered: 0,
         bye: match.bye,
     }
 }
@@ -321,7 +367,11 @@ export const slotMatchStatus = (slot: EventScheduleSlotDto): MatchStatusDto | nu
         state,
         startedAt: slot.matchStartedAt ?? undefined,
         teamsTotal: slot.matchTeamsTotal,
+        // „Alle gewertet" (AWAITING_FINISH oben) hängt weiterhin an den erledigten Booten, die
+        // Teilwertung dagegen an den gefahrenen — zwei Fragen, zwei Zahlen.
         teamsScored: slot.matchTeamsScored,
+        teamsRaced: slot.matchTeamsRaced,
+        teamsDeregistered: slot.matchTeamsDeregistered,
         bye: slot.bye,
     }
 }

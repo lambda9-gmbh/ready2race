@@ -91,6 +91,7 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                                         crewMode={streamCrew}
                                         useShortClubNames={names.clubs}
                                         failedFallback={t('event.info.athleteBoard.failed')}
+                                        deregisteredFallback={t('event.info.athleteBoard.deregistered')}
                                         size="compact"
                                         showLaps={teams.length <= 4}
                                         showSecondary={teams.length <= 5}

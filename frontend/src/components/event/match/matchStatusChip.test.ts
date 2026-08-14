@@ -6,6 +6,7 @@ import {
     roundCounterChips,
     slotMatchStatus,
     arenaChip,
+    deregisteredChip,
 } from './matchStatusChip.ts'
 
 const NOW = new Date('2026-08-15T10:00:00')
@@ -25,6 +26,8 @@ const status = (overrides: Partial<MatchStatusDto>): MatchStatusDto => ({
     state: 'UPCOMING',
     teamsTotal: 6,
     teamsScored: 0,
+    teamsRaced: 0,
+    teamsDeregistered: 0,
     ...overrides,
 })
 
@@ -82,13 +85,77 @@ describe('matchStatusChip', () => {
         expect(chip).toEqual({labelKey: 'event.match.status.runningPlain', color: 'primary'})
     })
 
-    it('meldet einen teilweise gewerteten Lauf mit gewertet/gesamt', () => {
-        const chip = matchStatusChip(status({teamsScored: 4}), minutesAgo(20), NOW)
+    it('meldet einen teilweise gewerteten Lauf mit gefahren/erwartet', () => {
+        const chip = matchStatusChip(status({teamsScored: 4, teamsRaced: 4}), minutesAgo(20), NOW)
         expect(chip).toEqual({
             labelKey: 'event.match.status.partiallyScored',
             values: {scored: 4, total: 6},
             color: 'warning',
         })
+    })
+
+    // --- Der Vorfall vom 14.08.2026 (Coastal-Regatta) ---
+
+    /**
+     * Eine Mannschaft von fünf wurde abgemeldet, gefahren ist niemand. Der Lauf stand als
+     * „Teilweise gewertet 1/5" auf dem Schiedsrichter-Board — eine Wertung, die es nicht gab.
+     */
+    it('nennt einen Lauf mit einer Abmeldung und sonst offenen Booten nicht teilweise gewertet', () => {
+        const chip = matchStatusChip(
+            status({teamsTotal: 5, teamsScored: 1, teamsRaced: 0, teamsDeregistered: 1}),
+            minutesAgo(1),
+            NOW,
+        )
+        expect(chip.labelKey).toBe('event.match.status.upcoming')
+    })
+
+    /** Drei gefahrene Boote neben einer Abmeldung sind sehr wohl eine Teilwertung — 3 von 4. */
+    it('meldet drei gefahrene Boote neben einer Abmeldung als teilweise gewertet', () => {
+        const chip = matchStatusChip(
+            status({teamsTotal: 5, teamsScored: 4, teamsRaced: 3, teamsDeregistered: 1}),
+            minutesAgo(20),
+            NOW,
+        )
+        expect(chip).toEqual({
+            labelKey: 'event.match.status.partiallyScored',
+            values: {scored: 3, total: 4},
+            color: 'warning',
+        })
+    })
+
+    /**
+     * Alle gefahren, eines abgemeldet: der Lauf ist durch. Ohne den um die Abmeldungen bereinigten
+     * Nenner stünde hier dauerhaft „Teilweise gewertet 4/5".
+     */
+    it('nennt einen Lauf, in dem alle übrigen gefahren sind, nicht mehr teilweise gewertet', () => {
+        const chip = matchStatusChip(
+            status({
+                state: 'AWAITING_FINISH',
+                teamsTotal: 5,
+                teamsScored: 5,
+                teamsRaced: 4,
+                teamsDeregistered: 1,
+            }),
+            minutesAgo(20),
+            NOW,
+        )
+        expect(chip.labelKey).toBe('event.match.status.awaitingFinish')
+    })
+
+    /** Alle abgemeldet: kein Rennen, keine Teilwertung — der Lauf wartet nur noch aufs Beenden. */
+    it('behauptet bei einem vollständig abgemeldeten Lauf keine Teilwertung', () => {
+        const chip = matchStatusChip(
+            status({
+                state: 'AWAITING_FINISH',
+                teamsTotal: 3,
+                teamsScored: 3,
+                teamsRaced: 0,
+                teamsDeregistered: 3,
+            }),
+            minutesAgo(20),
+            NOW,
+        )
+        expect(chip.labelKey).toBe('event.match.status.awaitingFinish')
     })
 
     it('zeigt einen vollständig gewerteten, aber nicht beendeten Lauf als „Wartet auf Beenden"', () => {
@@ -143,7 +210,7 @@ describe('matchStatusChip', () => {
 
     it('nennt einen abgesagten Lauf mit Teilergebnissen nicht „Teilweise gewertet"', () => {
         const chip = matchStatusChip(
-            status({state: 'SKIPPED', teamsScored: 3}),
+            status({state: 'SKIPPED', teamsScored: 3, teamsRaced: 3}),
             minutesAgo(35),
             NOW,
         )
@@ -269,6 +336,38 @@ describe('roundCounterChips', () => {
     })
 })
 
+describe('deregisteredChip', () => {
+    it('schweigt, wenn niemand abgemeldet ist', () => {
+        expect(deregisteredChip(status({}))).toBeNull()
+    })
+
+    /**
+     * Der leise Ausweis neben dem Zustands-Chip — dieselbe Kategorie wie „Arena 0/5". Er steht
+     * ausdrücklich NEBEN dem normalen Zustand und ersetzt ihn nicht.
+     */
+    it('weist eine Abmeldung als zweiten, leisen Chip aus', () => {
+        expect(deregisteredChip(status({teamsTotal: 5, teamsScored: 1, teamsDeregistered: 1}))).toEqual(
+            {labelKey: 'event.match.status.deregistered', values: {n: 1}, color: 'default'},
+        )
+    })
+
+    it('zählt mehrere Abmeldungen zusammen', () => {
+        expect(deregisteredChip(status({teamsDeregistered: 3}))?.values).toEqual({n: 3})
+    })
+
+    it('bleibt auch bei einem beendeten Lauf stehen', () => {
+        expect(
+            deregisteredChip(status({state: 'FINISHED', teamsScored: 6, teamsDeregistered: 2})),
+        ).not.toBeNull()
+    })
+
+    /** Beim Freilos erklärt der Freilos-Text die Abmeldung bereits mit Namen und Grund. */
+    it('schweigt beim Freilos', () => {
+        const bye: MatchByeDto = {cause: 'DEREGISTRATION', mustRace: false}
+        expect(deregisteredChip(status({teamsDeregistered: 1, bye}))).toBeNull()
+    })
+})
+
 const slot = (overrides: Partial<EventScheduleSlotDto>): EventScheduleSlotDto => ({
     id: 'slot-1',
     startTime: minutesAgo(10),
@@ -276,6 +375,8 @@ const slot = (overrides: Partial<EventScheduleSlotDto>): EventScheduleSlotDto =>
     matchActivatedAt: null,
     matchTeamsTotal: 6,
     matchTeamsScored: 0,
+    matchTeamsRaced: 0,
+    matchTeamsDeregistered: 0,
     matchId: 'match-1',
     ...overrides,
 })
@@ -320,12 +421,55 @@ describe('slotMatchStatus', () => {
     })
 
     it('reicht die Zählungen für die Teilwertung durch', () => {
-        expect(slotMatchStatus(slot({matchTeamsScored: 2}))).toEqual({
+        expect(slotMatchStatus(slot({matchTeamsScored: 2, matchTeamsRaced: 2}))).toEqual({
             state: 'UPCOMING',
             startedAt: undefined,
             teamsTotal: 6,
             teamsScored: 2,
+            teamsRaced: 2,
+            teamsDeregistered: 0,
         })
+    })
+
+    /**
+     * Der Vorfall im Zeitplan-Tab: „erledigt" trägt weiterhin den Zustand (hier: noch keiner,
+     * also UPCOMING), „gefahren" bleibt 0 — der Slot behauptet keine Teilwertung mehr.
+     */
+    it('trennt beim Slot mit einer Abmeldung erledigt von gefahren', () => {
+        expect(
+            slotMatchStatus(
+                slot({
+                    matchTeamsTotal: 5,
+                    matchTeamsScored: 1,
+                    matchTeamsRaced: 0,
+                    matchTeamsDeregistered: 1,
+                }),
+            ),
+        ).toEqual({
+            state: 'UPCOMING',
+            startedAt: undefined,
+            teamsTotal: 5,
+            teamsScored: 1,
+            teamsRaced: 0,
+            teamsDeregistered: 1,
+        })
+    })
+
+    /**
+     * Sind alle Boote abgemeldet, gilt der Lauf weiterhin als vollständig erledigt und wartet nur
+     * noch aufs Beenden — sonst bliebe die Aktivierungskette an ihm hängen.
+     */
+    it('liest einen vollständig abgemeldeten Lauf als AWAITING_FINISH', () => {
+        expect(
+            slotMatchStatus(
+                slot({
+                    matchTeamsTotal: 4,
+                    matchTeamsScored: 4,
+                    matchTeamsRaced: 0,
+                    matchTeamsDeregistered: 4,
+                }),
+            )?.state,
+        ).toBe('AWAITING_FINISH')
     })
 })
 

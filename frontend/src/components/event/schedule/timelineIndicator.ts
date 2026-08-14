@@ -45,6 +45,14 @@ export type TimelineEntry = {
     roundLabel?: string | null
     /** Ist-Start des verknüpften Laufs — der Tooltip stellt ihn der geplanten Zeit gegenüber. */
     actualStartTime?: string | null
+    /**
+     * Wie viele Mannschaften des Laufs abgemeldet sind. Auf dem Balken selbst ist dafür kein
+     * Platz - der Tooltip nennt sie hinter dem Status, in derselben leisen Rolle wie der
+     * Abmelde-Chip in den Listen (siehe `matchStatusChip.deregisteredChip`). Ausdrücklich KEIN
+     * eigener [TimelineEntryState]: eine Abmeldung ist keine Phase des Laufs, und ein eigener
+     * Wert bekäme eine eigene Farbe auf dem Balken.
+     */
+    deregisteredCount?: number
 }
 
 export type PositionedTimelineEntry = TimelineEntry & {
@@ -129,6 +137,7 @@ export const scheduleSlotsToEntries = (slots: EventScheduleSlotDto[]): TimelineE
         shortLabel: entryShortLabel(slot),
         roundLabel: entryRoundLabel(slot),
         actualStartTime: slot.matchStartedAt,
+        deregisteredCount: slot.matchTeamsDeregistered,
     }))
 
 // ---- Referee dashboard: LiveDashboardMatchDto + PendingSlotDto --------------------------------
@@ -184,6 +193,7 @@ export const dashboardEntriesForDay = (
             shortLabel: entryShortLabel(m),
             roundLabel: entryRoundLabel(m),
             actualStartTime: m.startedAt,
+            deregisteredCount: m.teams.filter(team => team.deregistered).length,
         }))
     const slotEntries: TimelineEntry[] = pendingSlots
         .filter(s => dayOf(s.startTime) === day)

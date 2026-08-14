@@ -13520,15 +13520,19 @@ components:
         (execution page, schedule, referee dashboard).
 
 
-        "Overdue" and "partially scored" are deliberately NOT states of their own but readings of
-        these fields: partially scored is state != RUNNING && 0 < teamsScored < teamsTotal, overdue
-        is state == UPCOMING && startTime + 5 min < now. Elapsed minutes and overdueness are
+        "Overdue", "partially scored" and "n withdrawn" are deliberately NOT states of their own but
+        readings of these fields: partially scored is
+        state != RUNNING && 0 < teamsRaced < teamsTotal - teamsDeregistered, overdue
+        is state == UPCOMING && startTime + 5 min < now, "n withdrawn" is teamsDeregistered > 0.
+        Elapsed minutes and overdueness are
         computed in the frontend against the browser clock so the chip keeps counting between two
         polls.
       required:
         - state
         - teamsTotal
         - teamsScored
+        - teamsRaced
+        - teamsDeregistered
       properties:
         state:
           $ref: '#/components/schemas/LiveDashboardMatchState'
@@ -13541,8 +13545,20 @@ components:
         teamsScored:
           type: integer
           description: >-
-            Scored means: deregistered OR place set OR failed - the same rule the referee dashboard
-            uses.
+            Settled means: deregistered OR place set OR failed - the question "is anyone still
+            waiting for a result here". Carries AWAITING_FINISH and the activation chain, NOT the
+            "partially scored" reading.
+        teamsRaced:
+          type: integer
+          description: >-
+            Of those, actually raced: place set OR failed, withdrawals excluded. Only this number
+            may trigger "partially scored". Before 2026-08-14 it did not exist and a match with one
+            withdrawal and four open boats read as "partially scored 1/5" although nobody had raced.
+        teamsDeregistered:
+          type: integer
+          description: >-
+            Of those, withdrawn from this round. A plain statement shown as a second, quiet chip
+            next to the state chip - it never decides a state.
         teamsInArena:
           type: integer
           description: null = not collected in this view (schedule, public boards).
@@ -15151,6 +15167,7 @@ components:
         - startNumber
         - participants
         - failed
+        - deregistered
       properties:
         startNumber:
           type: integer
@@ -15192,6 +15209,12 @@ components:
         failed:
           type: boolean
         failedReason:
+          type: string
+          nullable: true
+        deregistered:
+          type: boolean
+          description: "withdrawn from this round. Until 2026-08-14 only the results block carried this; in the upcoming and running blocks a withdrawn boat stood in the line-up like any other. The boat deliberately stays in the list (a crew at the pontoon cannot tell a vanished boat from a display error) and is marked as withdrawn instead"
+        deregisteredReason:
           type: string
           nullable: true
         registeringClub:
@@ -16559,6 +16582,8 @@ components:
         - state
         - matchTeamsTotal
         - matchTeamsScored
+        - matchTeamsRaced
+        - matchTeamsDeregistered
       properties:
         id:
           type: string
@@ -16625,7 +16650,13 @@ components:
           description: "Teams of the linked match that are still in the race (without the OUT rows carried over from the previous round) - 0 without a linked match"
         matchTeamsScored:
           type: integer
-          description: "Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own"
+          description: "Of those, settled: place set OR failed OR deregistered - the same rule the referee dashboard uses. Carries 'all scored' (AWAITING_FINISH), NOT the 'partially scored' reading"
+        matchTeamsRaced:
+          type: integer
+          description: "Of those, actually raced: place set OR failed, withdrawals excluded. Together with matchTeamsTotal and matchTeamsDeregistered this reads as 'partially scored n/m'; it is explicitly not a state of its own"
+        matchTeamsDeregistered:
+          type: integer
+          description: "Of those, withdrawn from this round - a plain statement shown as a second, quiet chip; it never decides a state"
         bye:
           allOf:
             - $ref: '#/components/schemas/MatchByeDto'

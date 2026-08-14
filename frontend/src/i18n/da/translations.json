@@ -1675,6 +1675,7 @@
         "cancelled": "Aflyst",
         "unscheduled": "Ikke planlagt",
         "inArena": "Arena {{inArena}}/{{total}}",
+        "deregistered": "{{n}} afmeldt",
         "doesNotTakePlace": "Gennemføres ikke",
         "bye": {
           "open": "Oversidder{{seed}} · åben",

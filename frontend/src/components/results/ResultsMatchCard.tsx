@@ -17,6 +17,12 @@ type Props<M extends ResultsMatchInfo> = {
     /** Der Zustand des Laufs, wo die Ansicht ihn kennt. Null oder fehlend heißt: kein Chip. */
     statusChip?: MatchChip | null
     /**
+     * Der zweite, leise Chip unter dem Zustand: „1 abgemeldet". Bewusst getrennt vom
+     * [statusChip] - eine Abmeldung ist eine Aussage über die Besetzung, keine über den Zustand
+     * des Laufs (siehe `matchStatusChip.deregisteredChip`).
+     */
+    secondaryChip?: MatchChip | null
+    /**
      * Ein Lauf, hinter dem kein Dialog steht: abgesagt, wartende Runde, Programmpunkt. Die Karte
      * bleibt sichtbar, verliert aber ihre Klickfläche — ein Dialog hätte dort nichts zu zeigen.
      */
@@ -52,6 +58,7 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
     selectMatch,
     competition,
     statusChip,
+    secondaryChip,
     disabled = false,
     note,
     cancelled = false,
@@ -113,6 +120,7 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
                             ml: 'auto',
                         }}>
                         <StatusChip chip={statusChip ?? null} />
+                        <StatusChip chip={secondaryChip ?? null} />
                         {match.startTime && (
                             <Typography>
                                 {format(new Date(match.startTime), t('format.datetime'))}

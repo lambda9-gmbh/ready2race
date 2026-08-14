@@ -260,9 +260,9 @@ class LiveDashboardLogicTest {
 
     @Test
     fun failedTeamWithoutPlaceCountsAsResult() {
-        assertTrue(LiveDashboardLogic.teamHasResult(1, false, false))
-        assertTrue(LiveDashboardLogic.teamHasResult(null, true, false))
-        assertFalse(LiveDashboardLogic.teamHasResult(null, false, false))
+        assertTrue(LiveDashboardLogic.teamIsSettled(1, false, false))
+        assertTrue(LiveDashboardLogic.teamIsSettled(null, true, false))
+        assertFalse(LiveDashboardLogic.teamIsSettled(null, false, false))
         assertEquals(
             LiveDashboardMatchState.AWAITING_FINISH,
             LiveDashboardLogic.deriveMatchState(
@@ -271,8 +271,8 @@ class LiveDashboardLogicTest {
                 start,
                 null,
                 listOf(
-                    LiveDashboardLogic.teamHasResult(1, false, false),
-                    LiveDashboardLogic.teamHasResult(null, true, false),
+                    LiveDashboardLogic.teamIsSettled(1, false, false),
+                    LiveDashboardLogic.teamIsSettled(null, true, false),
                 ),
             )
         )
@@ -280,7 +280,24 @@ class LiveDashboardLogicTest {
 
     @Test
     fun deregisteredTeamNeedsNoResult() {
-        assertTrue(LiveDashboardLogic.teamHasResult(null, false, true))
+        assertTrue(LiveDashboardLogic.teamIsSettled(null, false, true))
+    }
+
+    /**
+     * Der Kern des Vorfalls vom 14.08.2026: Abgemeldet heißt "erledigt", aber NICHT "gefahren".
+     * Solange beides dasselbe Prädikat beantwortete, zählte eine Abmeldung als Wertung.
+     */
+    @Test
+    fun deregisteredTeamHasNotRaced() {
+        assertFalse(LiveDashboardLogic.teamHasRaced(null, false, true))
+        assertTrue(LiveDashboardLogic.teamIsSettled(null, false, true))
+    }
+
+    @Test
+    fun placedAndFailedTeamsHaveRaced() {
+        assertTrue(LiveDashboardLogic.teamHasRaced(1, false, false))
+        assertTrue(LiveDashboardLogic.teamHasRaced(null, true, false))
+        assertFalse(LiveDashboardLogic.teamHasRaced(null, false, false))
     }
 
     @Test
@@ -293,8 +310,8 @@ class LiveDashboardLogicTest {
                 start,
                 null,
                 listOf(
-                    LiveDashboardLogic.teamHasResult(1, false, false),
-                    LiveDashboardLogic.teamHasResult(null, false, true),
+                    LiveDashboardLogic.teamIsSettled(1, false, false),
+                    LiveDashboardLogic.teamIsSettled(null, false, true),
                 ),
             )
         )

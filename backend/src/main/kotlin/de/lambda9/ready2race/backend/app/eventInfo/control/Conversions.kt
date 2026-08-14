@@ -138,6 +138,8 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam(
     penaltyNote = penaltyNote,
     failed = failed,
     failedReason = failedReason,
+    deregistered = deregistered,
+    deregisteredReason = deregistrationReason,
     laps = laps,
 )
 
@@ -151,6 +153,8 @@ fun UpcomingMatchTeamInfo.toAthleteBoardTeam(
     clubsFull = clubsOrRegistering(clubsFull, clubName),
     teamName = teamName,
     registeringClub = if (includeDetails) clubName else null,
+    deregistered = deregistered,
+    deregisteredReason = deregistrationReason,
     participants = participants.map {
         it.toAthleteBoardParticipant(includeDetails, requirements[it.participantId] ?: emptyList())
     },
@@ -182,7 +186,7 @@ fun RunningMatchInfo.toAthleteBoardMatch(
             startTime = startTime,
             finishedAt = null,
             teamResults = teams.map {
-                LiveDashboardLogic.teamHasResult(it.currentPosition, it.failed, deregistered = false)
+                LiveDashboardLogic.teamIsSettled(it.currentPosition, it.failed, it.deregistered)
             },
         ),
         startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
@@ -297,6 +301,10 @@ fun UpcomingMatchTeamInfo.toRunningMatchTeamInfo() = RunningMatchTeamInfo(
     penaltyNote = null,
     failed = false,
     failedReason = null,
+    // Die Abmeldung ist kein Ergebnis, sondern ein Ausweis - sie darf die Zurückhaltung von
+    // Ergebnissen nicht betreffen und wird deshalb hier durchgereicht.
+    deregistered = deregistered,
+    deregistrationReason = deregistrationReason,
     participants = participants,
 )
 
@@ -321,7 +329,7 @@ fun RunningMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
         finishedAt = null,
         skipped = false,
         teams = teams.map {
-            MatchStatusTeam(place = it.currentPosition, failed = it.failed, deregistered = false)
+            MatchStatusTeam(place = it.currentPosition, failed = it.failed, deregistered = it.deregistered)
         },
     ),
     executionOrder = executionOrder,
@@ -334,8 +342,10 @@ fun RunningMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
  * zwischen abgesagt, ungeplant und anstehend. Sie steht trotzdem hier und nicht als eigenes `if`,
  * damit die Anzeige dieselbe Aufzählung liest wie jede andere Oberfläche.
  *
- * Alle Boote gehen als „noch offen" in die Ableitung - für einen anstehenden Lauf liegt kein
- * Ergebnis vor, und die Quellabfrage könnte auch keins liefern.
+ * Kein Boot geht mit einem Ergebnis in die Ableitung - für einen anstehenden Lauf liegt keins vor,
+ * und die Quellabfrage könnte auch keins liefern. Die Abmeldung geht dagegen ein: sie ist kein
+ * Ergebnis, sondern die Feststellung, dass für dieses Boot keins mehr kommt, und genau so liest
+ * sie [MatchStatusLogic.matchStatus] (erledigt, nicht gefahren).
  */
 fun UpcomingCompetitionMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
     matchId = matchId,
@@ -351,7 +361,7 @@ fun UpcomingCompetitionMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
         startedAt = null,
         finishedAt = null,
         skipped = cancelled,
-        teams = teams.map { MatchStatusTeam(place = null, failed = false, deregistered = false) },
+        teams = teams.map { MatchStatusTeam(place = null, failed = false, deregistered = it.deregistered) },
     ),
     executionOrder = executionOrder,
     cancelled = cancelled,

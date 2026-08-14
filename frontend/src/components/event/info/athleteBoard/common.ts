@@ -93,12 +93,15 @@ export const sortRunningTeams = <
  * Platz/Zeit oder gescheitert (DNS/DNF/DSQ). Der Lauf wartet dann nur noch auf die
  * Schiedsrichter-Entscheidung (Beenden), erst die verschiebt ihn in „Letztes Ergebnis".
  *
- * Dieselbe Auslegung wie `LiveDashboardLogic.teamHasResult` im Backend, so wie sie dort für
- * laufende Läufe angewandt wird (Conversions, `deregistered = false`): mehr als Platz und
- * Gescheitert-Status weiß über ein laufendes Feld auch das Schiedsrichter-Dashboard nicht.
+ * Dieselbe Auslegung wie `LiveDashboardLogic.teamIsSettled` im Backend: erledigt, nicht gefahren.
+ * Ein abgemeldetes Boot zählt deshalb mit — sonst stünde ein Lauf, aus dem eines der Boote
+ * abgemeldet ist, für immer auf „läuft noch", obwohl alle anderen im Ziel sind.
  */
-export const finishComplete = (teams: {place?: number | null; failed?: boolean}[]): boolean =>
-    teams.length > 0 && teams.every(team => team.place != null || team.failed === true)
+export const finishComplete = (
+    teams: {place?: number | null; failed?: boolean; deregistered?: boolean}[],
+): boolean =>
+    teams.length > 0 &&
+    teams.every(team => team.place != null || team.failed === true || team.deregistered === true)
 
 /**
  * Welche Form der Vereinskette in der Zeile steht. Die Entscheidung trifft die Breite des
