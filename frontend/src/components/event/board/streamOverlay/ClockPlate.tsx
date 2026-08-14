@@ -1,28 +1,51 @@
-import {Box, useTheme} from '@mui/material'
+import {useRef} from 'react'
+import {Box, Typography, useTheme} from '@mui/material'
 import {AthleteBoardMatch} from '@api/types.gen.ts'
-import StreamClockLabel from './StreamClockLabel.tsx'
+import {formatElapsed, streamClockState} from '../streamClock.ts'
 import {solidOr} from './streamDisplay.ts'
-import useStreamClockDisplay from './useStreamClockDisplay.ts'
+import useTicker from './useTicker.ts'
 
 interface ClockPlateProps {
-    match: AthleteBoardMatch
+    match: AthleteBoardMatch | null
     clockOffsetMs: number
 }
 
 /**
  * Modus „Nur Laufuhr": eine kompakte, separat croppbare Uhr-Platte unten links —
  * dieselbe Stelle wie das Lower-Third, damit beide Quellen im Zweifel deckungsgleich
- * liegen. Die Platte erscheint erst, wenn die Uhr etwas zu zeigen hat (deckende Fläche
- * schiebt per Transform herein, der Uhrtext übernimmt den erlaubten Text-Fade), und
- * verschwindet mit dem Fade-out der Uhr wieder vollständig.
+ * liegen.
+ *
+ * Anders als die Uhr im Lower-Third ist diese Platte DAUERHAFT eingeblendet (Wunsch
+ * vom 14.08.): vor dem Start steht 0:00.0, während des Laufs tickt sie, mit dem
+ * letzten gewerteten Boot friert sie ein und bleibt stehen, bis der nächste Lauf sie
+ * wieder auf 0:00.0 zurücksetzt. Kein Fade — die Regie verlässt sich darauf, dass die
+ * Quelle immer da ist.
  */
 const ClockPlate = ({match, clockOffsetMs}: ClockPlateProps) => {
     const theme = useTheme()
-    const clock = useStreamClockDisplay(match, clockOffsetMs)
+    // Der 100-ms-Tick läuft nur, solange die Uhr wirklich zählt — eingefroren oder
+    // wartend genügt der Datenstand des Polls.
+    const running = streamClockState(match, Date.now(), clockOffsetMs).phase === 'running'
+    const now = useTicker(100, running)
+    const state = streamClockState(match, now, clockOffsetMs)
 
-    if (!clock.mounted) {
-        return null
+    // Einfrieren heißt festhalten: streamClockState ist eine reine Funktion, ihr
+    // elapsedMs liefe sonst weiter — der erste frozen-Wert bleibt stehen, bis wieder
+    // ein Lauf tickt (dann beginnt die nächste Messung bei dessen Startzeit).
+    const frozenMs = useRef<number | null>(null)
+    if (state.phase === 'frozen') {
+        frozenMs.current ??= state.elapsedMs
+    } else {
+        frozenMs.current = null
     }
+
+    const text = formatElapsed(
+        state.phase === 'frozen'
+            ? (frozenMs.current ?? state.elapsedMs)
+            : state.phase === 'running'
+              ? state.elapsedMs
+              : 0,
+    )
 
     return (
         <Box sx={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end'}}>
@@ -34,11 +57,6 @@ const ClockPlate = ({match, clockOffsetMs}: ClockPlateProps) => {
                     overflow: 'hidden',
                     backgroundColor: solidOr(theme.palette.text.primary, '#1d1d1d'),
                     color: solidOr(theme.palette.background.paper, '#ffffff'),
-                    '@keyframes r2rStreamClockIn': {
-                        from: {transform: 'translateY(24px)'},
-                        to: {transform: 'translateY(0)'},
-                    },
-                    animation: 'r2rStreamClockIn 350ms ease-out',
                 }}>
                 <Box
                     sx={{
@@ -48,7 +66,11 @@ const ClockPlate = ({match, clockOffsetMs}: ClockPlateProps) => {
                     }}
                 />
                 <Box sx={{px: 3, py: 1.5}}>
-                    <StreamClockLabel match={match} clockOffsetMs={clockOffsetMs} variant="h2" />
+                    <Typography
+                        variant="h2"
+                        sx={{fontWeight: 700, fontVariantNumeric: 'tabular-nums'}}>
+                        {text}
+                    </Typography>
                 </Box>
             </Box>
         </Box>
