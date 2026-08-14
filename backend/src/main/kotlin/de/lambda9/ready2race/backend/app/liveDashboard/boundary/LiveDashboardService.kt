@@ -266,7 +266,9 @@ object LiveDashboardService {
                             startedAt = startedAt,
                             startTime = startTime,
                             finishedAt = finishedAt,
-                            teamResults = teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) },
+                            // "Erledigt", nicht "gefahren": der Zustand fragt, ob noch jemand auf
+                            // ein Ergebnis wartet - eine Abmeldung zählt dabei mit.
+                            teamResults = teams.map { LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered) },
                             skipped = matchId in skippedMatchIds,
                         ),
                         bye = byeByMatch[matchId],

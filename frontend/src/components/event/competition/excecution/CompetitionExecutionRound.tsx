@@ -57,6 +57,7 @@ import {raceClockerPollStatus} from './raceClockerPollStatus.ts'
 import {TimingFormSystem} from '@components/event/competition/timing/timingConfigForm.ts'
 import {
     arenaChip,
+    deregisteredChip,
     matchStatusChip,
     roundCounterChips,
 } from '@components/event/match/matchStatusChip.ts'
@@ -488,13 +489,24 @@ const CompetitionExecutionRound = ({
                                                             : ''}
                                                     </TableCell>
                                                     <TableCell width="25%">
-                                                        <StatusChip
-                                                            chip={matchStatusChip(
-                                                                match.status,
-                                                                match.startTime,
-                                                                now,
-                                                            )}
-                                                        />
+                                                        <Stack
+                                                            direction={'row'}
+                                                            spacing={0.5}
+                                                            useFlexGap
+                                                            sx={{flexWrap: 'wrap'}}>
+                                                            <StatusChip
+                                                                chip={matchStatusChip(
+                                                                    match.status,
+                                                                    match.startTime,
+                                                                    now,
+                                                                )}
+                                                            />
+                                                            <StatusChip
+                                                                chip={deregisteredChip(
+                                                                    match.status,
+                                                                )}
+                                                            />
+                                                        </Stack>
                                                     </TableCell>
                                                     <TableCell width="20%">
                                                         {/* Fairness-Regel: Strecke trotz Freilos
@@ -757,6 +769,7 @@ const CompetitionExecutionRound = ({
                                                 now,
                                             )}
                                         />
+                                        <StatusChip chip={deregisteredChip(match.status)} />
                                         <StatusChip chip={arenaChip(match.status)} />
                                     </Stack>
                                     <LoadingButton

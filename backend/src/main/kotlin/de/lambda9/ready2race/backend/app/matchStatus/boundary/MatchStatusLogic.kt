@@ -24,13 +24,24 @@ import java.time.LocalDateTime
 object MatchStatusLogic {
 
     /**
-     * Wie viele Mannschaften eines Laufs bereits gewertet sind. "Gewertet" heißt hier genau
-     * dasselbe wie im Dashboard ([LiveDashboardLogic.teamHasResult]): abgemeldet ODER Platz
-     * gesetzt ODER ausgeschieden. Abgemeldete zählen mit, weil für sie kein Ergebnis mehr kommt -
-     * ohne diesen Fall erreichte ein Lauf mit einer Abmeldung nie "alle gewertet".
+     * Wie viele Mannschaften eines Laufs erledigt sind - abgemeldet ODER Platz gesetzt ODER
+     * ausgeschieden ([LiveDashboardLogic.teamIsSettled]). Abgemeldete zählen mit, weil für sie kein
+     * Ergebnis mehr kommt; ohne diesen Fall erreichte ein Lauf mit einer Abmeldung nie
+     * "alle gewertet" und die Kette bliebe an ihm hängen.
      */
     fun scoredCount(teams: List<MatchStatusTeam>): Int =
-        teams.count { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) }
+        teams.count { LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered) }
+
+    /**
+     * Wie viele Mannschaften tatsächlich gefahren sind ([LiveDashboardLogic.teamHasRaced]) -
+     * Abmeldungen zählen hier nicht mit. Genau diese Zahl (und nicht [scoredCount]) trägt die
+     * Ablesung "Teilweise gewertet", siehe `MatchStatusDto.teamsRaced`.
+     */
+    fun racedCount(teams: List<MatchStatusTeam>): Int =
+        teams.count { LiveDashboardLogic.teamHasRaced(it.place, it.failed, it.deregistered) }
+
+    /** Wie viele Mannschaften des Laufs für diese Runde abgemeldet sind. */
+    fun deregisteredCount(teams: List<MatchStatusTeam>): Int = teams.count { it.deregistered }
 
     /**
      * Setzt den Zustand eines Laufs zusammen. [teamsInArena] bleibt null, wo die Ansicht die
@@ -54,17 +65,19 @@ object MatchStatusLogic {
                 startedAt = startedAt,
                 startTime = startTime,
                 finishedAt = finishedAt,
-                // Dieselbe Eingabe wie im Dashboard: je Mannschaft ein Ja/Nein, ob sie gewertet
-                // ist. Ein Lauf ohne Mannschaften bleibt damit ausdrücklich nicht
-                // AWAITING_FINISH - deriveMatchState prüft auf isNotEmpty().
+                // Die Zustandsfrage ist "erledigt", nicht "gefahren": je Mannschaft ein Ja/Nein,
+                // ob auf sie noch jemand wartet. Ein Lauf ohne Mannschaften bleibt damit
+                // ausdrücklich nicht AWAITING_FINISH - deriveMatchState prüft auf isNotEmpty().
                 teamResults = teams.map {
-                    LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered)
+                    LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered)
                 },
                 skipped = skipped,
             ),
             startedAt = startedAt,
             teamsTotal = teams.size,
             teamsScored = scored,
+            teamsRaced = racedCount(teams),
+            teamsDeregistered = deregisteredCount(teams),
             teamsInArena = teamsInArena,
             bye = bye,
         )

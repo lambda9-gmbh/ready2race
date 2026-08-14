@@ -627,6 +627,8 @@ object EventInfoService {
                     clubName = first.get("club_name", String::class.java),
                     clubsShort = clubs.short.ifEmpty { null },
                     clubsFull = clubs.full.ifEmpty { null },
+                    deregistered = first.get("deregistered", Boolean::class.java) == true,
+                    deregistrationReason = first.get("deregistration_reason", String::class.java),
                     participants = groupedRecords.mapNotNull { record ->
                         record.get("participant_id", UUID::class.java)?.let {
                             UpcomingMatchParticipantInfo(
@@ -679,6 +681,8 @@ object EventInfoService {
                     penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
+                    deregistered = first.get("deregistered", Boolean::class.java) == true,
+                    deregistrationReason = first.get("deregistration_reason", String::class.java),
                     participants = groupedRecords.mapNotNull { record ->
                         record.get("participant_id", UUID::class.java)?.let {
                             UpcomingMatchParticipantInfo(

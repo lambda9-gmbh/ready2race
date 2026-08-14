@@ -63,6 +63,24 @@ class ScheduleChainTest {
         assertEquals(ChainDecision.Activate(listOf(m)), decision)
     }
 
+    /**
+     * Ein Lauf, dessen Boote alle abgemeldet sind, kommt aus `EventScheduleRepo.getChainSlots` mit
+     * `matchOpen = false` (die Kette fragt nach "erledigt", nicht nach "gefahren"). Die Kette geht
+     * über ihn hinweg statt an ihm stehenzubleiben - sonst käme die Regatta an einem Lauf, in dem
+     * niemand mehr fährt, nicht weiter.
+     */
+    @Test
+    fun aFullyDeregisteredMatchDoesNotStallTheChain() {
+        val m = UUID.randomUUID()
+        val decision = ScheduleChain.decideNext(
+            listOf(
+                slot(10, LINKED, UUID.randomUUID(), open = false),
+                slot(20, LINKED, m),
+            ),
+        )
+        assertEquals(ChainDecision.Activate(listOf(m)), decision)
+    }
+
     @Test
     fun parallelStartsActivateTogether() {
         val a = UUID.randomUUID()

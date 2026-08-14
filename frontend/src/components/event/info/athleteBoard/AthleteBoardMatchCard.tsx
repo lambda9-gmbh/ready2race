@@ -374,7 +374,20 @@ const AthleteBoardMatchCard = ({
                             index={index}
                             leadNumber={team.startNumber}
                             trailing={
-                                // Teilergebnis: sobald die Zeitnahme dieses Boot gewertet hat,
+                                // Die Abmeldung steht VOR jedem Ergebnis und unabhängig von
+                                // showLiveResult: sie ist kein Ergebnis, sondern die Feststellung,
+                                // dass dieses Boot nicht fährt — und die gehört auch in einen
+                                // anstehenden Lauf, in dem noch gar nichts gewertet sein kann.
+                                team.deregistered ? (
+                                    <AthleteBoardBoatStatus
+                                        muted
+                                        label={
+                                            team.deregisteredReason
+                                                ? `${t('event.info.athleteBoard.deregistered')} — ${team.deregisteredReason}`
+                                                : t('event.info.athleteBoard.deregistered')
+                                        }
+                                    />
+                                ) : // Teilergebnis: sobald die Zeitnahme dieses Boot gewertet hat,
                                 // steht die Zeit hier — der Lauf läuft dabei weiter, bis die
                                 // Organisation ihn beendet, und eine später ergänzte Zeitstrafe
                                 // ändert die Zeile beim nächsten Abruf noch. Rundenzeiten allein
@@ -420,7 +433,11 @@ const AthleteBoardMatchCard = ({
                                     </>
                                 ) : undefined
                             }>
-                            <AthleteBoardTeamLabel team={team} />
+                            <AthleteBoardTeamLabel
+                                team={team}
+                                strikeThrough={team.deregistered}
+                                color={team.deregistered ? 'text.secondary' : undefined}
+                            />
                             {/* Sprecherinnen-Detail: jede Athletin auf eigener Zeile —
                                 Boot für Boot vorstellbar, alle Namen lesbar. */}
                             {showCrewDetails && team.participants.length > 0 ? (

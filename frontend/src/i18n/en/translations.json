@@ -1675,6 +1675,7 @@
         "cancelled": "Cancelled",
         "unscheduled": "Unscheduled",
         "inArena": "Arena {{inArena}}/{{total}}",
+        "deregistered": "{{n}} withdrawn",
         "doesNotTakePlace": "Does not take place",
         "bye": {
           "open": "Bye{{seed}} · open",

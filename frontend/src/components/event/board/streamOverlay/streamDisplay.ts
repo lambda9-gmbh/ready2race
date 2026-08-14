@@ -40,6 +40,8 @@ export type StreamTeam = Pick<
     | 'penaltyNote'
     | 'failed'
     | 'failedReason'
+    | 'deregistered'
+    | 'deregisteredReason'
     | 'laps'
     | 'participants'
 >
@@ -115,11 +117,28 @@ export const crewLines = (
     return {primary: club, secondary}
 }
 
-/** Platz/Zeit oder DNF/DNS/DSQ einer Bootszeile — null ohne jedes Teilergebnis (Aufstellung). */
+/**
+ * Platz/Zeit, DNF/DNS/DSQ oder „Abgemeldet" einer Bootszeile — null ohne jedes Teilergebnis
+ * (Aufstellung).
+ *
+ * Die Abmeldung steht vor allem anderen und ist ausdrücklich kein Ergebnis: Sie sagt, dass dieses
+ * Boot nicht fährt, und gehört deshalb auch in ein Panel, in dem noch gar nichts gewertet sein
+ * kann. Ohne [deregisteredFallback] (Aufrufer, die die Angabe nicht führen) bleibt es beim alten
+ * Verhalten.
+ */
 export const teamTrailingLabel = (
-    team: Pick<StreamTeam, 'place' | 'timeString' | 'failed' | 'failedReason'>,
+    team: Pick<
+        StreamTeam,
+        'place' | 'timeString' | 'failed' | 'failedReason' | 'deregistered' | 'deregisteredReason'
+    >,
     failedFallback: string,
+    deregisteredFallback?: string,
 ): string | null => {
+    if (team.deregistered && deregisteredFallback) {
+        return team.deregisteredReason
+            ? `${deregisteredFallback} — ${team.deregisteredReason}`
+            : deregisteredFallback
+    }
     if (team.failed) return failedLabel(team.failedReason, failedFallback)
     const parts = [
         team.place != null ? formatPlaceOrdinal(team.place) : null,

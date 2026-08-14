@@ -340,6 +340,11 @@ export type AthleteBoardTeam = {
     failed: boolean
     failedReason?: string | null
     /**
+     * withdrawn from this round. Until 2026-08-14 only the results block carried this; in the upcoming and running blocks a withdrawn boat stood in the line-up like any other. The boat deliberately stays in the list (a crew at the pontoon cannot tell a vanished boat from a display error) and is marked as withdrawn instead
+     */
+    deregistered: boolean
+    deregisteredReason?: string | null
+    /**
      * registering club - only filled when a board element requests showRegisteringClub
      */
     registeringClub?: string | null
@@ -1858,9 +1863,17 @@ export type EventScheduleSlotDto = {
      */
     matchTeamsTotal: number
     /**
-     * Of those, already scored: place set OR failed OR deregistered - the same rule the referee dashboard uses. Together with matchTeamsTotal this reads as 'partially scored n/m'; it is explicitly not a state of its own
+     * Of those, settled: place set OR failed OR deregistered - the same rule the referee dashboard uses. Carries 'all scored' (AWAITING_FINISH), NOT the 'partially scored' reading
      */
     matchTeamsScored: number
+    /**
+     * Of those, actually raced: place set OR failed, withdrawals excluded. Together with matchTeamsTotal and matchTeamsDeregistered this reads as 'partially scored n/m'; it is explicitly not a state of its own
+     */
+    matchTeamsRaced: number
+    /**
+     * Of those, withdrawn from this round - a plain statement shown as a second, quiet chip; it never decides a state
+     */
+    matchTeamsDeregistered: number
     /**
      * Set when the linked match is a bye - null for free slots and slots whose round is not materialized yet.
      */
@@ -2538,7 +2551,7 @@ export type MatchStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
 /**
  * The derived state of a match, read by every surface - one derivation, three callers (execution page, schedule, referee dashboard).
  *
- * "Overdue" and "partially scored" are deliberately NOT states of their own but readings of these fields: partially scored is state != RUNNING && 0 < teamsScored < teamsTotal, overdue is state == UPCOMING && startTime + 5 min < now. Elapsed minutes and overdueness are computed in the frontend against the browser clock so the chip keeps counting between two polls.
+ * "Overdue", "partially scored" and "n withdrawn" are deliberately NOT states of their own but readings of these fields: partially scored is state != RUNNING && 0 < teamsRaced < teamsTotal - teamsDeregistered, overdue is state == UPCOMING && startTime + 5 min < now, "n withdrawn" is teamsDeregistered > 0. Elapsed minutes and overdueness are computed in the frontend against the browser clock so the chip keeps counting between two polls.
  */
 export type MatchStatusDto = {
     state: LiveDashboardMatchState
@@ -2548,9 +2561,17 @@ export type MatchStatusDto = {
     startedAt?: string
     teamsTotal: number
     /**
-     * Scored means: deregistered OR place set OR failed - the same rule the referee dashboard uses.
+     * Settled means: deregistered OR place set OR failed - the question "is anyone still waiting for a result here". Carries AWAITING_FINISH and the activation chain, NOT the "partially scored" reading.
      */
     teamsScored: number
+    /**
+     * Of those, actually raced: place set OR failed, withdrawals excluded. Only this number may trigger "partially scored". Before 2026-08-14 it did not exist and a match with one withdrawal and four open boats read as "partially scored 1/5" although nobody had raced.
+     */
+    teamsRaced: number
+    /**
+     * Of those, withdrawn from this round. A plain statement shown as a second, quiet chip next to the state chip - it never decides a state.
+     */
+    teamsDeregistered: number
     /**
      * null = not collected in this view (schedule, public boards).
      */

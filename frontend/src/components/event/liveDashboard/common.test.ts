@@ -27,7 +27,8 @@ import {
     pendingSlotLabel,
     shortenClubChain,
     dashboardRowColumns,
-    teamHasResult,
+    teamIsSettled,
+    teamHasRaced,
     teamNoteCount,
     teamsInDisplayOrder,
     teamShowsClubLine,
@@ -49,19 +50,40 @@ const team = (overrides: Partial<LiveDashboardTeamDto>): LiveDashboardTeamDto =>
     ...overrides,
 })
 
-describe('teamHasResult', () => {
+describe('teamIsSettled', () => {
     it('zählt Platz, Zeit und Ausscheiden als Ergebnis', () => {
-        expect(teamHasResult(team({place: 1}))).toBe(true)
-        expect(teamHasResult(team({time: '07:12.340'}))).toBe(true)
-        expect(teamHasResult(team({failed: true, failedReason: 'DNF'}))).toBe(true)
+        expect(teamIsSettled(team({place: 1}))).toBe(true)
+        expect(teamIsSettled(team({time: '07:12.340'}))).toBe(true)
+        expect(teamIsSettled(team({failed: true, failedReason: 'DNF'}))).toBe(true)
     })
 
     it('erwartet von abgemeldeten Booten kein Ergebnis', () => {
-        expect(teamHasResult(team({deregistered: true}))).toBe(true)
+        expect(teamIsSettled(team({deregistered: true}))).toBe(true)
     })
 
     it('erkennt ein offenes Boot', () => {
-        expect(teamHasResult(team({}))).toBe(false)
+        expect(teamIsSettled(team({}))).toBe(false)
+    })
+})
+
+describe('teamHasRaced', () => {
+    it('zählt Platz, Zeit und Ausscheiden als gefahren', () => {
+        expect(teamHasRaced(team({place: 1}))).toBe(true)
+        expect(teamHasRaced(team({time: '07:12.340'}))).toBe(true)
+        expect(teamHasRaced(team({failed: true, failedReason: 'DNF'}))).toBe(true)
+    })
+
+    /**
+     * Der Kern des Vorfalls vom 14.08.2026: Ein abgemeldetes Boot ist erledigt, aber es ist nicht
+     * gefahren. Solange beides dasselbe Prädikat war, zählte die Abmeldung als Wertung.
+     */
+    it('zählt ein abgemeldetes Boot nicht als gefahren', () => {
+        expect(teamHasRaced(team({deregistered: true}))).toBe(false)
+        expect(teamIsSettled(team({deregistered: true}))).toBe(true)
+    })
+
+    it('erkennt ein offenes Boot', () => {
+        expect(teamHasRaced(team({}))).toBe(false)
     })
 })
 
@@ -609,6 +631,32 @@ describe('dashboardMatchStatus', () => {
         )
         expect(status.teamsTotal).toBe(4)
         expect(status.teamsScored).toBe(3)
+        // Gefahren sind nur die beiden ohne Abmeldung.
+        expect(status.teamsRaced).toBe(2)
+        expect(status.teamsDeregistered).toBe(1)
+    })
+
+    /**
+     * Der Vorfall vom 14.08.2026 auf der Dashboard-Karte: fünf Boote, eines abgemeldet, sonst
+     * nichts gefahren. „Erledigt" ist 1, „gefahren" muss 0 sein — sonst behauptet die Karte eine
+     * Teilwertung, die es nicht gibt.
+     */
+    it('zählt eine Abmeldung als erledigt, aber nicht als gefahren', () => {
+        const status = dashboardMatchStatus(
+            match({
+                teams: [
+                    {deregistered: true} as never,
+                    {} as never,
+                    {} as never,
+                    {} as never,
+                    {} as never,
+                ],
+            }),
+        )
+        expect(status.teamsTotal).toBe(5)
+        expect(status.teamsScored).toBe(1)
+        expect(status.teamsRaced).toBe(0)
+        expect(status.teamsDeregistered).toBe(1)
     })
 
     it('trägt das Freilos in den Dashboard-Status', () => {

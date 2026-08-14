@@ -128,11 +128,17 @@ describe('scaled', () => {
     })
 })
 
-// Die Wartestand-Kennzeichnung der „Im Rennen"-Karte: genau dann, wenn jedes Boot
-// Platz/Zeit hat oder gescheitert ist — dieselbe Auslegung wie teamHasResult im Backend.
+// Die Wartestand-Kennzeichnung der „Im Rennen"-Karte: genau dann, wenn jedes Boot erledigt ist -
+// Platz/Zeit, gescheitert oder abgemeldet, dieselbe Auslegung wie teamIsSettled im Backend.
 describe('finishComplete', () => {
     test('alle Boote gewertet oder gescheitert: komplett', () => {
         expect(finishComplete([{place: 1}, {place: 2}, {failed: true}])).toBe(true)
+    })
+
+    // Auf ein abgemeldetes Boot wartet niemand mehr - sonst stünde die Karte für immer auf
+    // „läuft noch", obwohl alle anderen im Ziel sind.
+    test('ein abgemeldetes Boot hält den Zieleinlauf nicht offen', () => {
+        expect(finishComplete([{place: 1}, {deregistered: true}])).toBe(true)
     })
 
     test('ein Boot noch ohne Ergebnis: nicht komplett', () => {

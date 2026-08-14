@@ -17,10 +17,11 @@ typealias MatchState = LiveDashboardMatchState
  * Der Zustand eines Laufs, wie ihn alle Oberflächen lesen - eine Ableitung, drei Aufrufer
  * (Durchführungsseite, Zeitplan, Schiedsrichter-Dashboard).
  *
- * "Überfällig" und "Teilweise gewertet" sind bewusst KEINE eigenen Zustände, sondern Ablesungen
- * aus diesen Feldern:
- * - Teilweise gewertet: `state != RUNNING && 0 < teamsScored < teamsTotal`
+ * "Überfällig", "Teilweise gewertet" und "n abgemeldet" sind bewusst KEINE eigenen Zustände,
+ * sondern Ablesungen aus diesen Feldern:
+ * - Teilweise gewertet: `state != RUNNING && 0 < teamsRaced < teamsTotal - teamsDeregistered`
  * - Überfällig: `state == UPCOMING && startTime + 5 min < jetzt`
+ * - n abgemeldet: `teamsDeregistered > 0`
  *
  * Neue Werte in [MatchState] würden still durch jedes `when`/`switch` in den `else`-Zweig fallen,
  * das heute über die Aufzählung verzweigt (`selectForScope`, `matchControls`,
@@ -34,7 +35,27 @@ data class MatchStatusDto(
     /** Tatsächlicher Start (`competition_match.started_at`) - null, solange niemand gestartet hat. */
     val startedAt: LocalDateTime?,
     val teamsTotal: Int,
+    /**
+     * Davon erledigt (`LiveDashboardLogic.teamIsSettled`): Platz ODER ausgeschieden ODER
+     * abgemeldet. Die Zahl beantwortet "wartet hier noch jemand auf ein Ergebnis" und trägt
+     * deshalb [MatchState.AWAITING_FINISH] und die Aktivierungskette - NICHT die Ablesung
+     * "Teilweise gewertet".
+     */
     val teamsScored: Int,
+    /**
+     * Davon tatsächlich gefahren (`LiveDashboardLogic.teamHasRaced`): Platz ODER ausgeschieden,
+     * ohne die Abgemeldeten. Nur diese Zahl darf "Teilweise gewertet" auslösen. Vor dem 14.08.2026
+     * gab es sie nicht, und ein Lauf mit einer Abmeldung und vier offenen Booten stand auf dem
+     * Schiedsrichter-Board als "Teilweise gewertet 1/5" - obwohl niemand gefahren war.
+     */
+    val teamsRaced: Int = 0,
+    /**
+     * Davon für diese Runde abgemeldet. Reiner Ausweis: er wird als zweiter, leiser Chip neben dem
+     * Zustands-Chip angezeigt (dieselbe Kategorie wie "Arena 0/5") und entscheidet über keinen
+     * Zustand. `teamsTotal - teamsDeregistered` ist die Zahl der Boote, von denen überhaupt ein
+     * Ergebnis erwartet wird.
+     */
+    val teamsDeregistered: Int = 0,
     /** null = in dieser Ansicht nicht erhoben (Zeitplan, öffentliche Anzeigen). */
     val teamsInArena: Int? = null,
     /**
@@ -55,10 +76,10 @@ data class MatchStatusDto(
 typealias CrewLastScans = List<Pair<String, LocalDateTime>?>
 
 /**
- * Die drei Angaben je Mannschaft, aus denen sich "gewertet" ergibt - dieselbe Regel wie im
- * Dashboard (siehe `LiveDashboardLogic.teamHasResult`). Bewusst ein eigener, minimaler Typ statt
- * eines der großen Team-DTOs: die Ableitung soll ohne Datenbank und ohne Ansichtskontext prüfbar
- * bleiben.
+ * Die drei Angaben je Mannschaft, aus denen sich "erledigt" (`LiveDashboardLogic.teamIsSettled`)
+ * und "gefahren" (`LiveDashboardLogic.teamHasRaced`) ergeben. Bewusst ein eigener, minimaler Typ
+ * statt eines der großen Team-DTOs: die Ableitung soll ohne Datenbank und ohne Ansichtskontext
+ * prüfbar bleiben.
  */
 data class MatchStatusTeam(
     val place: Int?,

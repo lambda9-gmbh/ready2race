@@ -78,6 +78,8 @@ object EventScheduleService {
                     matchActivatedAt = r[COMPETITION_MATCH.ACTIVATED_AT],
                     matchTeamsTotal = r.get("match_teams_total", Int::class.java) ?: 0,
                     matchTeamsScored = r.get("match_teams_scored", Int::class.java) ?: 0,
+                    matchTeamsRaced = r.get("match_teams_raced", Int::class.java) ?: 0,
+                    matchTeamsDeregistered = r.get("match_teams_deregistered", Int::class.java) ?: 0,
                     bye = r[EVENT_SCHEDULE_SLOT.COMPETITION_SETUP_MATCH]?.let { byeByMatch[it] },
                 )
             }

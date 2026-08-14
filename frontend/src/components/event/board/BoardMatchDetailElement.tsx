@@ -183,7 +183,16 @@ const BoardMatchDetailElement = ({
                 {startNumber}
             </Typography>
             <Box sx={{minWidth: 0, flex: 1}}>
-                <Typography sx={{fontSize: scaled('0.95rem', '1.6vw', '2.2rem'), fontWeight: 700}}>
+                <Typography
+                    sx={{
+                        fontSize: scaled('0.95rem', '1.6vw', '2.2rem'),
+                        fontWeight: 700,
+                        // Ein abgemeldetes Boot bleibt in der Aufstellung stehen (die Crew am Steg
+                        // soll es wiederfinden), wird aber durchgestrichen — die Sprecherin sieht
+                        // auf einen Blick, wer nicht kommt.
+                        textDecoration:
+                            'deregistered' in team && team.deregistered ? 'line-through' : undefined,
+                    }}>
                     {teamLabel(team, t, 'full')}
                 </Typography>
                 {subline && (
@@ -235,9 +244,15 @@ const BoardMatchDetailElement = ({
                   team.startNumber,
                   team,
                   {
-                      // Platz und/oder Zeit, sobald vorhanden — beim Zeitfahren kommt der
-                      // Platz oft vor der übertragenen Zeit an und soll nicht darauf warten.
-                      label: team.failed
+                      // Die Abmeldung steht vor allem anderen: sie ist kein Ergebnis, sondern
+                      // die Feststellung, dass dieses Boot nicht fährt.
+                      label: team.deregistered
+                          ? team.deregisteredReason
+                              ? `${t('event.info.athleteBoard.deregistered')} — ${team.deregisteredReason}`
+                              : t('event.info.athleteBoard.deregistered')
+                          : // Platz und/oder Zeit, sobald vorhanden — beim Zeitfahren kommt der
+                            // Platz oft vor der übertragenen Zeit an und soll nicht darauf warten.
+                            team.failed
                           ? (team.failedReason ?? t('event.info.athleteBoard.failed'))
                           : team.place != null || team.timeString ? (
                                 <>
@@ -249,7 +264,7 @@ const BoardMatchDetailElement = ({
                                     {team.timeString ?? ''}
                                 </>
                             ) : null,
-                      muted: team.failed,
+                      muted: team.failed || team.deregistered,
                   },
                   team.registeringClub
                       ? t('event.info.athleteBoard.registeringClub', {club: team.registeringClub})
