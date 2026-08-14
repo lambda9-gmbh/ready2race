@@ -287,4 +287,32 @@ class BoardLogicTest {
         )
         assertEquals(12, BoardLogic.dataNeeds(withBiggerList).listLimits[BoardListMode.UPCOMING])
     }
+
+    // „Letztes Ergebnis" darf nicht am Slot −1 hängen: der zählt die Timeline rückwärts und
+    // trifft zuerst die früher gestarteten, noch laufenden Läufe. Fahren zwei Läufe
+    // gleichzeitig, kam dort ein laufender Lauf statt eines Ergebnisses an und die Kachel
+    // blieb leer. Über listLimits bekommt sie das jüngste Ergebnis unabhängig davon.
+    @Test
+    fun `RESULTS und AUTO fordern die Ergebnisliste an`() {
+        fun config(mode: StreamOverlayMode?) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(elements = listOf(BoardElement(type = BoardElementType.STREAM, streamMode = mode)))
+            ),
+        )
+        assertEquals(1, BoardLogic.dataNeeds(config(StreamOverlayMode.RESULTS)).listLimits[BoardListMode.RESULTS])
+        assertEquals(1, BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO)).listLimits[BoardListMode.RESULTS])
+        assertEquals(1, BoardLogic.dataNeeds(config(null)).listLimits[BoardListMode.RESULTS])
+        // Modi ohne Ergebnisbezug lassen die Liste weg.
+        assertEquals(null, BoardLogic.dataNeeds(config(StreamOverlayMode.RUNNING)).listLimits[BoardListMode.RESULTS])
+        assertEquals(null, BoardLogic.dataNeeds(config(StreamOverlayMode.UPCOMING)).listLimits[BoardListMode.RESULTS])
+
+        // Eine daneben konfigurierte Ergebnisliste mit größerem Limit gewinnt.
+        val withBiggerList = config(StreamOverlayMode.RESULTS).let {
+            it.copy(tiles = it.tiles + BoardTile(elements = listOf(
+                BoardElement(type = BoardElementType.MATCH_LIST, listMode = BoardListMode.RESULTS, limit = 6)
+            )))
+        }
+        assertEquals(6, BoardLogic.dataNeeds(withBiggerList).listLimits[BoardListMode.RESULTS])
+    }
 }

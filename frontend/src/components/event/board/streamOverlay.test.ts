@@ -153,9 +153,55 @@ describe('lastLaps', () => {
 describe('streamOverlayContent CLOCK', () => {
     it('liefert die Uhr-Quelle nur mit laufendem Lauf', () => {
         const running = match('VF1')
-        expect(
-            streamOverlayContent({slots: [slot(0, running)], lists: []}, 'CLOCK'),
-        ).toMatchObject({kind: 'clock'})
+        expect(streamOverlayContent({slots: [slot(0, running)], lists: []}, 'CLOCK')).toMatchObject(
+            {kind: 'clock'},
+        )
         expect(streamOverlayContent({slots: [slot(0)], lists: []}, 'CLOCK')).toBeNull()
+    })
+})
+
+/**
+ * Das jüngste Ergebnis kommt aus der Ergebnisliste, nicht aus dem Slot −1 — der trifft
+ * bei zwei gleichzeitig fahrenden Läufen zuerst den früher gestarteten (siehe
+ * `latestResultOf`). Genau daran zeigte „Nur letztes Ergebnis" auf einem vollen
+ * Regattatag nichts an.
+ */
+describe('jüngstes Ergebnis aus der Ergebnisliste', () => {
+    const resultList = (...results: AthleteBoardResult[]) =>
+        [{mode: 'RESULTS', matches: [], results}] as unknown as BoardListDto[]
+
+    it('RESULTS zeigt das Ergebnis, obwohl Slot −1 einen laufenden Lauf trägt', () => {
+        const content = streamOverlayContent(
+            view([slot(-1, match('parallel laufend'))], resultList(result('ZF'))),
+            'RESULTS',
+        )
+        expect(content).toMatchObject({kind: 'result', result: {matchName: 'ZF'}})
+    })
+
+    it('nimmt das erste Ergebnis der Liste (Server sortiert neuestes zuerst)', () => {
+        const content = streamOverlayContent(
+            view([], resultList(result('neu'), result('alt'))),
+            'RESULTS',
+        )
+        expect(content).toMatchObject({kind: 'result', result: {matchName: 'neu'}})
+    })
+
+    it('fällt ohne Ergebnisliste weiterhin auf den Slot −1 zurück', () => {
+        const content = streamOverlayContent(view([slot(-1, undefined, result('ZF'))]), 'RESULTS')
+        expect(content).toMatchObject({kind: 'result', result: {matchName: 'ZF'}})
+    })
+
+    it('zeigt nichts, wenn die Ergebnisliste leer ist und der Slot einen laufenden Lauf trägt', () => {
+        expect(
+            streamOverlayContent(
+                view([slot(-1, match('parallel laufend'))], resultList()),
+                'RESULTS',
+            ),
+        ).toBeNull()
+    })
+
+    it('AUTO fällt ohne laufenden Lauf ebenfalls auf die Ergebnisliste zurück', () => {
+        const content = streamOverlayContent(view([], resultList(result('ZF'))), 'AUTO')
+        expect(content).toMatchObject({kind: 'result', result: {matchName: 'ZF'}})
     })
 })

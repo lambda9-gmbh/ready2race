@@ -74,7 +74,10 @@ object BoardLogic {
             .toSet()
         // Das Stream-Overlay hängt sich an dieselbe Timeline: Offset 0 ist der zuletzt
         // gestartete laufende Lauf (genau die Regel „bei mehreren gewinnt der zuletzt
-        // gestartete" aus der Spec), −1 das jüngste Ergebnis, +1 der nächste anstehende.
+        // gestartete" aus der Spec), +1 der nächste anstehende. Das jüngste Ergebnis kommt
+        // NICHT über den Slot −1 (der trifft erst die früher gestarteten laufenden Läufe),
+        // sondern über die Ergebnisliste weiter unten — der Slot bleibt nur als Rückfall
+        // für ältere Anzeigen angemeldet.
         val streamElements = elements.filter { it.type == BoardElementType.STREAM }
         val streamOffsets = streamElements
             .flatMap {
@@ -101,6 +104,16 @@ object BoardLogic {
         val streamUpcomingList = streamElements.any {
             (it.streamMode ?: StreamOverlayMode.AUTO) == StreamOverlayMode.UPCOMING_LIST
         }
+        // „Letztes Ergebnis" braucht die Ergebnisliste, nicht den Slot −1: Offset −1 zählt
+        // die Timeline rückwärts und trifft dabei ZUERST die früher gestarteten, noch
+        // laufenden Läufe (siehe [resolveOffset]). Fahren zwei Läufe gleichzeitig — der
+        // Normalfall an einem vollen Regattatag —, liefert −1 einen laufenden Lauf statt
+        // eines Ergebnisses, und die Kachel blieb leer. Über listLimits bekommt sie das
+        // jüngste Ergebnis unabhängig davon, wie viele Läufe gerade auf dem Wasser sind.
+        val streamResults = streamElements.any {
+            val mode = it.streamMode ?: StreamOverlayMode.AUTO
+            mode == StreamOverlayMode.RESULTS || mode == StreamOverlayMode.AUTO
+        }
         val streamCrew = streamElements.any {
             (it.streamCrew ?: StreamCrewDisplay.CLUBS_FIRST) != StreamCrewDisplay.CLUBS_ONLY
         }
@@ -110,9 +123,12 @@ object BoardLogic {
                 .filter { it.type == BoardElementType.MATCH_LIST && it.listMode != null }
                 .groupBy { it.listMode!! }
                 .mapValues { (_, es) -> es.maxOf { it.limit ?: BoardLimits.MIN_LIST_LIMIT } }
-            if (streamUpcomingList) {
+            val withUpcoming = if (streamUpcomingList) {
                 base + (BoardListMode.UPCOMING to maxOf(base[BoardListMode.UPCOMING] ?: 0, 5))
             } else base
+            if (streamResults) {
+                withUpcoming + (BoardListMode.RESULTS to maxOf(withUpcoming[BoardListMode.RESULTS] ?: 0, 1))
+            } else withUpcoming
         }
 
         val maxNegative = allOffsets.filter { it < 0 }.minOrNull()?.let { -it } ?: 0
