@@ -3429,6 +3429,102 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /club/{clubId}/participant/search:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: searchParticipantsAcrossClubs
+      description: >-
+        Vereinsuebergreifende Suche fuer die Meldemaske. Liefert nur etwas, wenn die
+        Veranstaltung es erlaubt (allowCrossClubRegistration) und mindestens zwei Zeichen
+        eingegeben wurden; die Trefferzahl ist gedeckelt und der eigene Vereinsbestand faellt
+        heraus.
+      parameters:
+        - in: query
+          name: eventId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: search
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Matching participants of other clubs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantSearchResultDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /club/{clubId}/participant/{participantId}/club/{additionalClubId}:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: additionalClubId
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: addParticipantAdditionalClub
+      description: >-
+        Ordnet die Person einem weiteren Verein zu. Nur der Stammverein (clubId) und globales
+        Recht duerfen das.
+      responses:
+        204:
+          description: Additional club added
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: removeParticipantAdditionalClub
+      description: Loest die Zuordnung wieder. Bestehende Meldungen bleiben unberuehrt.
+      responses:
+        204:
+          description: Additional club removed
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /club/{clubId}/participant/{participantId}:
     parameters:
       - in: path
@@ -10696,6 +10792,9 @@ components:
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        allowCrossClubRegistration:
+          type: boolean
+          description: "Lets registrants search and register participants of other clubs; master data stays with the home club"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
         executionAutoRefresh:
@@ -10881,6 +10980,9 @@ components:
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        allowCrossClubRegistration:
+          type: boolean
+          description: "Lets registrants search and register participants of other clubs; master data stays with the home club"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
 
@@ -10939,6 +11041,9 @@ components:
         showBreaksOnPublicBoards:
           type: boolean
           description: "Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too"
+        allowCrossClubRegistration:
+          type: boolean
+          description: "Lets registrants search and register participants of other clubs; master data stays with the home club"
         publicResultsVisibility:
           $ref: '#/components/schemas/PublicResultsVisibility'
         executionAutoRefresh:
@@ -12352,6 +12457,9 @@ components:
         - usedInRegistration
         - createdAt
         - updatedAt
+        - clubId
+        - clubName
+        - additionalClubs
       properties:
         id:
           type: string
@@ -12383,6 +12491,56 @@ components:
           type: string
           format: date-time
         email:
+          type: string
+        clubId:
+          description: Stammverein - nur er darf die Stammdaten aendern
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        additionalClubs:
+          description: Weitere Vereine, die diese Person melden duerfen (ohne den Stammverein)
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantClubDto'
+
+    ParticipantClubDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    ParticipantSearchResultDto:
+      description: >-
+        Treffer der vereinsuebergreifenden Suche. Bewusst schmal: nur was zum Melden noetig ist,
+        keine Kontaktdaten.
+      type: object
+      required:
+        - id
+        - firstname
+        - lastname
+        - gender
+        - clubName
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstname:
+          type: string
+        lastname:
+          type: string
+        year:
+          type: integer
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/Gender'
+        clubName:
           type: string
 
     ParticipantForEventDto:

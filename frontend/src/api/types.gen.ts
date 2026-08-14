@@ -1336,6 +1336,10 @@ export type CreateEventRequest = {
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
+    /**
+     * Lets registrants search and register participants of other clubs; master data stays with the home club
+     */
+    allowCrossClubRegistration?: boolean
     publicResultsVisibility?: PublicResultsVisibility
 }
 
@@ -1620,6 +1624,10 @@ export type EventDto = {
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
+    /**
+     * Lets registrants search and register participants of other clubs; master data stays with the home club
+     */
+    allowCrossClubRegistration?: boolean
     publicResultsVisibility?: PublicResultsVisibility
     /**
      * Whether the execution page keeps itself up to date in the background
@@ -2808,6 +2816,11 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
+export type ParticipantClubDto = {
+    id: string
+    name: string
+}
+
 export type ParticipantDto = {
     id: string
     firstname: string
@@ -2821,6 +2834,15 @@ export type ParticipantDto = {
     createdAt: string
     updatedAt: string
     email?: string
+    /**
+     * Stammverein - nur er darf die Stammdaten aendern
+     */
+    clubId: string
+    clubName: string
+    /**
+     * Weitere Vereine, die diese Person melden duerfen (ohne den Stammverein)
+     */
+    additionalClubs: Array<ParticipantClubDto>
 }
 
 export type ParticipantForCompetitionRegistrationTeam = {
@@ -3017,6 +3039,18 @@ export type ParticipantRequirementUpsertDto = {
 }
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
+
+/**
+ * Treffer der vereinsuebergreifenden Suche. Bewusst schmal: nur was zum Melden noetig ist, keine Kontaktdaten.
+ */
+export type ParticipantSearchResultDto = {
+    id: string
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: Gender
+    clubName: string
+}
 
 export type ParticipantTrackingChangeDto = {
     id: string
@@ -3896,6 +3930,10 @@ export type UpdateEventRequest = {
      * Shows breaks/schedule placeholders from the timeline on the kiosk and athlete board too
      */
     showBreaksOnPublicBoards?: boolean
+    /**
+     * Lets registrants search and register participants of other clubs; master data stays with the home club
+     */
+    allowCrossClubRegistration?: boolean
     publicResultsVisibility?: PublicResultsVisibility
     /**
      * Whether the execution page keeps itself up to date in the background
@@ -5868,6 +5906,44 @@ export type GetClubParticipantsForEventData = {
 export type GetClubParticipantsForEventResponse = Array<ParticipantDto>
 
 export type GetClubParticipantsForEventError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type SearchParticipantsAcrossClubsData = {
+    path: {
+        clubId: string
+    }
+    query: {
+        eventId: string
+        search?: string
+    }
+}
+
+export type SearchParticipantsAcrossClubsResponse = Array<ParticipantSearchResultDto>
+
+export type SearchParticipantsAcrossClubsError = BadRequestError | ApiError
+
+export type AddParticipantAdditionalClubData = {
+    path: {
+        additionalClubId: string
+        clubId: string
+        participantId: string
+    }
+}
+
+export type AddParticipantAdditionalClubResponse = void
+
+export type AddParticipantAdditionalClubError = BadRequestError | ApiError
+
+export type RemoveParticipantAdditionalClubData = {
+    path: {
+        additionalClubId: string
+        clubId: string
+        participantId: string
+    }
+}
+
+export type RemoveParticipantAdditionalClubResponse = void
+
+export type RemoveParticipantAdditionalClubError = ApiError
 
 export type GetClubParticipantData = {
     path: {

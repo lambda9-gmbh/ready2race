@@ -381,6 +381,15 @@ import type {
     GetClubParticipantsForEventData,
     GetClubParticipantsForEventError,
     GetClubParticipantsForEventResponse,
+    SearchParticipantsAcrossClubsData,
+    SearchParticipantsAcrossClubsError,
+    SearchParticipantsAcrossClubsResponse,
+    AddParticipantAdditionalClubData,
+    AddParticipantAdditionalClubError,
+    AddParticipantAdditionalClubResponse,
+    RemoveParticipantAdditionalClubData,
+    RemoveParticipantAdditionalClubError,
+    RemoveParticipantAdditionalClubResponse,
     GetClubParticipantData,
     GetClubParticipantError,
     GetClubParticipantResponse,
@@ -2602,6 +2611,54 @@ export const getClubParticipantsForEvent = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/club/{clubId}/participant/event',
+    })
+}
+
+/**
+ * Vereinsuebergreifende Suche fuer die Meldemaske. Liefert nur etwas, wenn die Veranstaltung es erlaubt (allowCrossClubRegistration) und mindestens zwei Zeichen eingegeben wurden; die Trefferzahl ist gedeckelt und der eigene Vereinsbestand faellt heraus.
+ */
+export const searchParticipantsAcrossClubs = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SearchParticipantsAcrossClubsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        SearchParticipantsAcrossClubsResponse,
+        SearchParticipantsAcrossClubsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/search',
+    })
+}
+
+/**
+ * Ordnet die Person einem weiteren Verein zu. Nur der Stammverein (clubId) und globales Recht duerfen das.
+ */
+export const addParticipantAdditionalClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddParticipantAdditionalClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddParticipantAdditionalClubResponse,
+        AddParticipantAdditionalClubError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}/club/{additionalClubId}',
+    })
+}
+
+/**
+ * Loest die Zuordnung wieder. Bestehende Meldungen bleiben unberuehrt.
+ */
+export const removeParticipantAdditionalClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RemoveParticipantAdditionalClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RemoveParticipantAdditionalClubResponse,
+        RemoveParticipantAdditionalClubError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}/club/{additionalClubId}',
     })
 }
 

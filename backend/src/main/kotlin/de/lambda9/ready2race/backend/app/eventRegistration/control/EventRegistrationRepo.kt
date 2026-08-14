@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventRegistration.control
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo.competitionRgistrationReferenced
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
+import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
@@ -600,7 +601,11 @@ object EventRegistrationRepo {
         singleCompetitions
     )
         .from(PARTICIPANT)
-        .where(PARTICIPANT.CLUB.eq(clubId))
+        // Der volle Vereinsbestand, nicht nur die eigenen Mitglieder (Migration V202608142000).
+        // Das Meldeformular ist ein Vollersatz: Wer beim Wiederoeffnen nicht mehr in dieser Liste
+        // steht, verschwindet beim naechsten Speichern aus der Meldung. Eine ueber den
+        // Zweitverein gemeldete Person wuerde also stillschweigend wieder herausfallen.
+        .where(ParticipantRepo.belongsToClubCondition(clubId))
         .orderBy(PARTICIPANT.FIRSTNAME, PARTICIPANT.LASTNAME)
         .asMultiset("participants")
         .convertFrom {

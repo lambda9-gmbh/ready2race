@@ -102,6 +102,7 @@ object EventService {
             publicResultsVisibility = request.publicResultsVisibility.name
             executionAutoRefresh = request.executionAutoRefresh
             executionAutoRefreshSeconds = request.executionAutoRefreshSeconds
+            crossClubRegistration = request.allowCrossClubRegistration
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

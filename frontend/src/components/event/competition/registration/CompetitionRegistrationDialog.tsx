@@ -7,13 +7,14 @@ import {
     CompetitionRegistrationTeamUpsertDto,
     EventDto,
     EventRegistrationNamedParticipantDto,
+    Gender,
     RegistrationInvoiceType,
 } from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {CheckboxButtonGroup, useForm, useWatch} from 'react-hook-form-mui'
-import {useCallback, useMemo, useState} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
-import {Stack} from '@mui/material'
+import {Stack, TextField, Typography} from '@mui/material'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {
     addCompetitionRegistration,
@@ -21,6 +22,7 @@ import {
     getClubParticipantsForEvent,
     getCompetitionRegistrations,
     getRatingCategoriesForEvent,
+    searchParticipantsAcrossClubs,
     updateCompetitionRegistration,
 } from '@api/sdk.gen.ts'
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
@@ -36,6 +38,20 @@ import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 
 // TODO: validate/sanitize basepath (also in routes.tsx)
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
+/**
+ * Ein Treffer der vereinsuebergreifenden Suche, so wie ihn die Personenauswahl braucht. Bewusst
+ * schmaler als ParticipantDto - mehr liefert der Server auch nicht (siehe
+ * ParticipantSearchResultDto im Backend): keine Telefonnummer, keine E-Mail-Adresse.
+ */
+type ForeignParticipantOption = {
+    id: string
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: Gender
+    externalClubName: string
+}
 
 const registrationTypes: RegistrationInvoiceType[] = ['REGULAR', 'LATE']
 type RegistrationType = (typeof registrationTypes)[number]
@@ -150,9 +166,75 @@ const CompetitionRegistrationDialog = ({
         },
     )
 
+    /**
+     * Die vereinsübergreifende Suche (Migration V202608142000).
+     *
+     * Sie ist bewusst KEINE Liste: erst ab zwei Zeichen liefert der Server Treffer, die
+     * Trefferzahl ist gedeckelt, und geliefert wird nur, was zum Melden nötig ist — Name,
+     * Jahrgang, Verein. Ohne den Schalter an der Veranstaltung wird gar nicht erst gefragt.
+     */
+    const crossClubAllowed = eventData.allowCrossClubRegistration === true
+
+    const [crossClubSearch, setCrossClubSearch] = useState('')
+    const [crossClubDebounced, setCrossClubDebounced] = useState('')
+
+    useEffect(() => {
+        const handle = setTimeout(() => setCrossClubDebounced(crossClubSearch.trim()), 400)
+        return () => clearTimeout(handle)
+    }, [crossClubSearch])
+
+    const {data: crossClubData, pending: crossClubPending} = useFetch(
+        signal =>
+            searchParticipantsAcrossClubs({
+                signal,
+                path: {clubId: clubId!},
+                query: {eventId: eventData.id, search: crossClubDebounced},
+            }),
+        {
+            preCondition: () =>
+                crossClubAllowed && clubId != null && crossClubDebounced.length >= 2,
+            deps: [clubId, crossClubDebounced, crossClubAllowed],
+        },
+    )
+
+    /**
+     * Alle je gefundenen Fremden bleiben für die Dauer des Dialogs in der Auswahl stehen.
+     *
+     * Ohne diesen Speicher verschwände eine schon gewählte Person beim nächsten Tastendruck
+     * wieder aus den Optionen — die Auswahl des Formulars zeigt dann eine leere Zeile, obwohl
+     * die Id noch gesetzt ist. Der Speicher wächst nur um die gedeckelte Trefferzahl je Suche
+     * und wird beim Öffnen des Dialogs geleert.
+     */
+    const [foundElsewhere, setFoundElsewhere] = useState<ForeignParticipantOption[]>([])
+
+    useEffect(() => {
+        if (!crossClubData) return
+        setFoundElsewhere(prev => {
+            const known = new Set(prev.map(p => p.id))
+            const added = crossClubData
+                .filter(hit => !known.has(hit.id))
+                .map(hit => ({
+                    id: hit.id,
+                    firstname: hit.firstname,
+                    lastname: hit.lastname,
+                    year: hit.year,
+                    gender: hit.gender,
+                    // Der Vereinsname wandert in externalClubName, weil die Auswahl genau
+                    // danach gruppiert (siehe TeamParticipantAutocomplete) — so steht über den
+                    // Fremden ihr Verein statt einer leeren Überschrift.
+                    externalClubName: hit.clubName,
+                }))
+            return added.length > 0 ? [...prev, ...added] : prev
+        })
+    }, [crossClubData])
+
     const participants = useMemo(() => {
-        return participantsData ?? []
-    }, [participantsData])
+        const own = participantsData ?? []
+        if (!crossClubAllowed) {
+            return own
+        }
+        return [...own, ...foundElsewhere.filter(f => !own.some(p => p.id === f.id))]
+    }, [participantsData, foundElsewhere, crossClubAllowed])
 
     const getFilteredParticipants = useCallback(
         (namedParticipant: EventRegistrationNamedParticipantDto) => {
@@ -275,6 +357,9 @@ const CompetitionRegistrationDialog = ({
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
         setReloadCompetitionRegistrations(prev => !prev)
+        setCrossClubSearch('')
+        setCrossClubDebounced('')
+        setFoundElsewhere([])
     }, [props.entity])
 
     return (
@@ -325,6 +410,21 @@ const CompetitionRegistrationDialog = ({
                             required={true}
                             options={clubs?.data ?? []}
                         />
+                    )}
+                    {crossClubAllowed && clubId != null && (
+                        <Stack spacing={0.5}>
+                            <TextField
+                                size={'small'}
+                                value={crossClubSearch}
+                                onChange={e => setCrossClubSearch(e.target.value)}
+                                label={t('event.competition.registration.crossClub.label')}
+                            />
+                            <Typography variant={'caption'} color={'text.secondary'}>
+                                {crossClubPending
+                                    ? t('event.competition.registration.crossClub.searching')
+                                    : t('event.competition.registration.crossClub.hint')}
+                            </Typography>
+                        </Stack>
                     )}
                     {competition.properties.namedParticipants.map(
                         (namedParticipant, namedParticipantIndex) => (

@@ -496,9 +496,24 @@ object CompetitionRegistrationService {
 
             KIO.comprehension {
 
-                val participant = !ParticipantRepo.findByIdAndClub(participantId, clubId)
-                    .orDie()
-                    .onNullFail { CompetitionRegistrationError.RegistrationInvalid }
+                // Die Vereinspruefung beim Melden (Migration V202608142000).
+                //
+                // Steht der Schalter der Veranstaltung an, darf der meldende Verein jede Person
+                // melden - dann greift hier gar keine Vereinsbedingung mehr, nur noch die Sperre
+                // gegen dieselbe Person zweimal im selben Wettkampf (gleich darunter, bleibt).
+                //
+                // Steht er aus - die Vorbelegung -, greift die Pruefung wie bisher, nur auf den
+                // vollen Vereinsbestand: Stammverein ODER eingetragener Zweitverein. Ohne
+                // Zugehoerigkeiten und ohne Schalter verhaelt sich der Aufruf exakt wie vorher.
+                val participant = if (event.crossClubRegistration == true) {
+                    !ParticipantRepo.get(participantId)
+                        .orDie()
+                        .onNullFail { CompetitionRegistrationError.RegistrationInvalid }
+                } else {
+                    !ParticipantRepo.findByIdAndClub(participantId, clubId)
+                        .orDie()
+                        .onNullFail { CompetitionRegistrationError.RegistrationInvalid }
+                }
 
                 !CompetitionRegistrationNamedParticipantRepo.existsByParticipantIdAndCompetitionId(
                     participantId,
