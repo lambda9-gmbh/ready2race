@@ -36,8 +36,16 @@ const BoardStreamOverlayElement = ({view, element}: Props) => {
     const clockOffsetMs = useMemo(() => Date.now() - Date.parse(view.serverTime), [view.serverTime])
 
     // Leerzustand: reine Key-Farbe — das Overlay verschwindet im Stream von selbst.
+    // Ausnahme „Nur Laufuhr": Die Platte bleibt dauerhaft stehen (0:00.0 bis zum
+    // nächsten Start), damit die Regie die gecroppte Quelle nie verliert.
     if (content === null) {
-        return <Box sx={{position: 'fixed', inset: 0, backgroundColor: keyColor}} />
+        return (
+            <Box sx={{position: 'fixed', inset: 0, backgroundColor: keyColor}}>
+                {element.streamMode === 'CLOCK' && (
+                    <ClockPlate match={null} clockOffsetMs={clockOffsetMs} />
+                )}
+            </Box>
+        )
     }
 
     return (
