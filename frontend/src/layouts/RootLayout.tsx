@@ -198,6 +198,13 @@ const RootLayout = () => {
                                     )}
                                 </Stack>
                             )}
+                            <Box sx={{display: 'flex', justifyContent: 'center', mt: 1}}>
+                                <Link to="/datenschutz">
+                                    <Typography variant="caption" color="text.secondary">
+                                        {t('legal.privacy')}
+                                    </Typography>
+                                </Link>
+                            </Box>
                         </Stack>
                     </Box>
                 </Box>
