@@ -1,10 +1,11 @@
 import {Stack} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardResult, BoardElement} from '@api/types.gen.ts'
+import FitToHeight from './FitToHeight.tsx'
 import FlipList from '../FlipList.tsx'
 import StreamBoatRow from './StreamBoatRow.tsx'
 import StreamPanelShell from './StreamPanelShell.tsx'
-import {byNullsLast, competitionLabel, roundMatchLabel} from './streamDisplay.ts'
+import {byNullsLast, competitionLabel, roundMatchLabel, streamNameForms} from './streamDisplay.ts'
 
 interface ResultPanelProps {
     result: AthleteBoardResult
@@ -19,7 +20,7 @@ interface ResultPanelProps {
  */
 const ResultPanel = ({result, element}: ResultPanelProps) => {
     const {t} = useTranslation()
-    const useShortNames = element.useShortNames !== false
+    const names = streamNameForms(element)
     const streamCrew = element.streamCrew ?? 'CLUBS_FIRST'
     const teams = [...result.teams].sort(byNullsLast(team => team.place))
 
@@ -27,24 +28,32 @@ const ResultPanel = ({result, element}: ResultPanelProps) => {
         <StreamPanelShell
             panelKey={result.matchId}
             stateLabel={t('event.boards.stream.result')}
-            title={competitionLabel(result.competitionName, result.competitionShortName, useShortNames)}
+            title={competitionLabel(
+                result.competitionName,
+                result.competitionShortName,
+                names.competitions,
+            )}
             roundLine={roundMatchLabel(result.roundName, result.matchName)}>
-            {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie. */}
-            <Stack sx={{gap: 1.5, overflow: 'hidden'}}>
-                <FlipList
-                    items={teams}
-                    keyOf={team => String(team.startNumber)}
-                    render={team => (
-                        <StreamBoatRow
-                            team={team}
-                            crewMode={streamCrew}
-                            useShortNames={useShortNames}
-                            failedFallback={t('event.info.athleteBoard.failed')}
-                            size="large"
-                        />
-                    )}
-                />
-            </Stack>
+            {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie; passt das
+                Feld nicht in die Panelhöhe, verkleinert FitToHeight es, statt die letzte
+                Bootszeile abzuschneiden. */}
+            <FitToHeight>
+                <Stack sx={{gap: 1.5}}>
+                    <FlipList
+                        items={teams}
+                        keyOf={team => String(team.startNumber)}
+                        render={team => (
+                            <StreamBoatRow
+                                team={team}
+                                crewMode={streamCrew}
+                                useShortClubNames={names.clubs}
+                                failedFallback={t('event.info.athleteBoard.failed')}
+                                size="large"
+                            />
+                        )}
+                    />
+                </Stack>
+            </FitToHeight>
         </StreamPanelShell>
     )
 }

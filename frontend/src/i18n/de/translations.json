@@ -2215,7 +2215,8 @@
           "participantsFirst": "Personen prominent",
           "clubsOnly": "Nur Vereine"
         },
-        "longClubNames": "Vereins-Langform",
+        "shortCompetitionNames": "Wettkampf-Kürzel statt vollem Namen",
+        "shortClubNames": "Vereins-Kurzform statt voller Vereinskette",
         "showCountdown": "Uhrzeit/Countdown",
         "upcomingListTitle": "Nächste Läufe",
         "inMinutes": "in {{time}}"

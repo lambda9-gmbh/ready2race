@@ -2,11 +2,12 @@ import {Box, Stack, Typography, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch, BoardElement} from '@api/types.gen.ts'
 import {sortRunningTeams} from '../../info/athleteBoard/common'
+import FitToHeight from './FitToHeight.tsx'
 import FlipList from '../FlipList.tsx'
 import StreamBoatRow from './StreamBoatRow.tsx'
 import StreamClockLabel from './StreamClockLabel.tsx'
 import StreamStateBadge from './StreamStateBadge.tsx'
-import {competitionLabel, roundMatchLabel, solidOr} from './streamDisplay.ts'
+import {competitionLabel, roundMatchLabel, solidOr, streamNameForms} from './streamDisplay.ts'
 
 interface RunningLowerThirdProps {
     match: AthleteBoardMatch
@@ -15,7 +16,7 @@ interface RunningLowerThirdProps {
 }
 
 /**
- * „Läuft": Lower-Third am unteren Rand, maximal gut ein Drittel der Höhe. Die
+ * „Läuft": Lower-Third am unteren Rand, maximal gut vier Zehntel der Höhe. Die
  * Bootszeilen sortieren sich per FlipList um, sobald Teilergebnisse eintreffen
  * (`sortRunningTeams` — gewertete Boote nach Platz oben, ungewertete nach Startnummer
  * darunter, DNF/DQ ans Ende; dieselbe Regel wie die Athleten-Anzeige).
@@ -23,7 +24,7 @@ interface RunningLowerThirdProps {
 const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdProps) => {
     const {t} = useTranslation()
     const theme = useTheme()
-    const useShortNames = element.useShortNames !== false
+    const names = streamNameForms(element)
     const streamCrew = element.streamCrew ?? 'CLUBS_FIRST'
     const roundLine = roundMatchLabel(match.roundName, match.matchName)
     const teams = sortRunningTeams(match.teams)
@@ -34,7 +35,7 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                 sx={{
                     m: 3,
                     width: 1,
-                    maxHeight: '38vh',
+                    maxHeight: '44vh',
                     overflow: 'hidden',
                     borderRadius: 2,
                     display: 'flex',
@@ -56,8 +57,15 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                         min-height frei) — die Zeilen ragten dann optisch in die Unterzeile. */}
                     <Stack direction="row" alignItems="center" gap={2} sx={{flexShrink: 0}}>
                         <StreamStateBadge label={t('event.boards.stream.running')} indicator />
-                        <Typography variant="h4" noWrap sx={{fontWeight: 700, minWidth: 0, flex: 1}}>
-                            {competitionLabel(match.competitionName, match.competitionShortName, useShortNames)}
+                        <Typography
+                            variant="h4"
+                            noWrap
+                            sx={{fontWeight: 700, minWidth: 0, flex: 1}}>
+                            {competitionLabel(
+                                match.competitionName,
+                                match.competitionShortName,
+                                names.competitions,
+                            )}
                         </Typography>
                         <StreamClockLabel match={match} clockOffsetMs={clockOffsetMs} />
                     </Stack>
@@ -68,25 +76,29 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                     )}
 
                     {/* Je Boot eine Zeile — Positionswechsel animieren via FlipList. Nur
-                        dieser Block darf schrumpfen (minHeight 0), Kopf und Unterzeile nie.
-                        Ab fünf Booten weichen die Rundenzeilen — sonst schnitte die
-                        38-vh-Kante auch bei Full HD mitten durch die letzte Zeile. */}
-                    <Stack sx={{gap: 1, overflow: 'hidden', minHeight: 0, flex: '1 1 auto'}}>
-                        <FlipList
-                            items={teams}
-                            keyOf={team => String(team.startNumber)}
-                            render={team => (
-                                <StreamBoatRow
-                                    team={team}
-                                    crewMode={streamCrew}
-                                    useShortNames={useShortNames}
-                                    failedFallback={t('event.info.athleteBoard.failed')}
-                                    size="compact"
-                                    showLaps={teams.length <= 4}
-                                />
-                            )}
-                        />
-                    </Stack>
+                        dieser Block darf schrumpfen, Kopf und Unterzeile nie. Ab fünf Booten
+                        weichen die Rundenzeilen, damit die Zeilen groß bleiben; reicht die
+                        Höhe trotzdem nicht (großes Feld, flache OBS-Quelle), verkleinert
+                        FitToHeight den ganzen Block, statt die letzte Zeile anzuschneiden. */}
+                    <FitToHeight>
+                        <Stack sx={{gap: 1}}>
+                            <FlipList
+                                items={teams}
+                                keyOf={team => String(team.startNumber)}
+                                render={team => (
+                                    <StreamBoatRow
+                                        team={team}
+                                        crewMode={streamCrew}
+                                        useShortClubNames={names.clubs}
+                                        failedFallback={t('event.info.athleteBoard.failed')}
+                                        size="compact"
+                                        showLaps={teams.length <= 4}
+                                        showSecondary={teams.length <= 5}
+                                    />
+                                )}
+                            />
+                        </Stack>
+                    </FitToHeight>
                 </Stack>
             </Box>
         </Box>
