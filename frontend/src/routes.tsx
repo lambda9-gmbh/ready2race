@@ -60,7 +60,6 @@ import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
 import ResultsLayout from './layouts/ResultsLayout.tsx'
 import AdministrationPage from './pages/AdministrationPage.tsx'
 import ChallengePage from './pages/challenge/ChallengePage.tsx'
-import DatenschutzPage from './pages/DatenschutzPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -501,9 +500,15 @@ export const resultsEventRoute = createRoute({
     component: () => <ResultsPage />,
     // Direkteinstieg für QR-Aushänge: ?tab=live öffnet den Live-Reiter, ?tab=my-event wie
     // bisher „Mein Event", ?tab=results ist das ausgeschriebene Default-Ziel — alles andere
-    // fällt auf den Default (siehe resultsTab.ts).
-    validateSearch: (search: {tab?: string} & SearchSchemaInput) => ({
+    // fällt auf den Default (siehe resultsTab.ts). ?competition=<id> springt auf dem
+    // Ergebnisse-Reiter direkt in einen Wettkampf — für teilbare Links; eine unbekannte Id
+    // läuft ins Leere und die Seite startet normal.
+    validateSearch: (search: {tab?: string; competition?: string} & SearchSchemaInput) => ({
         tab: parseResultsTabSearch(search.tab),
+        competition:
+            typeof search.competition === 'string' && search.competition !== ''
+                ? search.competition
+                : undefined,
     }),
 })
 
@@ -522,14 +527,6 @@ export const challengeRoute = createRoute({
 // Öffentliche Route ohne App-Layout: fest montierte Athletenbildschirme und
 // Athleten-Handys brauchen weder Kopfleiste noch Seitenleiste noch Anmeldung.
 // Bestands-URL der alten Athleten-Anzeige — leitet auf das erste Board um.
-// Öffentliche Datenschutzerklärung — bewusst ohne Anmeldung erreichbar, verlinkt von
-// Ergebnisseite und Login-Seiten.
-export const datenschutzRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: 'datenschutz',
-    component: () => <DatenschutzPage />,
-})
-
 export const athleteBoardRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'board/$eventId',
@@ -585,7 +582,6 @@ const routeTree = rootRoute.addChildren([
     mobileRoute.addChildren([challengeRoute]),
     athleteBoardRoute,
     boardDisplayRoute,
-    datenschutzRoute,
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath

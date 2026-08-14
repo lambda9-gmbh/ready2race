@@ -70,6 +70,13 @@ data class BoardRequest(
                 if (element.borderColor != null && !HEX_COLOR.matches(element.borderColor)) {
                     errors += "$at: borderColor must be a hex color (#RGB or #RRGGBB)"
                 }
+                // streamMode/streamCrew sind nur an STREAM-Elementen erlaubt.
+                if (element.streamMode != null && element.type != BoardElementType.STREAM) {
+                    errors += "$at: streamMode requires type STREAM"
+                }
+                if (element.streamCrew != null && element.type != BoardElementType.STREAM) {
+                    errors += "$at: streamCrew requires type STREAM"
+                }
                 when (element.type) {
                     BoardElementType.MATCH -> {
                         val offset = element.offset
@@ -109,6 +116,13 @@ data class BoardRequest(
 
                     BoardElementType.AWARD_CEREMONY -> {
                         if (element.competitionId == null) errors += "$at: AWARD_CEREMONY needs competitionId"
+                    }
+
+                    BoardElementType.STREAM -> {
+                        // Wie die Sprecher-Kachel: vollflächig, duldet keine Nachbarkacheln.
+                        if (config.tiles.size > 1) {
+                            errors += "$at: STREAM must be the only tile of the board"
+                        }
                     }
 
                     BoardElementType.CLOCK -> {}

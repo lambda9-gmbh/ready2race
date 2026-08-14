@@ -11,6 +11,11 @@ import java.util.UUID
 
 object RaceClockerRaceRepo {
 
+    /** Wie viele Wettkämpfe noch auf dieses Rennen zeigen — die Löschsperre fragt das ab. */
+    fun countAssignedCompetitions(raceId: UUID) = Jooq.query {
+        fetchCount(COMPETITION, COMPETITION.RACECLOCKER_RACE.eq(raceId))
+    }
+
     fun getForEvent(eventId: UUID) = Jooq.query {
         select(
             RACECLOCKER_RACE.ID,

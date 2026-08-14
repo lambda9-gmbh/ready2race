@@ -1040,7 +1040,7 @@
             "title": "Nulstil løb?",
             "warning": "Advarsel: Dette løb nulstilles til ”aldrig kørt”. Uigenkaldeligt mistes: den faktiske start, alle mål- og mellemtider, alle placeringer, diskvalifikationer og tidsstraffe for dette løb.",
             "keeps": "Bevares: opstilling, baner og bådenes id'er — RaceClocker-tilknytningen forbliver gyldig, og løbet kan køres igen med det samme.",
-            "autoPull": "Den automatiske RaceClocker-hentning sættes på pause for dette løb — ellers ville næste hentning straks genindlæse de slettede resultater. Efter oprydning i RaceClocker genoptages bevidst via ”Genoptag automatisk hentning”.",
+          "autoPull": "Den automatiske RaceClocker-hentning sættes på pause for dette løb — ellers ville næste hentning straks genindlæse de slettede resultater. Efter oprydning i RaceClocker genoptages bevidst via ”Genoptag automatisk hentning”.",
             "question": "Vil du virkelig nulstille løbet?"
           },
           "error": "Der opstod en fejl ved nulstilling af løbet",
@@ -1587,7 +1587,8 @@
         "url": "Resultatadresse",
         "capturesLaps": "Registrerer omgangstider",
         "none": "Endnu intet løb oprettet.",
-        "deleteConfirm": "Slet „{{name}}“? Så længe en konkurrence stadig peger på det, kan det ikke slettes — fjern tildelingen nedenfor først.",
+        "deleteConfirm": "Vil du virkelig slette „{{name}}“?",
+        "deleteBlocked": "„{{name}}“ er stadig tildelt mindst én konkurrence og blev ikke slettet — fjern tildelingen nedenfor og prøv igen.",
         "nameTaken": "Der findes allerede et løb med dette navn.",
         "urlTaken": "Der findes allerede et løb med denne adresse.",
         "invalidUrl": "Adressen skal ligge på raceclocker.com.",
@@ -2020,9 +2021,9 @@
       },
       "indicator": {
         "now": "Nu",
-        "planned": "Planlagt {{time}}",
-        "started": "Startet {{time}}",
-        "expected": "Forventet ~{{time}}",
+          "planned": "Planlagt {{time}}",
+          "started": "Startet {{time}}",
+          "expected": "Forventet ~{{time}}",
         "state": {
           "finished": "Afsluttet",
           "preparing": "Forbereder",
@@ -2132,7 +2133,8 @@
           "clock": "Ur",
           "delay": "Forsinkelse",
           "text": "Infotekst",
-          "awardCeremony": "Præmieoverrækkelse"
+          "awardCeremony": "Præmieoverrækkelse",
+          "stream": "Livestream-overlay"
         },
         "offset": "Position",
         "offsetCurrent": "Aktuelt løb",
@@ -2186,7 +2188,33 @@
       "columns": "Kolonner",
       "columnCount": "{{count}} kolonner",
       "columnCount_one": "1 kolonne",
-      "showHeader": "Sidehoved med navn og ur"
+      "showHeader": "Sidehoved med navn og ur",
+      "stream": {
+        "running": "I gang",
+        "result": "Resultat",
+        "upcoming": "Næste",
+        "mode": {
+          "label": "Indhold",
+          "auto": "Automatisk (i gang, ellers seneste resultat)",
+          "running": "Kun løb i gang",
+          "results": "Kun seneste resultat",
+          "upcoming": "Næste kommende løb",
+          "laps": "Rundevisning",
+          "upcomingList": "Næste løb",
+          "clock": "Kun løbsur"
+        },
+        "crew": {
+          "label": "Bådvisning",
+          "clubsFirst": "Klubber fremhævet",
+          "participantsFirst": "Personer fremhævet",
+          "clubsOnly": "Kun klubber"
+        },
+        "shortCompetitionNames": "Løbsforkortelse i stedet for fuldt navn",
+        "shortClubNames": "Klubbens korte form i stedet for hele klubkæden",
+        "showCountdown": "Ur/nedtælling",
+        "upcomingListTitle": "Næste løb",
+        "inMinutes": "om {{time}}"
+      }
     }
   },
   "task": {
@@ -2756,11 +2784,14 @@
   "results": {
     "tabs": {
       "results": "Resultater",
-      "live": "Live"
+      "live": "Live",
+      "schedule": "Tidsplan"
     },
     "matchResults": {
       "matchResults": "Resultater",
-      "noResults": "Der findes endnu ingen resultater for denne konkurrence."
+      "noResults": "Der findes endnu ingen resultater for denne konkurrence.",
+      "latestSection": "Senest afsluttet",
+      "byCompetitionSection": "Efter konkurrence"
     },
     "liveMatches": {
       "noMatches": "Der er ingen løb planlagt lige nu.",
@@ -2780,7 +2811,14 @@
       "relative": "Relativ",
       "individual": "Individuel"
     },
-    "noEvents": "Ingen arrangementer tilgængelige"
+    "noEvents": "Ingen arrangementer tilgængelige",
+    "program": {
+      "loadFailed": "Tidsplanen kunne ikke indlæses.",
+      "empty": "Der er ikke oprettet en tidsplan for dette stævne.",
+      "running": "I gang",
+      "finished": "Afsluttet",
+      "upcoming": "Kommende"
+    }
   },
   "webDAV": {
     "infoText": {
@@ -3123,9 +3161,5 @@
     "team": "Hold",
     "deregistered": "Afmeldt",
     "noMatches": "Der er endnu ikke planlagt noget løb for dig."
-  },
-  "legal": {
-    "privacy": "Privatlivspolitik",
-    "privacyTitle": "Privatlivspolitik"
   }
 }

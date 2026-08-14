@@ -64,6 +64,16 @@ fun Route.eventInfo() {
                 }
             }
 
+            // Der Tab "Zeitplan" der öffentlichen Ergebnisanzeige: das Tagesprogramm aus dem
+            // Zeitplan, Slots mit Zustand — ohne Aufstellungen und ohne Ergebnisse.
+            get("/program") {
+                call.respondComprehension {
+                    val eventId = !pathParam("eventId", uuid)
+
+                    BoardService.getProgram(eventId)
+                }
+            }
+
             // Boards sind öffentlich abrufbar wie die Anzeigen darüber: montierte
             // Bildschirme und Athleten-Handys laden ihre URL ohne Anmeldung. Die
             // Kurzliste trägt die Umleitung der alten Athleten-Board-URL.

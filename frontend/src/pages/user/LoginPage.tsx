@@ -68,13 +68,6 @@ const LoginPage = () => {
                     <SubmitButton submitting={submitting}>{t('user.login.submit')}</SubmitButton>
                 </Stack>
             </FormContainer>
-            <Box sx={{display: 'flex', justifyContent: 'center', mt: 3}}>
-                <Link to="/datenschutz">
-                    <Typography variant="caption" color="text.secondary">
-                        {t('legal.privacy')}
-                    </Typography>
-                </Link>
-            </Box>
         </SimpleFormLayout>
     )
 }

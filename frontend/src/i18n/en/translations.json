@@ -1040,7 +1040,7 @@
             "title": "Reset race?",
             "warning": "Warning: This race will be reset to “never raced”. Irrevocably lost: the actual start, all finish and split times, all places, disqualifications and time penalties of this race.",
             "keeps": "Kept: line-up, lanes and the boats' identifiers — the RaceClocker mapping stays valid and the race can be raced again right away.",
-            "autoPull": "The automatic RaceClocker pull is paused for this race — otherwise the next pull would immediately re-import the deleted results. After cleaning up in RaceClocker, resume deliberately via “Resume automatic pull”.",
+          "autoPull": "The automatic RaceClocker pull is paused for this race — otherwise the next pull would immediately re-import the deleted results. After cleaning up in RaceClocker, resume deliberately via “Resume automatic pull”.",
             "question": "Really reset this race?"
           },
           "error": "An error has occurred when resetting the race",
@@ -1090,9 +1090,9 @@
             "activate": "Activate race",
             "deactivate": "Deactivate race",
             "markStarted": "Running",
-            "finish": "Finish race",
-            "finishConfirm": "Finish this race now? If the event advances automatically, this activates the next races.",
-            "finishSuccess": "Race finished",
+          "finish": "Finish race",
+          "finishConfirm": "Finish this race now? If the event advances automatically, this activates the next races.",
+          "finishSuccess": "Race finished",
             "reopen": "Undo finish"
           }
         },
@@ -1587,7 +1587,8 @@
         "url": "Results URL",
         "capturesLaps": "Records lap times",
         "none": "No race created yet.",
-        "deleteConfirm": "Delete “{{name}}”? As long as a competition still points at it, it cannot be deleted — untick the assignment below first.",
+        "deleteConfirm": "Really delete “{{name}}”?",
+        "deleteBlocked": "“{{name}}” is still assigned to at least one competition and was not deleted — untick the assignment below and try again.",
         "nameTaken": "A race with this name already exists.",
         "urlTaken": "A race with this results URL already exists.",
         "invalidUrl": "The URL must be on raceclocker.com.",
@@ -2026,9 +2027,9 @@
       },
       "indicator": {
         "now": "Now",
-        "planned": "Planned {{time}}",
-        "started": "Started {{time}}",
-        "expected": "Expected ~{{time}}",
+          "planned": "Planned {{time}}",
+          "started": "Started {{time}}",
+          "expected": "Expected ~{{time}}",
         "state": {
           "finished": "Finished",
           "preparing": "Preparing",
@@ -2138,7 +2139,8 @@
           "clock": "Clock",
           "delay": "Delay",
           "text": "Notice",
-          "awardCeremony": "Award ceremony"
+          "awardCeremony": "Award ceremony",
+          "stream": "Livestream overlay"
         },
         "offset": "Position",
         "offsetCurrent": "Current match",
@@ -2192,7 +2194,33 @@
       "columns": "Columns",
       "columnCount": "{{count}} columns",
       "columnCount_one": "1 column",
-      "showHeader": "Header with name and clock"
+      "showHeader": "Header with name and clock",
+      "stream": {
+        "running": "Running",
+        "result": "Result",
+        "upcoming": "Up next",
+        "mode": {
+          "label": "Content",
+          "auto": "Automatic (running, else latest result)",
+          "running": "Running match only",
+          "results": "Latest result only",
+          "upcoming": "Next upcoming match",
+          "laps": "Lap display",
+          "upcomingList": "Upcoming matches",
+          "clock": "Clock only"
+        },
+        "crew": {
+          "label": "Crew display",
+          "clubsFirst": "Clubs prominent",
+          "participantsFirst": "Participants prominent",
+          "clubsOnly": "Clubs only"
+        },
+        "shortCompetitionNames": "Competition abbreviation instead of full name",
+        "shortClubNames": "Club short form instead of the full club chain",
+        "showCountdown": "Clock/countdown",
+        "upcomingListTitle": "Upcoming matches",
+        "inMinutes": "in {{time}}"
+      }
     }
   },
   "task": {
@@ -2331,6 +2359,13 @@
       "invitation": "Invitation",
       "pendingInvitations": "Pending invitations",
       "accept": "Accept invitation",
+      "expiresAt": "Expires on",
+      "withdraw": "Withdraw invitation",
+      "withdrawConfirm": "Withdraw the invitation to {{email}}? The link that was already sent will stop working. You can invite the person again afterwards.",
+      "withdrawSuccess": "Invitation withdrawn",
+      "resend": "Resend invitation",
+      "resendConfirm": "Send the invitation to {{email}} again? They will receive a new link valid for seven days, and the link from the first mail will stop working.",
+      "resendSuccess": "Invitation sent again",
       "hint": "Please enter a password for the user account that will be created.",
       "submitPassword": "Accept invitation",
       "userCreated": {
@@ -2762,11 +2797,14 @@
   "results": {
     "tabs": {
       "results": "Results",
-      "live": "Live"
+      "live": "Live",
+      "schedule": "Schedule"
     },
     "matchResults": {
       "matchResults": "Match Results",
-      "noResults": "There are no results for this competition yet."
+      "noResults": "There are no results for this competition yet.",
+      "latestSection": "Recently finished",
+      "byCompetitionSection": "By competition"
     },
     "liveMatches": {
       "noMatches": "No match is scheduled right now.",
@@ -2786,7 +2824,14 @@
       "relative": "Relative",
       "individual": "Individual"
     },
-    "noEvents": "No events available"
+    "noEvents": "No events available",
+    "program": {
+      "loadFailed": "The schedule could not be loaded.",
+      "empty": "No schedule has been set up for this event.",
+      "running": "Running",
+      "finished": "Finished",
+      "upcoming": "Upcoming"
+    }
   },
   "webDAV": {
     "infoText": {
@@ -3129,9 +3174,5 @@
     "team": "Team",
     "deregistered": "Withdrawn",
     "noMatches": "No race has been scheduled for you yet."
-  },
-  "legal": {
-    "privacy": "Privacy policy",
-    "privacyTitle": "Privacy policy"
   }
 }

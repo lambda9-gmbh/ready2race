@@ -338,6 +338,58 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /user/invitation/{invitationId}:
+    parameters:
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteInvitation
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /user/invitation/{invitationId}/resend:
+    parameters:
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: resendInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendInvitationRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /user/resetPassword:
     post:
       operationId: initPasswordReset
@@ -6805,6 +6857,30 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/info/program:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getPublicProgram
+      description: >-
+        The "schedule" tab of the public results page: the whole day program from the timeline,
+        each slot with its derived state - the same entries the SCHEDULE boards render. Carries
+        no lineups and no results; times and places remain behind /latest-match-results and thus
+        behind Event.publicResultsVisibility.
+      responses:
+        200:
+          description: Program retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoardProgramEntry'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/info/boards:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -9715,6 +9791,7 @@ components:
         - RACECLOCKER_MATCH_IS_BYE
         - RACECLOCKER_RACE_NAME_TAKEN
         - RACECLOCKER_RACE_URL_TAKEN
+        - RACECLOCKER_RACE_STILL_ASSIGNED
         - STARTLIST_CONFIG_NOT_CONFIGURED
         - STARTLIST_MATCHES_WITHOUT_START_TIME
         - RESULT_IMPORT_CONFIG_NOT_CONFIGURED
@@ -10432,6 +10509,15 @@ components:
             format: uuid
         admin:
           type: boolean
+        callbackUrl:
+          type: string
+          format: url
+
+    ResendInvitationRequest:
+      type: object
+      required:
+        - callbackUrl
+      properties:
         callbackUrl:
           type: string
           format: url
@@ -13591,6 +13677,11 @@ components:
         timeString:
           type: string
           description: "Cumulative race time at this mark, formatted for display (e.g. '1:05.5')"
+        recordedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "when the lap time arrived; carries the ordering of the stream lap band"
 
     UpdateCompetitionMatchRequest:
       type: object
@@ -14496,6 +14587,7 @@ components:
         - TEXT
         - AWARD_CEREMONY
         - DELAY
+        - STREAM
 
     BoardListMode:
       type: string
@@ -14556,6 +14648,26 @@ components:
           $ref: '#/components/schemas/BoardListMode'
         scheduleMode:
           $ref: '#/components/schemas/BoardScheduleMode'
+        streamMode:
+          type: string
+          nullable: true
+          description: "STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races"
+          enum:
+            - AUTO
+            - RUNNING
+            - RESULTS
+            - UPCOMING
+            - LAPS
+            - UPCOMING_LIST
+            - CLOCK
+        streamCrew:
+          type: string
+          nullable: true
+          description: "STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only"
+          enum:
+            - CLUBS_FIRST
+            - PARTICIPANTS_FIRST
+            - CLUBS_ONLY
         limit:
           type: integer
           minimum: 1
@@ -14564,6 +14676,11 @@ components:
         useShortNames:
           type: boolean
           nullable: true
+          description: "competition short name (identifier) instead of the full name"
+        useShortClubNames:
+          type: boolean
+          nullable: true
+          description: "STREAM only: club short form instead of the full club chain; missing follows useShortNames, so existing boards keep their look"
         competitionId:
           type: string
           format: uuid

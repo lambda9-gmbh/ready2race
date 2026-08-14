@@ -180,6 +180,28 @@ fun Route.user() {
                     AppUserService.acceptInvitation(body)
                 }
             }
+
+            route("/{invitationId}") {
+
+                delete {
+                    call.respondComprehension {
+                        !authenticate(Privilege.CreateUserGlobal)
+                        val invitationId = !pathParam("invitationId", uuid)
+
+                        AppUserService.deleteInvitation(invitationId)
+                    }
+                }
+
+                put("/resend") {
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.CreateUserGlobal)
+                        val invitationId = !pathParam("invitationId", uuid)
+                        val body = !receiveKIO(ResendInvitationRequest.example)
+
+                        AppUserService.resendInvitation(body, invitationId, user)
+                    }
+                }
+            }
         }
         route("/resetPassword") {
             rateLimit(RateLimitName("resetPassword")) {

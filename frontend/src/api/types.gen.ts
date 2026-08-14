@@ -492,8 +492,25 @@ export type BoardElement = {
     showRegisteringClub?: boolean | null
     listMode?: BoardListMode
     scheduleMode?: BoardScheduleMode
+    /**
+     * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races
+     */
+    streamMode?:
+        | ('AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING' | 'LAPS' | 'UPCOMING_LIST' | 'CLOCK')
+        | null
+    /**
+     * STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only
+     */
+    streamCrew?: ('CLUBS_FIRST' | 'PARTICIPANTS_FIRST' | 'CLUBS_ONLY') | null
     limit?: number | null
+    /**
+     * competition short name (identifier) instead of the full name
+     */
     useShortNames?: boolean | null
+    /**
+     * STREAM only: club short form instead of the full club chain; missing follows useShortNames, so existing boards keep their look
+     */
+    useShortClubNames?: boolean | null
     competitionId?: string | null
     ratingCategoryId?: string | null
     showEventName?: boolean | null
@@ -509,6 +526,23 @@ export type BoardElement = {
 }
 
 /**
+ * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races
+ */
+export type streamMode =
+    | 'AUTO'
+    | 'RUNNING'
+    | 'RESULTS'
+    | 'UPCOMING'
+    | 'LAPS'
+    | 'UPCOMING_LIST'
+    | 'CLOCK'
+
+/**
+ * STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only
+ */
+export type streamCrew = 'CLUBS_FIRST' | 'PARTICIPANTS_FIRST' | 'CLUBS_ONLY'
+
+/**
  * MATCH_DETAIL is the announcer tile: one match in full detail, only valid as the board's single tile
  */
 export type BoardElementType =
@@ -519,6 +553,7 @@ export type BoardElementType =
     | 'TEXT'
     | 'AWARD_CEREMONY'
     | 'DELAY'
+    | 'STREAM'
 
 export type BoardListDto = {
     mode: BoardListMode
@@ -1431,6 +1466,7 @@ export type ErrorCode =
     | 'RACECLOCKER_MATCH_IS_BYE'
     | 'RACECLOCKER_RACE_NAME_TAKEN'
     | 'RACECLOCKER_RACE_URL_TAKEN'
+    | 'RACECLOCKER_RACE_STILL_ASSIGNED'
     | 'STARTLIST_CONFIG_NOT_CONFIGURED'
     | 'STARTLIST_MATCHES_WITHOUT_START_TIME'
     | 'RESULT_IMPORT_CONFIG_NOT_CONFIGURED'
@@ -2543,6 +2579,10 @@ export type MatchTeamLapDto = {
      * Cumulative race time at this mark, formatted for display (e.g. '1:05.5')
      */
     timeString: string
+    /**
+     * when the lap time arrived; carries the ordering of the stream lap band
+     */
+    recordedAt?: string | null
 }
 
 /**
@@ -3236,6 +3276,10 @@ export type RatingCategoryToEventRequest = {
 export type RegistrationInvoiceType = 'REGULAR' | 'LATE'
 
 export type ResendAccessTokenRequest = {
+    callbackUrl: string
+}
+
+export type ResendInvitationRequest = {
     callbackUrl: string
 }
 
@@ -4214,6 +4258,27 @@ export type AcceptUserInvitationData = {
 export type AcceptUserInvitationResponse = unknown
 
 export type AcceptUserInvitationError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteInvitationData = {
+    path: {
+        invitationId: string
+    }
+}
+
+export type DeleteInvitationResponse = void
+
+export type DeleteInvitationError = ApiError
+
+export type ResendInvitationData = {
+    body: ResendInvitationRequest
+    path: {
+        invitationId: string
+    }
+}
+
+export type ResendInvitationResponse = void
+
+export type ResendInvitationError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type InitPasswordResetData = {
     body: PasswordResetInitRequest
@@ -7517,6 +7582,16 @@ export type GetLiveMatchesData = {
 export type GetLiveMatchesResponse = LiveMatchesDto
 
 export type GetLiveMatchesError = ApiError
+
+export type GetPublicProgramData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetPublicProgramResponse = Array<BoardProgramEntry>
+
+export type GetPublicProgramError = ApiError
 
 export type GetPublicBoardsData = {
     path: {

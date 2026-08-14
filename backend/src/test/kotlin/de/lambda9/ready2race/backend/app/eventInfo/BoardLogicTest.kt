@@ -223,4 +223,96 @@ class BoardLogicTest {
         assertEquals(true, needs.advancement)
         assertEquals(true, needs.requirements)
     }
+
+    @Test
+    fun `dataNeeds meldet die Slots des Stream-Overlays an`() {
+        fun config(mode: StreamOverlayMode?) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(elements = listOf(BoardElement(type = BoardElementType.STREAM, streamMode = mode)))
+            ),
+        )
+        // AUTO (auch als null): laufender Lauf + Ergebnis-Rückfall.
+        assertEquals(setOf(0, -1), BoardLogic.dataNeeds(config(null)).offsets)
+        assertEquals(setOf(0, -1), BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO)).offsets)
+        assertEquals(setOf(0), BoardLogic.dataNeeds(config(StreamOverlayMode.RUNNING)).offsets)
+        assertEquals(setOf(-1), BoardLogic.dataNeeds(config(StreamOverlayMode.RESULTS)).offsets)
+        assertEquals(setOf(1), BoardLogic.dataNeeds(config(StreamOverlayMode.UPCOMING)).offsets)
+    }
+
+    @Test
+    fun `dataNeeds der neuen Stream-Modi und der Boot-Darstellung`() {
+        fun config(mode: StreamOverlayMode?, crew: StreamCrewDisplay? = null, advancement: Boolean? = null) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(elements = listOf(
+                    BoardElement(type = BoardElementType.STREAM, streamMode = mode, streamCrew = crew, showAdvancement = advancement)
+                ))
+            ),
+        )
+        assertEquals(setOf(0), BoardLogic.dataNeeds(config(StreamOverlayMode.LAPS)).offsets)
+        assertEquals(setOf(1), BoardLogic.dataNeeds(config(StreamOverlayMode.UPCOMING_LIST)).offsets)
+        assertEquals(true, BoardLogic.dataNeeds(config(StreamOverlayMode.UPCOMING_LIST)).upcomingLimit >= 5)
+        // Personen sind per Default sichtbar (CLUBS_FIRST) - Crew-Details werden angefordert.
+        assertEquals(true, BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO)).crewDetails)
+        assertEquals(true, BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO, StreamCrewDisplay.PARTICIPANTS_FIRST)).crewDetails)
+        // Nur-Vereine spart die Crew-Abfrage.
+        assertEquals(false, BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO, StreamCrewDisplay.CLUBS_ONLY)).crewDetails)
+        assertEquals(true, BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO, advancement = true)).advancement)
+    }
+
+    // UPCOMING_LIST braucht nicht nur den Slot +1 (für Kacheln, die nur ihn zeigen),
+    // sondern auch den `lists`-Block der Anzeige — sonst kann die STREAM-Kachel keine
+    // Liste anstehender Läufe rendern. Implizit wie ein MATCH_LIST(UPCOMING, 5): landet
+    // in listLimits, ohne dass BoardService.getBoardView etwas Eigenes bräuchte.
+    @Test
+    fun `UPCOMING_LIST fuellt den lists-Block ueber listLimits`() {
+        val config = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(elements = listOf(
+                    BoardElement(type = BoardElementType.STREAM, streamMode = StreamOverlayMode.UPCOMING_LIST)
+                ))
+            ),
+        )
+        val needs = BoardLogic.dataNeeds(config)
+        assertEquals(true, (needs.listLimits[BoardListMode.UPCOMING] ?: 0) >= 5)
+        assertEquals(needs.listLimits[BoardListMode.UPCOMING], needs.upcomingLimit)
+
+        // Existiert daneben eine MATCH_LIST(UPCOMING) mit größerem Limit, gewinnt das größere.
+        val withBiggerList = config.copy(
+            tiles = config.tiles + BoardTile(elements = listOf(
+                BoardElement(type = BoardElementType.MATCH_LIST, listMode = BoardListMode.UPCOMING, limit = 12)
+            ))
+        )
+        assertEquals(12, BoardLogic.dataNeeds(withBiggerList).listLimits[BoardListMode.UPCOMING])
+    }
+
+    // „Letztes Ergebnis" darf nicht am Slot −1 hängen: der zählt die Timeline rückwärts und
+    // trifft zuerst die früher gestarteten, noch laufenden Läufe. Fahren zwei Läufe
+    // gleichzeitig, kam dort ein laufender Lauf statt eines Ergebnisses an und die Kachel
+    // blieb leer. Über listLimits bekommt sie das jüngste Ergebnis unabhängig davon.
+    @Test
+    fun `RESULTS und AUTO fordern die Ergebnisliste an`() {
+        fun config(mode: StreamOverlayMode?) = BoardConfig(
+            columns = 1,
+            tiles = listOf(
+                BoardTile(elements = listOf(BoardElement(type = BoardElementType.STREAM, streamMode = mode)))
+            ),
+        )
+        assertEquals(1, BoardLogic.dataNeeds(config(StreamOverlayMode.RESULTS)).listLimits[BoardListMode.RESULTS])
+        assertEquals(1, BoardLogic.dataNeeds(config(StreamOverlayMode.AUTO)).listLimits[BoardListMode.RESULTS])
+        assertEquals(1, BoardLogic.dataNeeds(config(null)).listLimits[BoardListMode.RESULTS])
+        // Modi ohne Ergebnisbezug lassen die Liste weg.
+        assertEquals(null, BoardLogic.dataNeeds(config(StreamOverlayMode.RUNNING)).listLimits[BoardListMode.RESULTS])
+        assertEquals(null, BoardLogic.dataNeeds(config(StreamOverlayMode.UPCOMING)).listLimits[BoardListMode.RESULTS])
+
+        // Eine daneben konfigurierte Ergebnisliste mit größerem Limit gewinnt.
+        val withBiggerList = config(StreamOverlayMode.RESULTS).let {
+            it.copy(tiles = it.tiles + BoardTile(elements = listOf(
+                BoardElement(type = BoardElementType.MATCH_LIST, listMode = BoardListMode.RESULTS, limit = 6)
+            )))
+        }
+        assertEquals(6, BoardLogic.dataNeeds(withBiggerList).listLimits[BoardListMode.RESULTS])
+    }
 }

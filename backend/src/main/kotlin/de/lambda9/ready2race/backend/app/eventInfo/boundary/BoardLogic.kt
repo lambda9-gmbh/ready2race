@@ -72,13 +72,67 @@ object BoardLogic {
             .filter { it.type == BoardElementType.MATCH || it.type == BoardElementType.MATCH_DETAIL }
             .mapNotNull { it.offset }
             .toSet()
-        val listLimits = elements
-            .filter { it.type == BoardElementType.MATCH_LIST && it.listMode != null }
-            .groupBy { it.listMode!! }
-            .mapValues { (_, es) -> es.maxOf { it.limit ?: BoardLimits.MIN_LIST_LIMIT } }
+        // Das Stream-Overlay hängt sich an dieselbe Timeline: Offset 0 ist der zuletzt
+        // gestartete laufende Lauf (genau die Regel „bei mehreren gewinnt der zuletzt
+        // gestartete" aus der Spec), +1 der nächste anstehende. Das jüngste Ergebnis kommt
+        // NICHT über den Slot −1 (der trifft erst die früher gestarteten laufenden Läufe),
+        // sondern über die Ergebnisliste weiter unten — der Slot bleibt nur als Rückfall
+        // für ältere Anzeigen angemeldet.
+        val streamElements = elements.filter { it.type == BoardElementType.STREAM }
+        val streamOffsets = streamElements
+            .flatMap {
+                when (it.streamMode ?: StreamOverlayMode.AUTO) {
+                    StreamOverlayMode.AUTO -> listOf(0, -1)
+                    StreamOverlayMode.RUNNING -> listOf(0)
+                    StreamOverlayMode.RESULTS -> listOf(-1)
+                    StreamOverlayMode.UPCOMING -> listOf(1)
+                    // LAPS bleibt auf demselben Slot wie RUNNING — nur die Kachel zeigt
+                    // statt der Kurzkarte die Zwischenzeiten mit Eintreffzeit.
+                    StreamOverlayMode.LAPS -> listOf(0)
+                    // Nur-Uhr-Quelle: braucht denselben laufenden Lauf wie LAPS.
+                    StreamOverlayMode.CLOCK -> listOf(0)
+                    // UPCOMING_LIST behält zusätzlich den Einzel-Slot +1 (für Kacheln, die
+                    // nur ihn brauchen) — die Liste selbst kommt über listLimits (unten).
+                    StreamOverlayMode.UPCOMING_LIST -> listOf(1)
+                }
+            }
+            .toSet()
+        val allOffsets = offsets + streamOffsets
+        // UPCOMING_LIST ist inhaltlich ein implizites MATCH_LIST(UPCOMING, 5): es fließt in
+        // dieselbe listLimits-Menge ein, damit BoardService.getBoardView den `lists`-Block
+        // ohne Sonderfall befüllt (siehe BoardViewDto.lists-Aufbau).
+        val streamUpcomingList = streamElements.any {
+            (it.streamMode ?: StreamOverlayMode.AUTO) == StreamOverlayMode.UPCOMING_LIST
+        }
+        // „Letztes Ergebnis" braucht die Ergebnisliste, nicht den Slot −1: Offset −1 zählt
+        // die Timeline rückwärts und trifft dabei ZUERST die früher gestarteten, noch
+        // laufenden Läufe (siehe [resolveOffset]). Fahren zwei Läufe gleichzeitig — der
+        // Normalfall an einem vollen Regattatag —, liefert −1 einen laufenden Lauf statt
+        // eines Ergebnisses, und die Kachel blieb leer. Über listLimits bekommt sie das
+        // jüngste Ergebnis unabhängig davon, wie viele Läufe gerade auf dem Wasser sind.
+        val streamResults = streamElements.any {
+            val mode = it.streamMode ?: StreamOverlayMode.AUTO
+            mode == StreamOverlayMode.RESULTS || mode == StreamOverlayMode.AUTO
+        }
+        val streamCrew = streamElements.any {
+            (it.streamCrew ?: StreamCrewDisplay.CLUBS_FIRST) != StreamCrewDisplay.CLUBS_ONLY
+        }
+        val streamAdvancement = streamElements.any { it.showAdvancement == true }
+        val listLimits = run {
+            val base = elements
+                .filter { it.type == BoardElementType.MATCH_LIST && it.listMode != null }
+                .groupBy { it.listMode!! }
+                .mapValues { (_, es) -> es.maxOf { it.limit ?: BoardLimits.MIN_LIST_LIMIT } }
+            val withUpcoming = if (streamUpcomingList) {
+                base + (BoardListMode.UPCOMING to maxOf(base[BoardListMode.UPCOMING] ?: 0, 5))
+            } else base
+            if (streamResults) {
+                withUpcoming + (BoardListMode.RESULTS to maxOf(withUpcoming[BoardListMode.RESULTS] ?: 0, 1))
+            } else withUpcoming
+        }
 
-        val maxNegative = offsets.filter { it < 0 }.minOrNull()?.let { -it } ?: 0
-        val maxPositive = offsets.filter { it > 0 }.maxOrNull() ?: 0
+        val maxNegative = allOffsets.filter { it < 0 }.minOrNull()?.let { -it } ?: 0
+        val maxPositive = allOffsets.filter { it > 0 }.maxOrNull() ?: 0
 
         val matchElements = elements.filter { it.type == BoardElementType.MATCH }
         // MATCH_DETAIL ist maximale Detailtiefe ohne Schalter: Crew-Details, Weiterkommens-Regel
@@ -86,8 +140,8 @@ object BoardLogic {
         val matchDetail = elements.any { it.type == BoardElementType.MATCH_DETAIL }
         val crewDetails = matchDetail || matchElements.any {
             it.showCrewDetails == true || it.showBirthYears == true || it.showRegisteringClub == true
-        }
-        val advancement = matchDetail || matchElements.any { it.showAdvancement == true }
+        } || streamCrew
+        val advancement = matchDetail || matchElements.any { it.showAdvancement == true } || streamAdvancement
         val ceremonies = elements
             .filter { it.type == BoardElementType.AWARD_CEREMONY && it.competitionId != null }
             .map { AwardCeremonyKeyRequest(competitionId = it.competitionId!!, ratingCategoryId = it.ratingCategoryId) }
@@ -100,7 +154,7 @@ object BoardLogic {
             runningLimit = maxOf(1, maxNegative + 1, listLimits[BoardListMode.RUNNING] ?: 0),
             upcomingLimit = maxOf(1, maxPositive, listLimits[BoardListMode.UPCOMING] ?: 0),
             resultsLimit = maxOf(1, maxNegative, listLimits[BoardListMode.RESULTS] ?: 0),
-            offsets = offsets,
+            offsets = allOffsets,
             listLimits = listLimits,
             crewDetails = crewDetails,
             advancement = advancement,

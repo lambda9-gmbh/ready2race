@@ -45,6 +45,12 @@ import type {
     AcceptUserInvitationData,
     AcceptUserInvitationError,
     AcceptUserInvitationResponse,
+    DeleteInvitationData,
+    DeleteInvitationError,
+    DeleteInvitationResponse,
+    ResendInvitationData,
+    ResendInvitationError,
+    ResendInvitationResponse,
     InitPasswordResetData,
     InitPasswordResetError,
     InitPasswordResetResponse,
@@ -745,6 +751,9 @@ import type {
     GetLiveMatchesData,
     GetLiveMatchesError,
     GetLiveMatchesResponse,
+    GetPublicProgramData,
+    GetPublicProgramError,
+    GetPublicProgramResponse,
     GetPublicBoardsData,
     GetPublicBoardsError,
     GetPublicBoardsResponse,
@@ -1147,6 +1156,32 @@ export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/invitation/accept',
+    })
+}
+
+export const deleteInvitation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteInvitationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteInvitationResponse,
+        DeleteInvitationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/invitation/{invitationId}',
+    })
+}
+
+export const resendInvitation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResendInvitationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ResendInvitationResponse,
+        ResendInvitationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/invitation/{invitationId}/resend',
     })
 }
 
@@ -4173,6 +4208,22 @@ export const getLiveMatches = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/live-matches',
+    })
+}
+
+/**
+ * The "schedule" tab of the public results page: the whole day program from the timeline, each slot with its derived state - the same entries the SCHEDULE boards render. Carries no lineups and no results; times and places remain behind /latest-match-results and thus behind Event.publicResultsVisibility.
+ */
+export const getPublicProgram = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPublicProgramData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPublicProgramResponse,
+        GetPublicProgramError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/program',
     })
 }
 

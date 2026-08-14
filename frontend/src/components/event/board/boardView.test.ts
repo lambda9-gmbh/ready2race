@@ -375,12 +375,22 @@ describe('boardColumns', () => {
         elements: [{type: 'MATCH_DETAIL', offset: 0} as BoardElement],
     }
 
+    const streamTile: BoardTile = {
+        colSpan: 1,
+        rowSpan: 1,
+        elements: [{type: 'STREAM'} as BoardElement],
+    }
+
     // Der Nutzer-Befund vom 12.08.2026: 3 Spalten + Sprecher-Kachel quetschte die
     // Kachel in eine Spalte. Das Rendering ignoriert die Geometrie und heilt damit
     // auch gespeicherte Fehlkonfigurationen — ohne neuen Validierungsfehler.
     test('ein Sprecher-Board rendert immer einspaltig', () => {
         expect(boardColumns({columns: 3, tiles: [detailTile]})).toBe(1)
         expect(boardColumns({columns: 1, tiles: [detailTile]})).toBe(1)
+    })
+
+    test('ein Stream-Board rendert immer einspaltig', () => {
+        expect(boardColumns({columns: 3, tiles: [streamTile]})).toBe(1)
     })
 
     test('normale Boards behalten ihre Spaltenwahl', () => {

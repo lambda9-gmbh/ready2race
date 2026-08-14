@@ -43,7 +43,7 @@ enum class BoardLayout(val tileCount: Int, val columns: Int) {
  * einzige Kachel eines Boards gültig ([BoardRequest.validate]): sie ist für den zweiten
  * Bildschirm bzw. Browser-Tab der Sprecherin gedacht, nicht als Raster-Baustein.
  */
-enum class BoardElementType { MATCH, MATCH_DETAIL, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY, DELAY }
+enum class BoardElementType { MATCH, MATCH_DETAIL, MATCH_LIST, CLOCK, TEXT, AWARD_CEREMONY, DELAY, STREAM }
 
 /** SCHEDULE = Tagesprogramm: alle Slots des Zeitplans mit Status, für Sprecherinnen und Aushänge. */
 enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }
@@ -55,6 +55,24 @@ enum class BoardListMode { UPCOMING, RESULTS, RUNNING, SCHEDULE }
  * Fehlt das Feld (Alt-Konfigurationen), gilt FOLLOW.
  */
 enum class BoardScheduleMode { FOLLOW, FULL }
+
+/**
+ * Inhalt der Stream-Overlay-Kachel: AUTO = laufender Lauf, sonst letztes Ergebnis (der
+ * Rückfall, mit dem der Stream fast immer eine sinnvolle Einblendung hat); die übrigen
+ * Modi zeigen genau eine Quelle und sonst nichts — für Streamer, die sich je Quelle ein
+ * eigenes Board bauen. LAPS zeigt die Zwischenzeiten des laufenden Rennens (wie RUNNING,
+ * aber mit den Split-Marken statt der Kurzkarte), UPCOMING_LIST die nächsten Läufe als
+ * Liste statt eines einzelnen Slots (für die Regie-Vorschau zwischen zwei Rennen). Fehlt
+ * das Feld, gilt AUTO.
+ */
+enum class StreamOverlayMode { AUTO, RUNNING, RESULTS, UPCOMING, LAPS, UPCOMING_LIST, CLOCK }
+
+/**
+ * Boot-Darstellung des Stream-Overlays: Vereine prominent mit kleiner Personenzeile
+ * (Voreinstellung), Personen prominent mit kleinem Verein, oder nur Vereine. Fehlt das
+ * Feld, gilt CLUBS_FIRST.
+ */
+enum class StreamCrewDisplay { CLUBS_FIRST, PARTICIPANTS_FIRST, CLUBS_ONLY }
 
 /**
  * Ein Element einer Kachel. Bewusst flach statt sealed: das Schema geht 1:1 durch das
@@ -93,8 +111,18 @@ data class BoardElement(
     val limit: Int? = null,
     /** Nur für [BoardListMode.SCHEDULE]: mitlaufender Ausschnitt oder ganzer Tag — siehe [BoardScheduleMode]. */
     val scheduleMode: BoardScheduleMode? = null,
+    // STREAM: was das Livestream-Overlay einblendet — siehe StreamOverlayMode.
+    val streamMode: StreamOverlayMode? = null,
+    /** STREAM: Boot- vs. Personen-Gewichtung der Crew-Anzeige — siehe StreamCrewDisplay. */
+    val streamCrew: StreamCrewDisplay? = null,
     /** Wettkampf-Kürzel (short_name) statt des vollen Namens — für schmale Listen. */
     val useShortNames: Boolean? = null,
+    /**
+     * STREAM: Vereins-Kurzform statt der vollen Vereinskette. Fehlt das Feld, gilt
+     * [useShortNames] auch für die Vereine — bis dahin schaltete ein einziger Schalter
+     * beides gemeinsam um, und bestehende Boards sollen unverändert aussehen.
+     */
+    val useShortClubNames: Boolean? = null,
     // AWARD_CEREMONY: die Ehrung (Wettkampf + optionale Wertung), deren Podium die Kachel zeigt.
     val competitionId: UUID? = null,
     val ratingCategoryId: UUID? = null,

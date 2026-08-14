@@ -1040,7 +1040,7 @@
             "title": "Lauf zurücksetzen?",
             "warning": "Achtung: Dieser Lauf wird auf „nie gefahren“ zurückgesetzt. Unwiderruflich verloren gehen: der Ist-Start, alle Ziel- und Zwischenzeiten, alle Plätze, Ausscheidungen und Zeitstrafen dieses Laufs.",
             "keeps": "Erhalten bleiben: Aufstellung, Bahnen und die Kennungen der Boote — die RaceClocker-Zuordnung bleibt gültig, der Lauf kann direkt neu gefahren werden.",
-            "autoPull": "Der automatische RaceClocker-Abruf wird für diesen Lauf pausiert — sonst spielte der nächste Abruf die gelöschten Ergebnisse sofort wieder ein. Nach dem Aufräumen in RaceClocker über „Automatik wieder aufnehmen“ bewusst fortsetzen.",
+          "autoPull": "Der automatische RaceClocker-Abruf wird für diesen Lauf pausiert — sonst spielte der nächste Abruf die gelöschten Ergebnisse sofort wieder ein. Nach dem Aufräumen in RaceClocker über „Automatik wieder aufnehmen“ bewusst fortsetzen.",
             "question": "Lauf wirklich zurücksetzen?"
           },
           "error": "Beim Zurücksetzen des Laufs ist ein Fehler aufgetreten",
@@ -1090,9 +1090,9 @@
             "activate": "Lauf aktivieren",
             "deactivate": "Lauf deaktivieren",
             "markStarted": "Läuft",
-            "finish": "Lauf beenden",
-            "finishConfirm": "Diesen Lauf jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
-            "finishSuccess": "Lauf beendet",
+          "finish": "Lauf beenden",
+          "finishConfirm": "Diesen Lauf jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
+          "finishSuccess": "Lauf beendet",
             "reopen": "Beenden zurücknehmen"
           }
         },
@@ -1587,7 +1587,8 @@
         "url": "Ergebnis-Adresse",
         "capturesLaps": "Erfasst Rundenzeiten",
         "none": "Noch kein Rennen angelegt.",
-        "deleteConfirm": "„{{name}}“ löschen? Solange noch ein Wettkampf darauf zeigt, lässt es sich nicht löschen — hake die Zuordnung vorher unten ab.",
+        "deleteConfirm": "„{{name}}“ wirklich löschen?",
+        "deleteBlocked": "„{{name}}“ ist noch mindestens einem Wettkampf zugewiesen und wurde nicht gelöscht — hake die Zuordnung unten ab und versuche es erneut.",
         "nameTaken": "Es gibt schon ein Rennen mit diesem Namen.",
         "urlTaken": "Es gibt schon ein Rennen mit dieser Adresse.",
         "invalidUrl": "Die Adresse muss auf raceclocker.com liegen.",
@@ -2026,9 +2027,9 @@
       },
       "indicator": {
         "now": "Jetzt",
-        "planned": "Geplant {{time}}",
-        "started": "Gestartet {{time}}",
-        "expected": "Erwartet ~{{time}}",
+          "planned": "Geplant {{time}}",
+          "started": "Gestartet {{time}}",
+          "expected": "Erwartet ~{{time}}",
         "state": {
           "finished": "Beendet",
           "preparing": "In Vorbereitung",
@@ -2138,7 +2139,8 @@
           "clock": "Uhr",
           "delay": "Verspätung",
           "text": "Hinweistext",
-          "awardCeremony": "Siegerehrung"
+          "awardCeremony": "Siegerehrung",
+          "stream": "Livestream-Overlay"
         },
         "offset": "Position",
         "offsetCurrent": "Aktueller Lauf",
@@ -2192,7 +2194,33 @@
       "columns": "Spalten",
       "columnCount": "{{count}} Spalten",
       "columnCount_one": "1 Spalte",
-      "showHeader": "Kopfzeile mit Name und Uhr"
+      "showHeader": "Kopfzeile mit Name und Uhr",
+      "stream": {
+        "running": "Läuft",
+        "result": "Ergebnis",
+        "upcoming": "Als Nächstes",
+        "mode": {
+          "label": "Inhalt",
+          "auto": "Automatisch (läuft, sonst letztes Ergebnis)",
+          "running": "Nur laufender Lauf",
+          "results": "Nur letztes Ergebnis",
+          "upcoming": "Nächster anstehender Lauf",
+          "laps": "Rundenanzeige",
+          "upcomingList": "Nächste Läufe",
+          "clock": "Nur Laufuhr"
+        },
+        "crew": {
+          "label": "Boot-Darstellung",
+          "clubsFirst": "Vereine prominent",
+          "participantsFirst": "Personen prominent",
+          "clubsOnly": "Nur Vereine"
+        },
+        "shortCompetitionNames": "Wettkampf-Kürzel statt vollem Namen",
+        "shortClubNames": "Vereins-Kurzform statt voller Vereinskette",
+        "showCountdown": "Uhrzeit/Countdown",
+        "upcomingListTitle": "Nächste Läufe",
+        "inMinutes": "in {{time}}"
+      }
     }
   },
   "task": {
@@ -2331,6 +2359,13 @@
       "invitation": "Einladung",
       "pendingInvitations": "Ausstehende Einladungen",
       "accept": "Einladung annehmen",
+      "expiresAt": "Läuft ab am",
+      "withdraw": "Einladung zurückziehen",
+      "withdrawConfirm": "Die Einladung an {{email}} zurückziehen? Der bereits verschickte Link wird damit ungültig. Die Person kann anschließend neu eingeladen werden.",
+      "withdrawSuccess": "Einladung zurückgezogen",
+      "resend": "Einladung erneut verschicken",
+      "resendConfirm": "Die Einladung erneut an {{email}} verschicken? Sie erhält einen neuen Link mit sieben Tagen Frist, der Link aus der ersten Mail wird ungültig.",
+      "resendSuccess": "Einladung erneut verschickt",
       "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
       "submitPassword": "Einladung annehmen",
       "userCreated": {
@@ -2762,11 +2797,14 @@
   "results": {
     "tabs": {
       "results": "Ergebnisse",
-      "live": "Live"
+      "live": "Live",
+      "schedule": "Zeitplan"
     },
     "matchResults": {
       "matchResults": "Ergebnisse",
-      "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf."
+      "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf.",
+      "latestSection": "Zuletzt beendet",
+      "byCompetitionSection": "Nach Wettkampf"
     },
     "liveMatches": {
       "noMatches": "Zurzeit ist kein Lauf angesetzt.",
@@ -2786,7 +2824,14 @@
       "relative": "Relativ",
       "individual": "Individuell"
     },
-    "noEvents": "Keine Veranstaltungen verfügbar"
+    "noEvents": "Keine Veranstaltungen verfügbar",
+    "program": {
+      "loadFailed": "Der Zeitplan konnte nicht geladen werden.",
+      "empty": "Für diese Veranstaltung ist kein Zeitplan hinterlegt.",
+      "running": "Läuft",
+      "finished": "Beendet",
+      "upcoming": "Anstehend"
+    }
   },
   "webDAV": {
     "infoText": {
@@ -3129,9 +3174,5 @@
     "team": "Mannschaft",
     "deregistered": "Abgemeldet",
     "noMatches": "Für dich ist noch kein Lauf eingetragen."
-  },
-  "legal": {
-    "privacy": "Datenschutz",
-    "privacyTitle": "Datenschutzerklärung"
   }
 }

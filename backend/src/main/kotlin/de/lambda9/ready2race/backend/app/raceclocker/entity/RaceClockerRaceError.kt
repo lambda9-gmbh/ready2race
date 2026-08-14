@@ -18,6 +18,12 @@ sealed interface RaceClockerRaceError : ServiceError {
      */
     data object UrlTaken : RaceClockerRaceError
 
+    /**
+     * Der Fremdschlüssel würde zugewiesene Wettkämpfe beim Löschen stillschweigend abhängen
+     * (SET NULL) — deshalb blockt der Server, solange noch ein Wettkampf auf das Rennen zeigt.
+     */
+    data object StillAssigned : RaceClockerRaceError
+
     override fun respond(): ApiError = when (this) {
         NotFound -> ApiError(
             status = HttpStatusCode.NotFound,
@@ -34,6 +40,12 @@ sealed interface RaceClockerRaceError : ServiceError {
             status = HttpStatusCode.Conflict,
             message = "A RaceClocker race with this results URL already exists for this event",
             errorCode = ErrorCode.RACECLOCKER_RACE_URL_TAKEN,
+        )
+
+        StillAssigned -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "The RaceClocker race is still assigned to at least one competition",
+            errorCode = ErrorCode.RACECLOCKER_RACE_STILL_ASSIGNED,
         )
     }
 }

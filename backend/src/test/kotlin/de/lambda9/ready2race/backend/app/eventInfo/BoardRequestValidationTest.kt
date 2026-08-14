@@ -287,4 +287,62 @@ class BoardRequestValidationTest {
             BoardRequest(name = " ", config = BoardConfig(columns = 1, tiles = tiles(1)))
         assertNotEquals(ValidationResult.Valid, blankName.validate())
     }
+
+    @Test
+    fun `STREAM ist nur als einzige Kachel gueltig`() {
+        val invalid = BoardRequest(
+            name = "Stream",
+            config = BoardConfig(
+                columns = 2,
+                tiles = listOf(
+                    BoardTile(elements = listOf(BoardElement(type = BoardElementType.STREAM))),
+                    BoardTile(elements = listOf(BoardElement(type = BoardElementType.CLOCK))),
+                ),
+            ),
+        )
+        assertNotEquals(ValidationResult.Valid, invalid.validate())
+
+        val valid = BoardRequest(
+            name = "Stream",
+            config = BoardConfig(
+                columns = 1,
+                tiles = listOf(
+                    BoardTile(elements = listOf(BoardElement(type = BoardElementType.STREAM))),
+                ),
+            ),
+        )
+        assertEquals(ValidationResult.Valid, valid.validate())
+    }
+
+    @Test
+    fun `streamMode ist nur an STREAM-Elementen erlaubt`() {
+        val invalid = BoardRequest(
+            name = "Uhr",
+            config = BoardConfig(
+                columns = 1,
+                tiles = listOf(
+                    BoardTile(
+                        elements = listOf(
+                            BoardElement(type = BoardElementType.CLOCK, streamMode = StreamOverlayMode.AUTO)
+                        )
+                    ),
+                ),
+            ),
+        )
+        assertNotEquals(ValidationResult.Valid, invalid.validate())
+    }
+
+    @Test
+    fun `streamCrew ist nur an STREAM-Elementen erlaubt`() {
+        val invalid = BoardRequest(
+            name = "Uhr",
+            config = BoardConfig(
+                columns = 1,
+                tiles = listOf(BoardTile(elements = listOf(
+                    BoardElement(type = BoardElementType.CLOCK, streamCrew = StreamCrewDisplay.CLUBS_ONLY)
+                ))),
+            ),
+        )
+        assertNotEquals(ValidationResult.Valid, invalid.validate())
+    }
 }

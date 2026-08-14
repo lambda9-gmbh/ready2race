@@ -50,6 +50,23 @@ object BoardService {
             KIO.ok(ApiResponse.ListDto(boards.map { it.toDto() }))
         }
 
+    /**
+     * Das öffentliche Tagesprogramm für den Zeitplan-Reiter der Ergebnisseite: dieselben
+     * Einträge, die auch die SCHEDULE-Boards zeigen (buildProgram) — Slots mit Zustand, ohne
+     * Aufstellungen und ohne Ergebnisse. Ein FINISHED-Zustand ist kein Ergebnis; Zeiten und
+     * Plätze bleiben allein hinter /latest-match-results und damit hinter
+     * Event.publicResultsVisibility.
+     */
+    fun getProgram(eventId: UUID): App<EventInfoProblem, ApiResponse.ListDto<BoardProgramEntry>> =
+        KIO.comprehension {
+            val exists = !EventRepo.exists(eventId).orDie()
+            if (!exists) {
+                !KIO.fail<EventInfoProblem>(EventInfoProblem.EventNotFound(eventId))
+            }
+            val program = !buildProgram(eventId)
+            KIO.ok(ApiResponse.ListDto(program))
+        }
+
     /** Öffentliche Kurzliste: trägt die Umleitung der alten Athleten-Board-URL. */
     fun getBoardNames(eventId: UUID): App<EventInfoProblem, ApiResponse.ListDto<BoardNameDto>> =
         KIO.comprehension {

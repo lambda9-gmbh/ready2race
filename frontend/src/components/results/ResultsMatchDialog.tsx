@@ -69,10 +69,18 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                 <>
                     <DialogTitle>
                         <Stack>
-                            <Typography variant={match.matchName ? 'body2' : 'h6'}>
+                            <Typography
+                                variant={
+                                    match.matchName && match.matchName !== match.roundName
+                                        ? 'body2'
+                                        : 'h6'
+                                }
+                                sx={{overflowWrap: 'anywhere'}}>
                                 {match.competitionName} - {match.roundName}
                             </Typography>
-                            {match.matchName ?? ''}
+                            {/* Ein Laufname, der nur die Runde wiederholt („Zeitfahren"),
+                                erscheint nicht doppelt. */}
+                            {match.matchName !== match.roundName ? (match.matchName ?? '') : ''}
                             {match.categoryName && (
                                 <Box>
                                     <Chip
@@ -106,9 +114,13 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                     {section.entries.map(team => (
                                         <Card key={team.teamId}>
                                             <CardContent>
+                                                {/* Auf dem Telefon untereinander: Platz/Zeit oben,
+                                                    Verein darunter linksbündig. Die alte
+                                                    Zwei-Spalten-Zeile quetschte lange
+                                                    Vereinsketten gegen die Platzzahl. */}
                                                 <Stack
-                                                    spacing={4}
-                                                    direction={'row'}
+                                                    spacing={{xs: 1, sm: 4}}
+                                                    direction={{xs: 'column', sm: 'row'}}
                                                     sx={{
                                                         justifyContent: 'space-between',
                                                     }}>
@@ -181,14 +193,17 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                     ) : (
                                                         <Box></Box>
                                                     )}
-                                                    <Box>
-                                                        <Typography textAlign={'right'}>
+                                                    <Box sx={{minWidth: 0}}>
+                                                        <Typography
+                                                            textAlign={{xs: 'left', sm: 'right'}}
+                                                            sx={{overflowWrap: 'anywhere'}}>
                                                             {team.clubsFull ?? team.clubName}
                                                         </Typography>
                                                         <Typography
                                                             color={'textSecondary'}
                                                             variant={'body2'}
-                                                            textAlign={'right'}>
+                                                            textAlign={{xs: 'left', sm: 'right'}}
+                                                            sx={{overflowWrap: 'anywhere'}}>
                                                             {[
                                                                 t('club.registeredBy') +
                                                                     ' ' +
@@ -219,7 +234,10 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                         )
                                                         .map(participant => (
                                                             <Grid2
-                                                                size={6}
+                                                                // Eine Spalte auf dem Telefon:
+                                                                // zwei nebeneinander schnitten
+                                                                // lange Namen und Vereine ab.
+                                                                size={{xs: 12, sm: 6}}
                                                                 key={participant.participantId}>
                                                                 <ListItemText
                                                                     primary={

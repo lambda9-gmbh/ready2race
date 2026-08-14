@@ -10,11 +10,11 @@
  * Leere und die Seite startet auf ihrem Default.
  */
 
-export const RESULTS_TABS = ['latest-results', 'live', 'my-event'] as const
+export const RESULTS_TABS = ['latest-results', 'live', 'schedule', 'my-event'] as const
 export type ResultsTab = (typeof RESULTS_TABS)[number]
 
 /** Die erlaubten Werte des tab-Suchparameters. */
-export const RESULTS_TAB_SEARCH_VALUES = ['results', 'live', 'my-event'] as const
+export const RESULTS_TAB_SEARCH_VALUES = ['results', 'live', 'schedule', 'my-event'] as const
 export type ResultsTabSearchValue = (typeof RESULTS_TAB_SEARCH_VALUES)[number]
 
 /**
@@ -31,4 +31,10 @@ export const parseResultsTabSearch = (
 
 /** Der Reiter, mit dem die Seite startet — dasselbe Muster wie der bisherige my-event-Einstieg. */
 export const initialResultsTab = (value: ResultsTabSearchValue | undefined): ResultsTab =>
-    value === 'live' ? 'live' : value === 'my-event' ? 'my-event' : 'latest-results'
+    value === 'live'
+        ? 'live'
+        : value === 'schedule'
+          ? 'schedule'
+          : value === 'my-event'
+            ? 'my-event'
+            : 'latest-results'
