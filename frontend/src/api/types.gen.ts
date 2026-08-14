@@ -3298,6 +3298,7 @@ export type Resource =
     | 'WEB_DAV'
     | 'RESULT'
     | 'LIVE_DASHBOARD'
+    | 'BOARD'
 
 export type ResultChallengeClubDto = {
     id: string

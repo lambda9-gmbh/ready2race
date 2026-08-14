@@ -20,6 +20,8 @@ import {
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {updateBoardGlobal, updateEventGlobal} from '@authorization/privileges.ts'
 import BaseDialog from '@components/BaseDialog'
 import {createBoard, deleteBoard, getBoards, updateBoard} from '@api/sdk.gen'
 import {BoardDto, BoardRequest} from '@api/types.gen'
@@ -37,6 +39,13 @@ const BoardsPanel = ({eventId}: BoardsPanelProps) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
+    const user = useUser()
+
+    // Lesen darf, wer die Seite erreicht (READ BOARD oder READ EVENT); schreiben nur, wer eines
+    // der beiden Änderungsrechte hat. Ohne diese Prüfung stünden die Knöpfe auch für eine reine
+    // Leserolle da und liefen beim Klick in den 403 des Servers.
+    const canEdit =
+        user.checkPrivilege(updateBoardGlobal) || user.checkPrivilege(updateEventGlobal)
 
     const [reloadKey, setReloadKey] = useState(0)
     const [editorOpen, setEditorOpen] = useState(false)
@@ -133,15 +142,17 @@ const BoardsPanel = ({eventId}: BoardsPanelProps) => {
         <Box>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{mb: 2}}>
                 <Typography variant="h5">{t('event.boards.title')}</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                        setEditingBoard(null)
-                        setEditorOpen(true)
-                    }}>
-                    {t('event.boards.create')}
-                </Button>
+                {canEdit && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                            setEditingBoard(null)
+                            setEditorOpen(true)
+                        }}>
+                        {t('event.boards.create')}
+                    </Button>
+                )}
             </Stack>
 
             {boards && boards.length === 0 && (
@@ -187,17 +198,21 @@ const BoardsPanel = ({eventId}: BoardsPanelProps) => {
                                 </IconButton>
                             </Tooltip>
                             <Box sx={{flex: 1}} />
-                            <IconButton
-                                size="small"
-                                onClick={() => {
-                                    setEditingBoard(board)
-                                    setEditorOpen(true)
-                                }}>
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton size="small" onClick={() => handleDelete(board)}>
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
+                            {canEdit && (
+                                <>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            setEditingBoard(board)
+                                            setEditorOpen(true)
+                                        }}>
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton size="small" onClick={() => handleDelete(board)}>
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </>
+                            )}
                         </CardActions>
                     </Card>
                 ))}

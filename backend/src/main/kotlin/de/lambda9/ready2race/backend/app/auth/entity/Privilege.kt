@@ -27,6 +27,7 @@ sealed class Privilege(
         WEB_DAV,
         RESULT,
         LIVE_DASHBOARD,
+        BOARD,
         ADMINISTRATION,
     }
 
@@ -93,6 +94,13 @@ sealed class Privilege(
 
     data object ReadLiveDashboardGlobal : Privilege(Action.READ, Resource.LIVE_DASHBOARD, Scope.GLOBAL)
     data object UpdateLiveDashboardGlobal : Privilege(Action.UPDATE, Resource.LIVE_DASHBOARD, Scope.GLOBAL)
+
+    // Die Boards (öffentliche Anzeigen, Stream-Overlays) hingen bis zum 14.08.2026 am breiten
+    // UPDATE EVENT. Wer sie pflegt - Sprecher, Streamer - braucht damit aber nicht auch Wettkämpfe,
+    // Gebühren und Urkunden. Deshalb ein eigenes Paar; UPDATE EVENT gilt weiterhin mit, damit
+    // bestehende Rollen nichts verlieren.
+    data object ReadBoardGlobal : Privilege(Action.READ, Resource.BOARD, Scope.GLOBAL)
+    data object UpdateBoardGlobal : Privilege(Action.UPDATE, Resource.BOARD, Scope.GLOBAL)
 
     data object UpdateAdministrationConfigGlobal : Privilege(Action.UPDATE, Resource.ADMINISTRATION, Scope.GLOBAL)
     data object ReadAdministrationConfigGlobal : Privilege(Action.READ, Resource.ADMINISTRATION, Scope.GLOBAL)

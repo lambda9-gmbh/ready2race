@@ -2,7 +2,7 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
-import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.authenticateAny
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.queryParam
@@ -109,11 +109,15 @@ fun Route.eventInfo() {
         }
     }
 
+    // Die Board-Verwaltung trägt ein eigenes Rechtepaar (READ/UPDATE BOARD), damit eine
+    // Sprecher- oder Streamer-Rolle die Anzeigen pflegen kann, ohne das breite UPDATE EVENT
+    // (Wettkämpfe, Gebühren, Urkunden, Zeitnahme) zu bekommen. Die Event-Rechte bleiben
+    // gleichwertig zugelassen - bestehende Rollen verlieren dadurch nichts.
     route("/event/{eventId}/boards") {
         // Alle Boards einer Veranstaltung, mit voller Konfiguration (Verwaltungsmaske).
         get {
             call.respondComprehension {
-                val user = !authenticate(Privilege.ReadEventGlobal)
+                val user = !authenticateAny(Privilege.ReadBoardGlobal, Privilege.ReadEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
 
                 BoardService.getBoards(eventId)
@@ -122,7 +126,7 @@ fun Route.eventInfo() {
 
         post {
             call.respondComprehension {
-                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val user = !authenticateAny(Privilege.UpdateBoardGlobal, Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 val request = !receiveKIO(BoardRequest.example)
 
@@ -132,7 +136,7 @@ fun Route.eventInfo() {
 
         put("/{boardId}") {
             call.respondComprehension {
-                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val user = !authenticateAny(Privilege.UpdateBoardGlobal, Privilege.UpdateEventGlobal)
                 val boardId = !pathParam("boardId", uuid)
                 val request = !receiveKIO(BoardRequest.example)
 
@@ -142,7 +146,7 @@ fun Route.eventInfo() {
 
         delete("/{boardId}") {
             call.respondComprehension {
-                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val user = !authenticateAny(Privilege.UpdateBoardGlobal, Privilege.UpdateEventGlobal)
                 val boardId = !pathParam("boardId", uuid)
 
                 BoardService.deleteBoard(boardId)

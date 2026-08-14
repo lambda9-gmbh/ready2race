@@ -158,6 +158,19 @@ export const updateLiveDashboardGlobal: Privilege = {
     scope: 'GLOBAL',
 }
 
+// Die Board-Verwaltung (öffentliche Anzeigen, Stream-Overlays) für Rollen, die keine
+// Veranstaltung bearbeiten dürfen. Das Backend lässt UPDATE EVENT weiterhin gleichwertig zu.
+export const readBoardGlobal: Privilege = {
+    action: 'READ',
+    resource: 'BOARD',
+    scope: 'GLOBAL',
+}
+export const updateBoardGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'BOARD',
+    scope: 'GLOBAL',
+}
+
 export const updateAdministrationConfigGlobal: Privilege = {
     action: 'UPDATE',
     resource: 'ADMINISTRATION',

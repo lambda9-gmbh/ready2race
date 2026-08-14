@@ -9730,6 +9730,7 @@ components:
         - WEB_DAV
         - RESULT
         - LIVE_DASHBOARD
+        - BOARD
 
     Scope:
       type: string
