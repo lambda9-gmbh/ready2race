@@ -2,6 +2,7 @@ import {useMemo} from 'react'
 import {Box} from '@mui/material'
 import {BoardElement, BoardViewDto} from '@api/types.gen.ts'
 import {streamOverlayContent, STREAM_DEFAULT_BACKGROUND} from './streamOverlay.ts'
+import ClockPlate from './streamOverlay/ClockPlate.tsx'
 import LapBand from './streamOverlay/LapBand.tsx'
 import ResultPanel from './streamOverlay/ResultPanel.tsx'
 import RunningLowerThird from './streamOverlay/RunningLowerThird.tsx'
@@ -52,6 +53,9 @@ const BoardStreamOverlayElement = ({view, element}: Props) => {
                 <UpcomingListPanel matches={content.matches} element={element} />
             )}
             {content.kind === 'laps' && <LapBand laps={content.laps} element={element} />}
+            {content.kind === 'clock' && (
+                <ClockPlate match={content.match} clockOffsetMs={clockOffsetMs} />
+            )}
         </Box>
     )
 }

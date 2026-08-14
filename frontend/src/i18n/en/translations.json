@@ -2206,7 +2206,8 @@
           "results": "Latest result only",
           "upcoming": "Next upcoming match",
           "laps": "Lap display",
-          "upcomingList": "Upcoming matches"
+          "upcomingList": "Upcoming matches",
+          "clock": "Clock only"
         },
         "crew": {
           "label": "Crew display",
