@@ -77,6 +77,33 @@ export const slotsAfter = (slots: EventScheduleSlotDto[], fromSlotId: string): E
     return idx === -1 ? [] : slots.slice(idx + 1)
 }
 
+// Die Slots, auf die sich ein noch unverplanter Lauf legen lässt (Dialog "Einplanen"). Der
+// Excel-Import legt für jede Zeile, die er keinem Lauf zuordnen konnte, einen FREE-Slot an - der
+// Zeitplan steht damit schon minutengenau, nur die Läufe fehlen. Sie danach in diese Slots zu
+// setzen ist der kürzere Weg, als jede Startzeit ein zweites Mal einzutippen.
+//
+// state === 'FREE' sortiert dabei schon alles Nötige aus (siehe deriveSlotState im Backend): ein
+// abgesagter Programmpunkt trägt SKIPPED, ein Slot mit Lauf LINKED/WAITING/OBSOLETE. Die Prüfung
+// auf einen laufenden oder beendeten Lauf steht trotzdem daneben - dieselbe Regel wie in
+// [hasRunningOrFinishedSlots] -, damit die Auswahl nicht davon abhängt, dass ein freier Slot
+// niemals einen Lauf tragen KANN. Sortiert nach Startzeit, weil die Auswahl über alle Renntage
+// geht und die Reihenfolge im Dropdown die des Zeitplans sein soll.
+export const plannableFreeSlots = (slots: EventScheduleSlotDto[]): EventScheduleSlotDto[] =>
+    slots
+        .filter(s => s.state === 'FREE' && s.matchStartedAt == null && s.matchFinishedAt == null)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+
+// Beschriftung eines freien Slots im Einplanen-Dropdown, z. B. "14.08.2026, 10:30 · Reserve". Das
+// Datum gehört dazu: die Auswahl geht über alle Renntage, und an einer Mehrtages-Regatta trägt
+// dieselbe Uhrzeit sonst zwei ununterscheidbare Einträge. [formatDateTime] kommt von außen
+// (date-fns mit dem Sprachformat aus t('format.datetime')), damit die Aufbereitung ohne
+// i18n-Kontext testbar bleibt. Der Name ist für freie Slots eigentlich Pflicht (XOR-Regel in
+// UpsertScheduleSlotRequest) - fehlt er trotzdem, bleibt eben die Zeit allein stehen.
+export const freeSlotOptionLabel = (
+    slot: EventScheduleSlotDto,
+    formatDateTime: (isoDateTime: string) => string,
+): string => [formatDateTime(slot.startTime), slotLabel(slot)].filter(Boolean).join(' · ')
+
 export type AdvanceOffer = {
     deltaMinutes: number
     targets: EventScheduleSlotDto[]

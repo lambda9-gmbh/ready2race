@@ -2015,6 +2015,11 @@
         }
       },
       "allPlanned": "All scheduled races are already planned.",
+      "planTarget": "Schedule into",
+      "planTargetNew": "New slot",
+      "planTargetExisting": "Existing free slot",
+      "planTargetSlot": "Free slot",
+      "planTargetHint": "Start time and duration are taken from the selected slot. The free slot becomes a race slot and loses its name.",
       "goToExecution": "Go to execution",
       "eventMode": {
         "enable": "Enable event mode: schedule and execution side by side",

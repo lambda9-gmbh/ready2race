@@ -2009,6 +2009,11 @@
         }
       },
       "allPlanned": "Alle planlagte løb er allerede indsat.",
+      "planTarget": "Planlæg i",
+      "planTargetNew": "Ny slot",
+      "planTargetExisting": "Eksisterende fri slot",
+      "planTargetSlot": "Fri slot",
+      "planTargetHint": "Starttid og varighed overtages fra den valgte slot. Den frie slot bliver til en løbs-slot og mister sit navn.",
       "goToExecution": "Til gennemførelse",
       "eventMode": {
         "enable": "Slå arrangement-tilstand til: tidsplan og gennemførelse side om side",

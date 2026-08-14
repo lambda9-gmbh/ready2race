@@ -1217,6 +1217,7 @@ const EventSchedule = ({event}: Props) => {
                     onClose={closeDialog}
                     reloadData={reload}
                     unplannedSetupMatches={unplannedSetupMatches}
+                    slots={data?.slots ?? []}
                     editingSlot={editingSlot}
                     presetMatch={presetMatch}
                 />
