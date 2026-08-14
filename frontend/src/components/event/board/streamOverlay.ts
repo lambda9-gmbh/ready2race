@@ -35,6 +35,19 @@ const slotAt = (slots: BoardViewDto['slots'], offset: number) =>
     slots.find(slot => slot.offset === offset)
 
 /**
+ * Das jüngste Ergebnis der Veranstaltung — aus der Ergebnisliste, die der Server für jede
+ * Stream-Kachel mit „Letztes Ergebnis"/AUTO mitliefert (BoardLogic.dataNeeds).
+ *
+ * Der Slot −1 taugt dafür nicht: Er zählt die Timeline rückwärts und trifft zuerst die
+ * früher gestarteten, noch LAUFENDEN Läufe. Fahren zwei Läufe gleichzeitig — an einem
+ * vollen Regattatag der Normalfall —, liefert er einen laufenden Lauf ohne Ergebnis, und
+ * die Kachel zeigte nichts an. Er bleibt nur als Rückfall stehen, für den Fall, dass die
+ * Antwort (noch) keine Ergebnisliste trägt.
+ */
+export const latestResultOf = (view: Pick<BoardViewDto, 'slots' | 'lists'>) =>
+    view.lists.find(list => list.mode === 'RESULTS')?.results?.[0] ?? slotAt(view.slots, -1)?.result
+
+/**
  * Die letzten `limit` (Default 3) eingetroffenen Runden des Laufs, über alle Boote hinweg
  * geflacht, neueste zuerst. Runden ohne recordedAt gelten als älteste und landen hinten;
  * bei Gleichstand entscheidet stabil erst der Rundenname, dann die Startnummer.
@@ -71,7 +84,7 @@ export const streamOverlayContent = (
     mode: BoardElement['streamMode'],
 ): StreamOverlayContent => {
     const running = slotAt(view.slots, 0)?.match
-    const latestResult = slotAt(view.slots, -1)?.result
+    const latestResult = latestResultOf(view)
     const upcoming = slotAt(view.slots, 1)?.match
     switch (mode ?? 'AUTO') {
         case 'RUNNING':
