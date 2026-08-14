@@ -2,10 +2,17 @@ import {Stack, Typography, useTheme} from '@mui/material'
 import {format} from 'date-fns'
 import {useTranslation} from 'react-i18next'
 import {AthleteBoardMatch, BoardElement} from '@api/types.gen.ts'
+import FitToHeight from './FitToHeight.tsx'
 import FlipList from '../FlipList.tsx'
 import StreamBoatRow from './StreamBoatRow.tsx'
 import StreamPanelShell from './StreamPanelShell.tsx'
-import {byNullsLast, competitionLabel, formatCountdownClock, roundMatchLabel, solidOr} from './streamDisplay.ts'
+import {
+    byNullsLast,
+    competitionLabel,
+    formatCountdownClock,
+    roundMatchLabel,
+    solidOr,
+} from './streamDisplay.ts'
 import useTicker from './useTicker.ts'
 
 interface UpcomingPanelProps {
@@ -41,7 +48,11 @@ const UpcomingPanel = ({match, element, clockOffsetMs}: UpcomingPanelProps) => {
         <StreamPanelShell
             panelKey={match.matchId}
             stateLabel={t('event.boards.stream.upcoming')}
-            title={competitionLabel(match.competitionName, match.competitionShortName, useShortNames)}
+            title={competitionLabel(
+                match.competitionName,
+                match.competitionShortName,
+                useShortNames,
+            )}
             roundLine={roundMatchLabel(match.roundName, match.matchName)}
             headerTrailing={
                 match.startTime ? (
@@ -58,6 +69,7 @@ const UpcomingPanel = ({match, element, clockOffsetMs}: UpcomingPanelProps) => {
                     sx={{
                         fontVariantNumeric: 'tabular-nums',
                         fontWeight: 600,
+                        flexShrink: 0,
                         color: solidOr(theme.palette.primary.light, '#64b5f6'),
                     }}>
                     {t('event.boards.stream.inMinutes', {time: formatCountdownClock(remainingMs)})}
@@ -68,31 +80,40 @@ const UpcomingPanel = ({match, element, clockOffsetMs}: UpcomingPanelProps) => {
             {element.showAdvancement === true && match.nextRoundName && (
                 <Typography
                     variant="body1"
-                    sx={{fontWeight: 600, color: solidOr(theme.palette.primary.light, '#64b5f6')}}>
+                    sx={{
+                        fontWeight: 600,
+                        flexShrink: 0,
+                        color: solidOr(theme.palette.primary.light, '#64b5f6'),
+                    }}>
                     {match.advancingSeats != null
                         ? t('event.info.athleteBoard.advancing', {
                               count: match.advancingSeats,
                               round: match.nextRoundName,
                           })
-                        : t('event.info.athleteBoard.advancingUnsized', {round: match.nextRoundName})}
+                        : t('event.info.athleteBoard.advancingUnsized', {
+                              round: match.nextRoundName,
+                          })}
                 </Typography>
             )}
-            {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie. */}
-            <Stack sx={{gap: 1.5, overflow: 'hidden'}}>
-                <FlipList
-                    items={teams}
-                    keyOf={team => String(team.startNumber)}
-                    render={team => (
-                        <StreamBoatRow
-                            team={team}
-                            crewMode={streamCrew}
-                            useShortNames={useShortNames}
-                            failedFallback={t('event.info.athleteBoard.failed')}
-                            size="large"
-                        />
-                    )}
-                />
-            </Stack>
+            {/* Keine Bildlaufleiste auf einer TV-Grafik — eine Kachel scrollt nie; passt die
+                Aufstellung nicht in die Panelhöhe, verkleinert FitToHeight sie. */}
+            <FitToHeight>
+                <Stack sx={{gap: 1.5}}>
+                    <FlipList
+                        items={teams}
+                        keyOf={team => String(team.startNumber)}
+                        render={team => (
+                            <StreamBoatRow
+                                team={team}
+                                crewMode={streamCrew}
+                                useShortNames={useShortNames}
+                                failedFallback={t('event.info.athleteBoard.failed')}
+                                size="large"
+                            />
+                        )}
+                    />
+                </Stack>
+            </FitToHeight>
         </StreamPanelShell>
     )
 }

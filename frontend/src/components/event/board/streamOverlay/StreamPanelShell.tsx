@@ -20,8 +20,10 @@ interface StreamPanelShellProps {
 
 /**
  * Gemeinsame Hülle der zentrierten TV-Grafik-Panels (Ergebnis, Als Nächstes, Nächste
- * Läufe): vollständig deckendes, abgerundetes Panel mittig im Bild, max. 70 % Breite/
- * Höhe, Akzentbalken oben in Primärfarbe. Rutscht beim Erscheinen einmalig per
+ * Läufe): vollständig deckendes, abgerundetes Panel mittig im Bild, 78 % Breite und
+ * höchstens 80 % Höhe, Akzentbalken oben in Primärfarbe. Die Höhengrenze ist bewusst
+ * großzügig: Ein großes Feld muss sonst so stark verkleinert werden (FitToHeight), dass
+ * die Zeilen auf einer 720p-Quelle nicht mehr zu lesen sind. Rutscht beim Erscheinen einmalig per
  * translateY-Slide-in herein (CSS-Keyframe, kein Opacity-Fade über der Key-Fläche).
  */
 const StreamPanelShell = ({panelKey, stateLabel, title, roundLine, headerTrailing, children}: StreamPanelShellProps) => {
@@ -35,7 +37,7 @@ const StreamPanelShell = ({panelKey, stateLabel, title, roundLine, headerTrailin
                     // Als Nächstes, Nächste Läufe) teilen sich dieselbe TV-Grafik-Größe —
                     // so bekommen auch Lang-Vereinsnamen und lange Wettkampfnamen Platz.
                     width: 'min(72rem, 78vw)',
-                    maxHeight: '70vh',
+                    maxHeight: '80vh',
                     overflow: 'hidden',
                     borderRadius: 3,
                     display: 'flex',

@@ -32,6 +32,19 @@ export const sameKeySequence = (a: readonly string[], b: readonly string[]): boo
     a.length === b.length && a.every((key, index) => key === b[index])
 
 /**
+ * Der Weg, den ein Knoten per `translate` zurücklegen muss, damit er auf dem BILDSCHIRM
+ * um `screenDelta` Pixel wandert. Gemessen wird mit `getBoundingClientRect()` in
+ * Bildschirmpixeln, verschoben wird im lokalen Koordinatensystem des Knotens — steht die
+ * Liste in einer verkleinerten Fläche (`FitToHeight` skaliert ein zu großes Feld auf die
+ * Panelhöhe), sind das zwei verschiedene Maßstäbe und die Bewegung liefe ohne Umrechnung
+ * um genau diesen Faktor zu kurz. `nodeScale` liest der Aufrufer am Knoten selbst ab
+ * (gemessene Höhe / Layouthöhe); 0 oder negative Werte können nur aus einem noch nicht
+ * gelayouteten Knoten stammen und bleiben unverändert.
+ */
+export const localDelta = (screenDelta: number, nodeScale: number): number =>
+    nodeScale > 0 ? screenDelta / nodeScale : screenDelta
+
+/**
  * FLIP-Liste (First, Last, Invert, Play): animiert Positionswechsel UND neue Einträge
  * ausschließlich über CSS-Transforms — nie über Opacity oder Größe. Auf dem
  * chroma-tauglichen Panel dürfen Kanten nie halbtransparent werden, ein Transform
@@ -77,7 +90,14 @@ export const sameKeySequence = (a: readonly string[], b: readonly string[]): boo
  * Schlüssel hat keine alte Position und startet direkt mit `enterOffset` statt an
  * seinem Ziel — er schiebt sich sichtbar herein statt einfach aufzutauchen.
  */
-function FlipList<T>({items, keyOf, render, axis = 'y', enterOffset = 24, itemStyle}: FlipListProps<T>) {
+function FlipList<T>({
+    items,
+    keyOf,
+    render,
+    axis = 'y',
+    enterOffset = 24,
+    itemStyle,
+}: FlipListProps<T>) {
     const nodes = useRef(new Map<string, HTMLDivElement>())
     const lastPositions = useRef(new Map<string, number>())
     const lastKeys = useRef<string[]>([])
@@ -110,11 +130,17 @@ function FlipList<T>({items, keyOf, render, axis = 'y', enterOffset = 24, itemSt
 
             const current = axis === 'y' ? rect.top : rect.left
             const previous = lastPositions.current.get(key)
-            const delta = previous === undefined ? enterOffset : previous - current
+            // Maßstab der umgebenden Fläche, am Knoten selbst abgelesen: die gemessene
+            // Höhe geteilt durch die Layouthöhe, die ein Transform unberührt lässt
+            // (siehe `localDelta`).
+            const nodeScale = node.offsetHeight > 0 ? rect.height / node.offsetHeight : 1
+            const screenDelta = previous === undefined ? enterOffset : previous - current
+            const delta = localDelta(screenDelta, nodeScale)
 
             if (delta !== 0) {
                 node.style.transition = 'none'
-                node.style.transform = axis === 'y' ? `translateY(${delta}px)` : `translateX(${delta}px)`
+                node.style.transform =
+                    axis === 'y' ? `translateY(${delta}px)` : `translateX(${delta}px)`
                 // Layout erzwingen, bevor die Transition wieder aktiv wird — sonst fasst
                 // der Browser Sprung und Rückstellung in einem Frame zusammen und es
                 // gibt keine sichtbare Bewegung.

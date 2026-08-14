@@ -15,6 +15,13 @@ interface StreamBoatRowProps {
      * bleiben die Runden sichtbar (zentrierte Panels).
      */
     showLaps?: boolean
+    /**
+     * Besatzungs-/Vereins-Zweitzeile abschaltbar: Das Lower-Third lässt sie ab sechs
+     * Booten weg. Sie halbiert die Zeilenhöhe, und in einem großen Feld wäre der
+     * Maßstab, den FitToHeight sonst braucht, so klein, dass am Ende gar nichts mehr
+     * lesbar ist — lieber die Vereine groß als alles winzig.
+     */
+    showSecondary?: boolean
 }
 
 /**
@@ -22,7 +29,15 @@ interface StreamBoatRowProps {
  * Platz/Zeit oder DNF/DNS/DSQ. Geteilt vom Lower-Third, Ergebnis- und Als-Nächstes-Panel —
  * dieselbe Zeile, nur unterschiedlich groß.
  */
-const StreamBoatRow = ({team, crewMode, useShortNames, failedFallback, size, showLaps = true}: StreamBoatRowProps) => {
+const StreamBoatRow = ({
+    team,
+    crewMode,
+    useShortNames,
+    failedFallback,
+    size,
+    showLaps = true,
+    showSecondary = true,
+}: StreamBoatRowProps) => {
     const theme = useTheme()
     const large = size === 'large'
     const {primary, secondary} = crewLines(team, crewMode, useShortNames)
@@ -46,7 +61,7 @@ const StreamBoatRow = ({team, crewMode, useShortNames, failedFallback, size, sho
                 </Typography>
                 {/* Zweite Zeile nach `streamCrew`: Besatzung ODER Verein, je nachdem was
                     NICHT schon prominent oben steht (CLUBS_ONLY hat gar keine). */}
-                {secondary && (
+                {showSecondary && secondary && (
                     <Typography variant={large ? 'body1' : 'body2'} noWrap>
                         {secondary}
                     </Typography>
@@ -63,7 +78,10 @@ const StreamBoatRow = ({team, crewMode, useShortNames, failedFallback, size, sho
                         variant="body2"
                         noWrap
                         sx={{color: solidOr(theme.palette.warning.light, '#ffb74d')}}>
-                        {[team.penaltySeconds != null ? `${team.penaltySeconds}s` : null, team.penaltyNote]
+                        {[
+                            team.penaltySeconds != null ? `${team.penaltySeconds}s` : null,
+                            team.penaltyNote,
+                        ]
                             .filter(Boolean)
                             .join(' · ')}
                     </Typography>
