@@ -86,6 +86,8 @@ object BoardLogic {
                     // LAPS bleibt auf demselben Slot wie RUNNING — nur die Kachel zeigt
                     // statt der Kurzkarte die Zwischenzeiten mit Eintreffzeit.
                     StreamOverlayMode.LAPS -> listOf(0)
+                    // Nur-Uhr-Quelle: braucht denselben laufenden Lauf wie LAPS.
+                    StreamOverlayMode.CLOCK -> listOf(0)
                     // UPCOMING_LIST behält zusätzlich den Einzel-Slot +1 (für Kacheln, die
                     // nur ihn brauchen) — die Liste selbst kommt über listLimits (unten).
                     StreamOverlayMode.UPCOMING_LIST -> listOf(1)

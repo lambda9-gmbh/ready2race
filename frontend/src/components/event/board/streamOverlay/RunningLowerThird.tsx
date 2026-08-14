@@ -50,8 +50,11 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                     }}
                 />
                 <Stack sx={{minWidth: 0, flex: 1, p: 3, gap: 1.5, overflow: 'hidden'}}>
-                    {/* Kopfzeile: Zustand + Wettkampf + Laufuhr (rechtsbündig). */}
-                    <Stack direction="row" alignItems="center" gap={2}>
+                    {/* Kopfzeile: Zustand + Wettkampf + Laufuhr (rechtsbündig). flexShrink 0,
+                        weil der Spalten-Flex unter maxHeight sonst Kopf und Unterzeile
+                        zusammendrückt (noWrap setzt overflow hidden und gibt damit die
+                        min-height frei) — die Zeilen ragten dann optisch in die Unterzeile. */}
+                    <Stack direction="row" alignItems="center" gap={2} sx={{flexShrink: 0}}>
                         <StreamStateBadge label={t('event.boards.stream.running')} indicator />
                         <Typography variant="h4" noWrap sx={{fontWeight: 700, minWidth: 0, flex: 1}}>
                             {competitionLabel(match.competitionName, match.competitionShortName, useShortNames)}
@@ -59,13 +62,16 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                         <StreamClockLabel match={match} clockOffsetMs={clockOffsetMs} />
                     </Stack>
                     {roundLine && (
-                        <Typography variant="h6" noWrap sx={{fontWeight: 500}}>
+                        <Typography variant="h6" noWrap sx={{fontWeight: 500, flexShrink: 0}}>
                             {roundLine}
                         </Typography>
                     )}
 
-                    {/* Je Boot eine Zeile — Positionswechsel animieren via FlipList. */}
-                    <Stack sx={{gap: 1, overflow: 'hidden'}}>
+                    {/* Je Boot eine Zeile — Positionswechsel animieren via FlipList. Nur
+                        dieser Block darf schrumpfen (minHeight 0), Kopf und Unterzeile nie.
+                        Ab fünf Booten weichen die Rundenzeilen — sonst schnitte die
+                        38-vh-Kante auch bei Full HD mitten durch die letzte Zeile. */}
+                    <Stack sx={{gap: 1, overflow: 'hidden', minHeight: 0, flex: '1 1 auto'}}>
                         <FlipList
                             items={teams}
                             keyOf={team => String(team.startNumber)}
@@ -76,6 +82,7 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                                     useShortNames={useShortNames}
                                     failedFallback={t('event.info.athleteBoard.failed')}
                                     size="compact"
+                                    showLaps={teams.length <= 4}
                                 />
                             )}
                         />

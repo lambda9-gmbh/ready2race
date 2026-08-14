@@ -65,7 +65,7 @@ enum class BoardScheduleMode { FOLLOW, FULL }
  * Liste statt eines einzelnen Slots (für die Regie-Vorschau zwischen zwei Rennen). Fehlt
  * das Feld, gilt AUTO.
  */
-enum class StreamOverlayMode { AUTO, RUNNING, RESULTS, UPCOMING, LAPS, UPCOMING_LIST }
+enum class StreamOverlayMode { AUTO, RUNNING, RESULTS, UPCOMING, LAPS, UPCOMING_LIST, CLOCK }
 
 /**
  * Boot-Darstellung des Stream-Overlays: Vereine prominent mit kleiner Personenzeile

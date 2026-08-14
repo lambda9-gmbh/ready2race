@@ -9,6 +9,12 @@ interface StreamBoatRowProps {
     /** 'compact' im Lower-Third, 'large' in den zentrierten Panels — dieselbe Zeile,
      *  nur mit der größeren TV-Grafik-Typografie statt der schmaleren Lower-Third-Schrift. */
     size: 'compact' | 'large'
+    /**
+     * Rundenzeilen abschaltbar: Das Lower-Third blendet sie ab fünf Booten aus, damit die
+     * Höhenkante nicht mitten durch die letzte Bootszeile schneidet. Fehlt das Flag,
+     * bleiben die Runden sichtbar (zentrierte Panels).
+     */
+    showLaps?: boolean
 }
 
 /**
@@ -16,7 +22,7 @@ interface StreamBoatRowProps {
  * Platz/Zeit oder DNF/DNS/DSQ. Geteilt vom Lower-Third, Ergebnis- und Als-Nächstes-Panel —
  * dieselbe Zeile, nur unterschiedlich groß.
  */
-const StreamBoatRow = ({team, crewMode, useShortNames, failedFallback, size}: StreamBoatRowProps) => {
+const StreamBoatRow = ({team, crewMode, useShortNames, failedFallback, size, showLaps = true}: StreamBoatRowProps) => {
     const theme = useTheme()
     const large = size === 'large'
     const {primary, secondary} = crewLines(team, crewMode, useShortNames)
@@ -46,7 +52,7 @@ const StreamBoatRow = ({team, crewMode, useShortNames, failedFallback, size}: St
                     </Typography>
                 )}
                 {/* Rundenzeiten: eigene Zeile, tabularNums, kleiner. */}
-                {team.laps && team.laps.length > 0 && (
+                {showLaps && team.laps && team.laps.length > 0 && (
                     <Typography variant="body2" noWrap sx={{fontVariantNumeric: 'tabular-nums'}}>
                         {team.laps.map(lap => `${lap.name} ${lap.timeString}`).join(' · ')}
                     </Typography>

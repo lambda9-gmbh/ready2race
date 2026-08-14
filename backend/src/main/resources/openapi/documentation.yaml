@@ -14659,6 +14659,7 @@ components:
             - UPCOMING
             - LAPS
             - UPCOMING_LIST
+            - CLOCK
         streamCrew:
           type: string
           nullable: true

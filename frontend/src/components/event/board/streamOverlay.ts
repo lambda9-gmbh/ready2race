@@ -11,6 +11,7 @@ export type StreamOverlayContent =
     | {kind: 'upcoming'; match: AthleteBoardMatch}
     | {kind: 'upcomingList'; matches: AthleteBoardMatch[]}
     | {kind: 'laps'; match: AthleteBoardMatch; laps: StreamLapEntry[]}
+    | {kind: 'clock'; match: AthleteBoardMatch}
     | null
 
 /**
@@ -83,6 +84,11 @@ export const streamOverlayContent = (
             const matches = (view.lists.find(l => l.mode === 'UPCOMING')?.matches ?? []).slice(0, 5)
             return matches.length > 0 ? {kind: 'upcomingList', matches} : null
         }
+        case 'CLOCK':
+            // Nur-Uhr-Quelle: Streamer croppen sie notfalls separat. Ohne laufenden
+            // Lauf bleibt die Seite reine Key-Farbe — die Uhr regelt ihr Erscheinen
+            // danach selbst (Fade ab actualStartTime, Freeze, Fade-out).
+            return running ? {kind: 'clock', match: running} : null
         case 'LAPS': {
             if (!running) return null
             const laps = lastLaps(running)

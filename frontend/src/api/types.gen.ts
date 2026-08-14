@@ -495,7 +495,9 @@ export type BoardElement = {
     /**
      * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races
      */
-    streamMode?: ('AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING' | 'LAPS' | 'UPCOMING_LIST') | null
+    streamMode?:
+        | ('AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING' | 'LAPS' | 'UPCOMING_LIST' | 'CLOCK')
+        | null
     /**
      * STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only
      */
@@ -519,7 +521,14 @@ export type BoardElement = {
 /**
  * STREAM only: what the livestream overlay shows; missing means AUTO (running match, falling back to the latest result); LAPS = lap band; UPCOMING_LIST = next five races
  */
-export type streamMode = 'AUTO' | 'RUNNING' | 'RESULTS' | 'UPCOMING' | 'LAPS' | 'UPCOMING_LIST'
+export type streamMode =
+    | 'AUTO'
+    | 'RUNNING'
+    | 'RESULTS'
+    | 'UPCOMING'
+    | 'LAPS'
+    | 'UPCOMING_LIST'
+    | 'CLOCK'
 
 /**
  * STREAM only: crew emphasis - clubs first (default when missing), participants first, or clubs only

@@ -149,3 +149,13 @@ describe('lastLaps', () => {
         expect(lastLaps(runningMatch([]))).toEqual([])
     })
 })
+
+describe('streamOverlayContent CLOCK', () => {
+    it('liefert die Uhr-Quelle nur mit laufendem Lauf', () => {
+        const running = match('VF1')
+        expect(
+            streamOverlayContent({slots: [slot(0, running)], lists: []}, 'CLOCK'),
+        ).toMatchObject({kind: 'clock'})
+        expect(streamOverlayContent({slots: [slot(0)], lists: []}, 'CLOCK')).toBeNull()
+    })
+})

@@ -414,6 +414,7 @@ const BoardEditor = ({eventId, board, onSubmit, onCancel}: BoardEditorProps) => 
                         <MenuItem value="UPCOMING_LIST">
                             {t('event.boards.stream.mode.upcomingList')}
                         </MenuItem>
+                        <MenuItem value="CLOCK">{t('event.boards.stream.mode.clock')}</MenuItem>
                     </TextField>
                     <TextField
                         select

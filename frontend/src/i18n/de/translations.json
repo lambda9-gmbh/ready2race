@@ -2206,7 +2206,8 @@
           "results": "Nur letztes Ergebnis",
           "upcoming": "Nächster anstehender Lauf",
           "laps": "Rundenanzeige",
-          "upcomingList": "Nächste Läufe"
+          "upcomingList": "Nächste Läufe",
+          "clock": "Nur Laufuhr"
         },
         "crew": {
           "label": "Boot-Darstellung",
