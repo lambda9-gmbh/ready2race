@@ -15,6 +15,10 @@ data class ParticipantRequirementUpsertDto(
     val optional: Boolean?,
     val checkInApp: Boolean?,
     val publiclyVisible: Boolean?,
+    // Geltungsbereich der Bedingung, siehe Migration V202608141900. Beide fehlend = beide aus
+    // = je Veranstaltung, also das Verhalten vor dem 14.08.2026.
+    val perEventDay: Boolean?,
+    val perCompetition: Boolean?,
     val checkEarliestMinutesBefore: Int?,
     val checkLatestMinutesBefore: Int?,
 ) : Validatable {
@@ -40,6 +44,8 @@ data class ParticipantRequirementUpsertDto(
                 optional = false,
                 checkInApp = false,
                 publiclyVisible = false,
+                perEventDay = false,
+                perCompetition = false,
                 checkEarliestMinutesBefore = 120,
                 checkLatestMinutesBefore = 15,
             )

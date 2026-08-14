@@ -269,6 +269,10 @@ object LiveDashboardRepo {
             PARTICIPANT_REQUIREMENT.OPTIONAL,
             PARTICIPANT_REQUIREMENT.CHECK_EARLIEST_MINUTES_BEFORE,
             PARTICIPANT_REQUIREMENT.CHECK_LATEST_MINUTES_BEFORE,
+            // Der Geltungsbereich der Bedingung (V202608141900) - er entscheidet, welche
+            // Dimensionen einer Erfüllung überhaupt verglichen werden.
+            PARTICIPANT_REQUIREMENT.PER_EVENT_DAY,
+            PARTICIPANT_REQUIREMENT.PER_COMPETITION,
             EVENT_HAS_PARTICIPANT_REQUIREMENT.NAMED_PARTICIPANT,
         )
             .from(EVENT_HAS_PARTICIPANT_REQUIREMENT)
@@ -278,9 +282,16 @@ object LiveDashboardRepo {
             .fetch()
     }
 
+    /**
+     * Die abgehakten Bedingungen der Veranstaltung. Seit V202608141900 kommen die beiden
+     * Dimensionen (Tag, Wettkampf) mit: eine Person kann zu derselben Bedingung mehrere Zeilen
+     * tragen, und welche davon für einen Lauf zählt, entscheidet
+     * [de.lambda9.ready2race.backend.app.participantRequirement.boundary.RequirementScopeLogic].
+     * Die Schalter der Bedingung selbst liefert `getRequirements` gleich nebenan.
+     */
     fun getChecks(eventId: UUID) = Jooq.query {
         with(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT) {
-            select(PARTICIPANT, PARTICIPANT_REQUIREMENT, CREATED_AT, NOTE)
+            select(PARTICIPANT, PARTICIPANT_REQUIREMENT, EVENT_DAY, COMPETITION, CREATED_AT, NOTE)
                 .from(this)
                 .where(EVENT.eq(eventId))
                 .fetch()

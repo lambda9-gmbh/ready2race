@@ -20,13 +20,19 @@ import kotlin.test.assertNotNull
  */
 class ParticipantRequirementConversionsTest {
 
-    private fun upsert(publiclyVisible: Boolean?) = ParticipantRequirementUpsertDto(
+    private fun upsert(
+        publiclyVisible: Boolean?,
+        perEventDay: Boolean? = false,
+        perCompetition: Boolean? = false,
+    ) = ParticipantRequirementUpsertDto(
         name = "Aktivenpass",
         description = null,
         publicNote = null,
         optional = false,
         checkInApp = false,
         publiclyVisible = publiclyVisible,
+        perEventDay = perEventDay,
+        perCompetition = perCompetition,
         checkEarliestMinutesBefore = null,
         checkLatestMinutesBefore = null,
     )
@@ -88,5 +94,33 @@ class ParticipantRequirementConversionsTest {
         val dtoOff = record.toDto().unsafeRunSync().getOrNull()
         assertNotNull(dtoOff)
         assertFalse(dtoOff.publiclyVisible)
+    }
+
+    /**
+     * Der Geltungsbereich (V202608141900) läuft durch dieselbe Abbildung. Wichtig ist der
+     * Standard: eine Bedingung ohne Angabe bleibt bei "gilt je Veranstaltung" und damit beim
+     * Verhalten vor dem 14.08.2026 — ein versehentlich eingeschalteter Schalter ließe eine
+     * längst erfüllte Bedingung über Nacht wieder als offen erscheinen.
+     */
+    @Test
+    fun scopeSwitchesTravelBothWaysAndDefaultToOff() {
+        val record = upsert(false, perEventDay = true, perCompetition = true)
+            .toRecord(UUID.randomUUID())
+            .unsafeRunSync().getOrNull()
+        assertNotNull(record)
+        assertEquals(true, record.perEventDay)
+        assertEquals(true, record.perCompetition)
+
+        val dto = record.toDto().unsafeRunSync().getOrNull()
+        assertNotNull(dto)
+        assertEquals(true, dto.perEventDay)
+        assertEquals(true, dto.perCompetition)
+
+        val ohneAngabe = upsert(false, perEventDay = null, perCompetition = null)
+            .toRecord(UUID.randomUUID())
+            .unsafeRunSync().getOrNull()
+        assertNotNull(ohneAngabe)
+        assertEquals(false, ohneAngabe.perEventDay)
+        assertEquals(false, ohneAngabe.perCompetition)
     }
 }

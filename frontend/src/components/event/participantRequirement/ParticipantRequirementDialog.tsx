@@ -18,6 +18,8 @@ type ParticipantRequirementForm = {
     optional: boolean
     checkInApp: boolean
     publiclyVisible: boolean
+    perEventDay: boolean
+    perCompetition: boolean
     checkEarliestMinutesBefore: string
     checkLatestMinutesBefore: string
 }
@@ -48,6 +50,8 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
         optional: false,
         checkInApp: false,
         publiclyVisible: false,
+        perEventDay: false,
+        perCompetition: false,
         checkEarliestMinutesBefore: '',
         checkLatestMinutesBefore: '',
     }
@@ -81,6 +85,21 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
                     name="publiclyVisible"
                     label={t('participantRequirement.publiclyVisible')}
                 />
+                {/* Zwei Schalter statt einer Auswahlliste: aus ihnen ergeben sich die vier
+                    Geltungsbereiche (je Veranstaltung, je Tag, je Wettkampf, je Wettkampf und
+                    Tag), ohne dass für den vierten ein fünfter Listeneintrag nötig wäre.
+                    Beide aus = das Verhalten vor dem 14.08.2026: einmal erfüllt, für die ganze
+                    Veranstaltung erledigt. */}
+                <FormInputCheckbox
+                    name="perEventDay"
+                    label={t('participantRequirement.perEventDay')}
+                    helperText={t('participantRequirement.perEventDayHint')}
+                />
+                <FormInputCheckbox
+                    name="perCompetition"
+                    label={t('participantRequirement.perCompetition')}
+                    helperText={t('participantRequirement.perCompetitionHint')}
+                />
                 <FormInputNumber
                     name="checkEarliestMinutesBefore"
                     label={t('participantRequirement.checkEarliestMinutesBefore')}
@@ -106,6 +125,8 @@ function mapFormToRequest(formData: ParticipantRequirementForm): ParticipantRequ
         optional: formData.optional,
         checkInApp: formData.checkInApp,
         publiclyVisible: formData.publiclyVisible,
+        perEventDay: formData.perEventDay,
+        perCompetition: formData.perCompetition,
         checkEarliestMinutesBefore:
             formData.checkEarliestMinutesBefore !== ''
                 ? Number(formData.checkEarliestMinutesBefore)
@@ -125,6 +146,8 @@ function mapDtoToForm(dto: ParticipantRequirementDto): ParticipantRequirementFor
         optional: dto.optional,
         checkInApp: dto.checkInApp,
         publiclyVisible: dto.publiclyVisible,
+        perEventDay: dto.perEventDay,
+        perCompetition: dto.perCompetition,
         checkEarliestMinutesBefore: dto.checkEarliestMinutesBefore?.toString() ?? '',
         checkLatestMinutesBefore: dto.checkLatestMinutesBefore?.toString() ?? '',
     }
