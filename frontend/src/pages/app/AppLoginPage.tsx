@@ -1,5 +1,4 @@
 import {useState} from 'react'
-import {Link} from '@tanstack/react-router'
 import {useTranslation} from 'react-i18next'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {
@@ -139,11 +138,6 @@ const AppLoginPage = () => {
                     )}
                 </Alert>
             )}
-            <Link to="/datenschutz">
-                <Typography variant="caption" color="text.secondary" sx={{mt: 3}}>
-                    {t('legal.privacy')}
-                </Typography>
-            </Link>
         </Box>
     )
 }

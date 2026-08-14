@@ -1040,7 +1040,7 @@
             "title": "Nulstil løb?",
             "warning": "Advarsel: Dette løb nulstilles til ”aldrig kørt”. Uigenkaldeligt mistes: den faktiske start, alle mål- og mellemtider, alle placeringer, diskvalifikationer og tidsstraffe for dette løb.",
             "keeps": "Bevares: opstilling, baner og bådenes id'er — RaceClocker-tilknytningen forbliver gyldig, og løbet kan køres igen med det samme.",
-            "autoPull": "Den automatiske RaceClocker-hentning sættes på pause for dette løb — ellers ville næste hentning straks genindlæse de slettede resultater. Efter oprydning i RaceClocker genoptages bevidst via ”Genoptag automatisk hentning”.",
+          "autoPull": "Den automatiske RaceClocker-hentning sættes på pause for dette løb — ellers ville næste hentning straks genindlæse de slettede resultater. Efter oprydning i RaceClocker genoptages bevidst via ”Genoptag automatisk hentning”.",
             "question": "Vil du virkelig nulstille løbet?"
           },
           "error": "Der opstod en fejl ved nulstilling af løbet",
@@ -2021,9 +2021,9 @@
       },
       "indicator": {
         "now": "Nu",
-        "planned": "Planlagt {{time}}",
-        "started": "Startet {{time}}",
-        "expected": "Forventet ~{{time}}",
+          "planned": "Planlagt {{time}}",
+          "started": "Startet {{time}}",
+          "expected": "Forventet ~{{time}}",
         "state": {
           "finished": "Afsluttet",
           "preparing": "Forbereder",
@@ -3161,9 +3161,5 @@
     "team": "Hold",
     "deregistered": "Afmeldt",
     "noMatches": "Der er endnu ikke planlagt noget løb for dig."
-  },
-  "legal": {
-    "privacy": "Privatlivspolitik",
-    "privacyTitle": "Privatlivspolitik"
   }
 }

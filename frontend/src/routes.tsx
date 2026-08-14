@@ -60,7 +60,6 @@ import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
 import ResultsLayout from './layouts/ResultsLayout.tsx'
 import AdministrationPage from './pages/AdministrationPage.tsx'
 import ChallengePage from './pages/challenge/ChallengePage.tsx'
-import DatenschutzPage from './pages/DatenschutzPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -528,14 +527,6 @@ export const challengeRoute = createRoute({
 // Öffentliche Route ohne App-Layout: fest montierte Athletenbildschirme und
 // Athleten-Handys brauchen weder Kopfleiste noch Seitenleiste noch Anmeldung.
 // Bestands-URL der alten Athleten-Anzeige — leitet auf das erste Board um.
-// Öffentliche Datenschutzerklärung — bewusst ohne Anmeldung erreichbar, verlinkt von
-// Ergebnisseite und Login-Seiten.
-export const datenschutzRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: 'datenschutz',
-    component: () => <DatenschutzPage />,
-})
-
 export const athleteBoardRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'board/$eventId',
@@ -591,7 +582,6 @@ const routeTree = rootRoute.addChildren([
     mobileRoute.addChildren([challengeRoute]),
     athleteBoardRoute,
     boardDisplayRoute,
-    datenschutzRoute,
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
