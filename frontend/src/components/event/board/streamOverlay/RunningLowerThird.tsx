@@ -7,7 +7,13 @@ import FlipList from '../FlipList.tsx'
 import StreamBoatRow from './StreamBoatRow.tsx'
 import StreamClockLabel from './StreamClockLabel.tsx'
 import StreamStateBadge from './StreamStateBadge.tsx'
-import {competitionLabel, roundMatchLabel, solidOr, streamNameForms} from './streamDisplay.ts'
+import {
+    competitionLabel,
+    roundMatchLabel,
+    runningBadge,
+    solidOr,
+    streamNameForms,
+} from './streamDisplay.ts'
 
 interface RunningLowerThirdProps {
     match: AthleteBoardMatch
@@ -28,6 +34,9 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
     const streamCrew = element.streamCrew ?? 'CLUBS_FIRST'
     const roundLine = roundMatchLabel(match.roundName, match.matchName)
     const teams = sortRunningTeams(match.teams)
+    // Der Slot 0 kann auch einen erst an den Start gerufenen Lauf tragen (PREPARING) —
+    // das Badge sagt dann „In Vorbereitung" statt „LÄUFT", ohne Punkt (siehe runningBadge).
+    const badge = runningBadge(match.state)
 
     return (
         <Box sx={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end'}}>
@@ -56,7 +65,10 @@ const RunningLowerThird = ({match, element, clockOffsetMs}: RunningLowerThirdPro
                         zusammendrückt (noWrap setzt overflow hidden und gibt damit die
                         min-height frei) — die Zeilen ragten dann optisch in die Unterzeile. */}
                     <Stack direction="row" alignItems="center" gap={2} sx={{flexShrink: 0}}>
-                        <StreamStateBadge label={t('event.boards.stream.running')} indicator />
+                        <StreamStateBadge
+                            label={t(`event.boards.stream.${badge.labelKey}`)}
+                            indicator={badge.indicator}
+                        />
                         <Typography
                             variant="h4"
                             noWrap

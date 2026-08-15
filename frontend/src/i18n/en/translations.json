@@ -2247,6 +2247,7 @@
       "showHeader": "Header with name and clock",
       "stream": {
         "running": "Running",
+        "preparing": "Preparing",
         "result": "Result",
         "upcoming": "Up next",
         "mode": {

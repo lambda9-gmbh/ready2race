@@ -1,4 +1,9 @@
-import {AthleteBoardParticipant, AthleteBoardResultTeam, AthleteBoardTeam} from '@api/types.gen.ts'
+import {
+    AthleteBoardParticipant,
+    AthleteBoardResultTeam,
+    AthleteBoardTeam,
+    LiveDashboardMatchState,
+} from '@api/types.gen.ts'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {formatPlaceOrdinal} from '@utils/placeOrdinal.ts'
 
@@ -170,6 +175,21 @@ export const roundMatchLabel = (
     const showMatchName = matchName != null && matchName !== roundName
     return [roundName, showMatchName ? matchName : null].filter(Boolean).join(' · ') || null
 }
+
+/**
+ * Badge des laufenden Lower-Thirds nach Laufzustand. Der Slot 0 trägt nicht nur fahrende
+ * Läufe: der Running-Block des Servers führt auch die an den Start gerufenen (PREPARING —
+ * aktiviert, Boote noch am Steg; andere Zustände liefert er nicht). Das Lower-Third zeigt
+ * so einen Lauf bewusst weiter — die Info ist für den Stream nützlich —, aber „LÄUFT" darf
+ * erst der belegte Start behaupten, und der Indikator-Punkt heißt „on air": beides erst
+ * ab RUNNING.
+ */
+export const runningBadge = (
+    state: LiveDashboardMatchState,
+): {labelKey: 'preparing' | 'running'; indicator: boolean} =>
+    state === 'PREPARING'
+        ? {labelKey: 'preparing', indicator: false}
+        : {labelKey: 'running', indicator: true}
 
 /** Wettkampfname in Kurz- oder Langform je nach `useShortNames` — ohne Kürzel bleibt der volle Name. */
 export const competitionLabel = (
