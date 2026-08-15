@@ -1,7 +1,9 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.event.entity.PublicResultsVisibility
+import de.lambda9.ready2race.backend.app.eventInfo.control.MyEventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventMatchDto
+import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventRequirementScopeDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventResultDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventTeamMemberDto
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.RequirementScopeLogic
@@ -37,6 +39,10 @@ object MyEventLogic {
      */
     data class RawMatch(
         val matchId: UUID,
+        /** Der Wettkampf des Laufs - der Rahmen, in dem eine Bedingung je Wettkampf gilt. */
+        val competitionId: UUID? = null,
+        val competitionIdentifier: String? = null,
+        val competitionShortName: String? = null,
         /** Die eigene Meldung in diesem Lauf — wird nur am Ergebnis nach außen gereicht. */
         val teamId: UUID?,
         val competitionName: String,
@@ -174,4 +180,75 @@ object MyEventLogic {
         deregistered = deregistered,
         deregisteredReason = deregisteredReason,
     )
+
+    /**
+     * Die Bezugsrahmen einer Bedingung aus Sicht einer Person - je Rahmen eine Zeile mit ihrem
+     * Stand.
+     *
+     * Die Regel lautet "je Tag und je Wettkampf", nicht "je Lauf": Vorlauf, Viertelfinale,
+     * Halbfinale und Finale sind Runden desselben Wettkampfs, eine Bestätigung deckt sie alle ab.
+     * Die Rahmen entstehen deshalb aus den Läufen dieser Person, auf (Tag, Wettkampf)
+     * eingedampft; die Zeitangaben rechnen gegen den ERSTEN Lauf des jeweiligen Rahmens.
+     *
+     * Ohne Schalter bleibt genau ein Rahmen ohne Namen übrig, dessen Fenster wie bisher am
+     * [fallbackStart] hängt (dem nächsten künftigen Start der Person) - die Anzeige verhält sich
+     * für bestehende Bedingungen unverändert.
+     */
+    fun requirementScopes(
+        scope: RequirementScopeLogic.Scope,
+        matches: List<RawMatch>,
+        eventDays: List<RequirementScopeLogic.EventDayRef>,
+        fulfillments: List<MyEventRepo.Fulfillment>,
+        fallbackStart: LocalDateTime?,
+        earliestMinutesBefore: Int?,
+        latestMinutesBefore: Int?,
+    ): List<MyEventRequirementScopeDto> {
+        fun windowFrom(reference: LocalDateTime?) = MyEventRequirementScopeDto(
+            competitionName = null,
+            eventDayDate = null,
+            fulfilled = fulfillments.isNotEmpty(),
+            checkFrom = checkWindowBound(reference, earliestMinutesBefore),
+            checkUntil = checkWindowBound(reference, latestMinutesBefore),
+        )
+
+        if (!scope.perEventDay && !scope.perCompetition) {
+            return listOf(windowFrom(fallbackStart))
+        }
+
+        val dayById = eventDays.associateBy { it.id }
+        return matches
+            .map { match ->
+                val day = RequirementScopeLogic.eventDayOf(match.startTime, eventDays)
+                Triple(day, match.competitionId, match)
+            }
+            // Ein Rahmen ist (Tag, Wettkampf) - egal, wie viele Runden dazugehören.
+            .groupBy { (day, competitionId, _) ->
+                (if (scope.perEventDay) day else null) to (if (scope.perCompetition) competitionId else null)
+            }
+            .map { (key, group) ->
+                val (day, competitionId) = key
+                val frameStart = group.mapNotNull { it.third.startTime }.minOrNull()
+                val label = group.first().third.let { match ->
+                    listOfNotNull(match.competitionIdentifier, match.competitionShortName ?: match.competitionName)
+                        .joinToString(" ")
+                }
+                MyEventRequirementScopeDto(
+                    competitionName = if (scope.perCompetition) label else null,
+                    eventDayDate = if (scope.perEventDay) dayById[day]?.date else null,
+                    fulfilled = fulfillments.any { fulfillment ->
+                        RequirementScopeLogic.covers(
+                            scope,
+                            RequirementScopeLogic.Fulfillment(fulfillment.eventDay, fulfillment.competition),
+                            RequirementScopeLogic.MatchScope(eventDay = day, competition = competitionId),
+                        )
+                    },
+                    checkFrom = checkWindowBound(frameStart, earliestMinutesBefore),
+                    checkUntil = checkWindowBound(frameStart, latestMinutesBefore),
+                ) to frameStart
+            }
+            // Chronologisch, nicht alphabetisch: Auf dem Telefon zählt, was zuerst dran ist -
+            // "12 CM2x" vor "8 CMix4x+" wäre nur die Zeichenfolge, nicht der Tagesablauf.
+            .sortedWith(compareBy({ it.second?.toLocalDate() }, { it.second }))
+            .map { it.first }
+    }
 }

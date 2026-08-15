@@ -10,6 +10,8 @@ import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventRegistrationDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventRequirementDto
 import de.lambda9.ready2race.backend.app.eventInfo.entity.MyEventTeamMemberDto
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
+import de.lambda9.ready2race.backend.app.participantRequirement.boundary.RequirementScopeLogic
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -117,7 +119,11 @@ object MyEventService {
                 .findSubstitutionsForRegistrationRounds(registrationRounds(matchRecords)).orDie()
             val registrationRecords = !MyEventRepo.findRegistrationsWithoutMatch(eventId, participantId).orDie()
             val requirementRecords = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
-            val fulfilledRequirementIds = !MyEventRepo.findFulfilledRequirementIds(eventId, participantId).orDie()
+            val fulfillments = !MyEventRepo.findFulfillments(eventId, participantId).orDie()
+            // Die Wettkampftage: nur zum Zuordnen eines Laufs zu seinem Tag - dieselbe Ableitung
+            // wie beim Speichern einer Bestätigung, damit beide Seiten denselben Tag meinen.
+            val eventDays = !EventDayRepo.getByEvent(eventId).orDie()
+                .map { days -> days.map { RequirementScopeLogic.EventDayRef(it.id!!, it.date!!) } }
 
             // Welche Bedingungen für eine Person gelten, hängt an ihrer Rolle im Boot: eine
             // Bedingung ohne Rollenbindung gilt für alle, eine rollengebundene nur für Personen
@@ -131,8 +137,9 @@ object MyEventService {
                 .getRequirementsForNamedParticipants(eventId, namedParticipantIds).orDie()
                 .map { records -> records.map { it.participantRequirement }.toSet() }
 
+            val rawMatches = !toRawMatches(matchRecords, substitutionRecords, participantId)
             val split = MyEventLogic.split(
-                entries = !toRawMatches(matchRecords, substitutionRecords, participantId),
+                entries = rawMatches,
                 now = now,
                 visibility = visibility,
                 // Das persönliche Dashboard zeigt immer einen Countdown. Die Athleten-Anzeige darf
@@ -169,21 +176,34 @@ object MyEventService {
                     // dem 11.08.2026 im Haus, siehe MyEventRequirementDto.
                     .filter { applicableRequirementIds.contains(it.id) }
                     .filter { it.publiclyVisible == true }
-                    .map {
+                    .map { requirement ->
+                        val scope = RequirementScopeLogic.Scope(
+                            perEventDay = requirement.perEventDay == true,
+                            perCompetition = requirement.perCompetition == true,
+                        )
+                        // Die Rahmen, in denen DIESE Person startet - je Rahmen muss die
+                        // Bedingung einmal erfüllt sein. Ohne Schalter bleibt genau einer übrig,
+                        // und die Anzeige verhält sich wie vorher.
+                        val scopes = MyEventLogic.requirementScopes(
+                            scope = scope,
+                            matches = rawMatches,
+                            eventDays = eventDays,
+                            fulfillments = fulfillments.filter { it.requirementId == requirement.id },
+                            fallbackStart = firstFutureStart,
+                            earliestMinutesBefore = requirement.checkEarliestMinutesBefore,
+                            latestMinutesBefore = requirement.checkLatestMinutesBefore,
+                        )
                         MyEventRequirementDto(
-                            id = it.id!!,
-                            name = it.name ?: "",
-                            publicNote = it.publicNote,
-                            optional = it.optional == true,
-                            fulfilled = fulfilledRequirementIds.contains(it.id),
-                            checkFrom = MyEventLogic.checkWindowBound(
-                                firstFutureStart,
-                                it.checkEarliestMinutesBefore,
-                            ),
-                            checkUntil = MyEventLogic.checkWindowBound(
-                                firstFutureStart,
-                                it.checkLatestMinutesBefore,
-                            ),
+                            id = requirement.id!!,
+                            name = requirement.name ?: "",
+                            publicNote = requirement.publicNote,
+                            optional = requirement.optional == true,
+                            // Erfüllt ist die Bedingung erst, wenn JEDER Rahmen abgedeckt ist.
+                            fulfilled = scopes.isNotEmpty() && scopes.all { it.fulfilled },
+                            // Die Aufschlüsselung nur zeigen, wo sie etwas unterscheidet.
+                            scopes = if (scope.perEventDay || scope.perCompetition) scopes else emptyList(),
+                            checkFrom = scopes.firstOrNull()?.checkFrom,
+                            checkUntil = scopes.firstOrNull()?.checkUntil,
                         )
                     }
                     .sortedBy { it.name },
@@ -279,6 +299,9 @@ object MyEventService {
 
         return MyEventLogic.RawMatch(
             matchId = matchId,
+            competitionId = first.get("competition_id", UUID::class.java),
+            competitionIdentifier = first.get("competition_identifier", String::class.java),
+            competitionShortName = first.get("competition_short_name", String::class.java),
             teamId = first.get("registration_id", UUID::class.java),
             competitionName = first.get("competition_name", String::class.java) ?: "",
             categoryName = first.get("category_name", String::class.java),

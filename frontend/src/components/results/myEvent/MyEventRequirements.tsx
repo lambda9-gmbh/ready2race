@@ -11,6 +11,7 @@ import {
 } from '@mui/material'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
+import {format} from 'date-fns'
 import {useTranslation} from 'react-i18next'
 import type {TFunction} from 'i18next'
 import {MyEventRequirementDto} from '@api/types.gen.ts'
@@ -149,8 +150,38 @@ export const MyEventRequirements = ({requirements, variant}: MyEventRequirements
                                     </Stack>
                                 }
                                 secondary={
-                                    r.publicNote || window ? (
+                                    r.publicNote || window || (r.scopes ?? []).length > 0 ? (
                                         <>
+                                            {/* Bei einer Bedingung je Wettkampf oder Tag sagt
+                                                "offen" allein zu wenig: Wer für einen von zwei
+                                                Wettkämpfen gewogen ist, sucht sonst den Fehler.
+                                                Deshalb je Rahmen eine Zeile. */}
+                                            {(r.scopes ?? []).map((scope, index) => (
+                                                <Typography
+                                                    key={`${scope.competitionName ?? ''}-${scope.eventDayDate ?? ''}-${index}`}
+                                                    variant="body2"
+                                                    color={
+                                                        scope.fulfilled
+                                                            ? 'success.main'
+                                                            : 'text.secondary'
+                                                    }>
+                                                    {[
+                                                        scope.competitionName,
+                                                        scope.eventDayDate
+                                                            ? format(
+                                                                  new Date(scope.eventDayDate),
+                                                                  t('format.date'),
+                                                              )
+                                                            : null,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' · ')}
+                                                    {' — '}
+                                                    {scope.fulfilled
+                                                        ? t('myEvent.requirementFulfilled')
+                                                        : t('myEvent.requirementOpen')}
+                                                </Typography>
+                                            ))}
                                             {r.publicNote && (
                                                 <Typography
                                                     variant="body2"

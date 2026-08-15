@@ -99,6 +99,11 @@ object MyEventRepo {
             DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION_PROPERTIES.NAME.`as`("competition_name"),
+            // Die Kennung des Wettkampfs: Sie entscheidet, für welchen Rahmen eine Bedingung
+            // mit `perCompetition` erfüllt sein muss (V202608141900).
+            COMPETITION_PROPERTIES.COMPETITION.`as`("competition_id"),
+            COMPETITION_PROPERTIES.IDENTIFIER.`as`("competition_identifier"),
+            COMPETITION_PROPERTIES.SHORT_NAME.`as`("competition_short_name"),
             COMPETITION_CATEGORY.NAME.`as`("category_name"),
             COMPETITION_MATCH_TEAM.START_NUMBER,
             COMPETITION_MATCH_TEAM.PLACE,
@@ -274,12 +279,31 @@ object MyEventRepo {
      * Tabelle trägt in `note` eine Freitext-Notiz für interne Augen; was hier nicht geladen wird,
      * kann weiter oben auch nicht versehentlich in die Antwort geraten.
      */
-    fun findFulfilledRequirementIds(eventId: UUID, participantId: UUID): JIO<List<UUID>> = Jooq.query {
-        select(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT)
-            .from(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT)
-            .where(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.EVENT.eq(eventId))
-            .and(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT.eq(participantId))
-            .fetch { it.value1()!! }
+    /** Eine Erfüllung mit ihrem Bezugsrahmen - ohne die Notiz, die für interne Augen ist. */
+    data class Fulfillment(val requirementId: UUID, val eventDay: UUID?, val competition: UUID?)
+
+    /**
+     * Die Erfüllungen einer Person samt Tag und Wettkampf.
+     *
+     * Ohne die beiden Dimensionen beantwortet das persönliche Dashboard die falsche Frage: Es
+     * fragte, OB eine Bestätigung existiert, und zeigte einer Steuerfrau, die für einen von zwei
+     * Wettkämpfen gewogen ist, beide als erledigt. Die `note`-Spalte wird auch hier gar nicht
+     * erst geladen.
+     */
+    fun findFulfillments(eventId: UUID, participantId: UUID): JIO<List<Fulfillment>> = Jooq.query {
+        with(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT) {
+            select(PARTICIPANT_REQUIREMENT, EVENT_DAY, COMPETITION)
+                .from(this)
+                .where(EVENT.eq(eventId))
+                .and(PARTICIPANT.eq(participantId))
+                .fetch { r ->
+                    Fulfillment(
+                        requirementId = r[PARTICIPANT_REQUIREMENT]!!,
+                        eventDay = r[EVENT_DAY],
+                        competition = r[COMPETITION],
+                    )
+                }
+        }
     }
 
     /**

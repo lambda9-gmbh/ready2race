@@ -16362,6 +16362,29 @@ components:
           type: string
           nullable: true
 
+    MyEventRequirementScopeDto:
+      type: object
+      required:
+        - fulfilled
+      properties:
+        competitionName:
+          type: string
+          nullable: true
+        eventDayDate:
+          type: string
+          format: date
+          nullable: true
+        fulfilled:
+          type: boolean
+        checkFrom:
+          type: string
+          format: date-time
+          nullable: true
+        checkUntil:
+          type: string
+          format: date-time
+          nullable: true
+
     MyEventRequirementDto:
       type: object
       required:
@@ -16383,6 +16406,13 @@ components:
           type: boolean
         fulfilled:
           type: boolean
+        scopes:
+          type: array
+          description: >-
+            Aufschluesselung, sobald die Bedingung je Tag oder je Wettkampf gilt - je Rahmen eine
+            Zeile. Leer bei einer Bedingung ohne Schalter.
+          items:
+            $ref: '#/components/schemas/MyEventRequirementScopeDto'
         checkFrom:
           type: string
           format: date-time
