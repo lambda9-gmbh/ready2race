@@ -76,6 +76,58 @@ export const preselectCompetition = (
     return null
 }
 
+/**
+ * Der Stand einer Bedingung für diese Person, aufgeschlüsselt nach dem, was sie überhaupt
+ * unterscheidet.
+ *
+ * An der Waage ist „abgehakt: ja/nein" zu wenig, sobald eine Bedingung je Wettkampf gilt: Wer in
+ * zwei Wettkämpfen startet, muss zweimal auf die Waage, und die Person am Tablet muss auf einen
+ * Blick sehen, was davon schon erledigt ist - ohne dafür die Wettkampf-Auswahl durchzuklicken.
+ *
+ * Eine Zeile je Wettkampf bei `perCompetition`, sonst genau eine für die Person. `perEventDay`
+ * wirkt in beiden Fällen als Einschränkung auf heute; die Regel dafür ist dieselbe wie überall
+ * ([covers]).
+ */
+export type RequirementStatusEntry = {
+    /** Der Wettkampf dieser Zeile; null, wenn die Bedingung nicht je Wettkampf gilt. */
+    competitionId: string | null
+    /** Anzeigename des Wettkampfs; null bei der einzelnen Zeile ohne Wettkampfbezug. */
+    competitionLabel: string | null
+    fulfilled: boolean
+    note?: string | null
+}
+
+export const requirementStatus = (
+    requirementId: string,
+    scope: RequirementScope,
+    checked: CheckedParticipantRequirement[],
+    competitions: ParticipantScanCompetitionDto[],
+    todayEventDayId: string | null | undefined,
+): RequirementStatusEntry[] => {
+    const entryFor = (
+        competitionId: string | null,
+        label: string | null,
+    ): RequirementStatusEntry => {
+        const covering = coveringFulfillment(requirementId, scope, checked, {
+            todayEventDayId,
+            competitionId,
+        })
+        return {
+            competitionId,
+            competitionLabel: label,
+            fulfilled: covering !== undefined,
+            note: covering?.note,
+        }
+    }
+
+    if (!scope.perCompetition) {
+        return [entryFor(null, null)]
+    }
+    return competitions.map(competition =>
+        entryFor(competition.id, competitionLabel(competition)),
+    )
+}
+
 /** Anzeigename eines Wettkampfs: Kennung plus Kürzel, sonst der volle Name. */
 export const competitionLabel = (competition: ParticipantScanCompetitionDto): string =>
     [competition.identifier, competition.shortName ?? competition.name]

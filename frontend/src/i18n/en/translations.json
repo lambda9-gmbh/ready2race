@@ -2819,6 +2819,13 @@
       "perCompetition": "per competition",
       "perEventDay": "per event day",
       "perCompetitionAndDay": "per competition and day"
+    },
+    "status": {
+      "done": "done",
+      "open": "open",
+      "approved": "{{name}} approved{{scope}}",
+      "revoked": "{{name}} revoked",
+      "error": "The approval could not be saved."
     }
   },
   "qrScanner": {

@@ -23,7 +23,7 @@ import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut'
 import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist'
 import AppTopTitle from '@components/qrApp/AppTopTitle.tsx'
 import {CheckedParticipantRequirement, ParticipantScanCompetitionDto} from '@api/types.gen.ts'
-import {preselectCompetition} from '@components/qrApp/requirementScope.ts'
+import {competitionLabel, preselectCompetition} from '@components/qrApp/requirementScope.ts'
 
 /**
  * Der zuletzt an dieser Station gewählte Wettkampf. Er überlebt den einzelnen Scan bewusst:
@@ -152,7 +152,7 @@ const QrParticipantPage = () => {
         // Der Wettkampf gehört nur an eine Bedingung, die je Wettkampf gilt. Bei allen anderen
         // bliebe er sonst als Einschränkung in der Zeile stehen, die niemand gewollt hat.
         const requirement = (participantRequirementsData ?? []).find(r => r.id === requirementId)
-        await approveParticipantRequirementForParticipant({
+        const {error} = await approveParticipantRequirementForParticipant({
             path: {eventId},
             // Bewusst der additive Einzel-Endpunkt: der Ersetzen-Endpunkt (approve) erwartet den
             // kompletten Zustand und würde alle nicht mitgeschickten Bestätigungen löschen.
@@ -165,6 +165,29 @@ const QrParticipantPage = () => {
                 competitionId: requirement?.perCompetition ? (competitionId ?? undefined) : undefined,
             },
         })
+
+        // Die Antwort wurde bis hierher gar nicht ausgewertet: Ein abgelehnter Aufruf sah an der
+        // Waage genauso aus wie ein angenommener - der Knopf blieb einfach stehen. Die
+        // Rückmeldung nennt deshalb auch den Rahmen, für den gerade abgehakt wurde; an einer
+        // Bedingung je Wettkampf ist "gespeichert" allein zu wenig.
+        if (error) {
+            feedback.error(t('qrParticipant.status.error'))
+            setSubmitting(false)
+            return
+        }
+        const chosenCompetition = competitions.find(c => c.id === competitionId)
+        const scopeSuffix =
+            requirement?.perCompetition && chosenCompetition
+                ? competitionLabel(chosenCompetition)
+                : undefined
+        feedback.success(
+            checked === false
+                ? t('qrParticipant.status.revoked', {name: requirement?.name ?? ''})
+                : t('qrParticipant.status.approved', {
+                      name: requirement?.name ?? '',
+                      scope: scopeSuffix ? ` — ${scopeSuffix}` : '',
+                  }),
+        )
 
         // Nach Änderung neu laden
         const {data: partData} = await getParticipantsForEventInApp({path: {eventId}})

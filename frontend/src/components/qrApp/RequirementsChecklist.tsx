@@ -14,7 +14,7 @@ import {
     ParticipantRequirementForEventDto,
     ParticipantScanCompetitionDto,
 } from '@api/types.gen.ts'
-import {competitionLabel, coveringFulfillment} from './requirementScope.ts'
+import {competitionLabel, coveringFulfillment, requirementStatus} from './requirementScope.ts'
 import {Block, Check, EditNote} from '@mui/icons-material'
 import {useEffect, useState} from 'react'
 import BaseDialog from '@components/BaseDialog.tsx'
@@ -204,8 +204,56 @@ export const RequirementsChecklist = ({
                                 </>
                             )}
                         </Stack>
-                        <Stack>
+                        <Stack sx={{minWidth: 0}}>
                             <Typography>{req.name}</Typography>
+                            {/* Der Stand je Wettkampf (und Tag) direkt an der Bedingung: Wer in
+                                zwei Wettkämpfen startet, muss zweimal auf die Waage, und die
+                                Station soll das sehen, ohne die Auswahl durchzuklicken. Bei einer
+                                Bedingung ohne Wettkampfbezug bleibt es bei der einen Zeile - dort
+                                sagt schon das Häkchen alles, deshalb entfällt sie. */}
+                            {req.perCompetition &&
+                                requirementStatus(
+                                    req.id,
+                                    {
+                                        perEventDay: req.perEventDay,
+                                        perCompetition: req.perCompetition,
+                                    },
+                                    checkedRequirements,
+                                    competitions,
+                                    todayEventDayId,
+                                ).map(entry => (
+                                    <Stack
+                                        key={entry.competitionId}
+                                        direction={'row'}
+                                        spacing={0.5}
+                                        alignItems={'center'}>
+                                        {entry.fulfilled ? (
+                                            <Check color={'success'} sx={{fontSize: 16}} />
+                                        ) : (
+                                            <Block color={'disabled'} sx={{fontSize: 16}} />
+                                        )}
+                                        <Typography
+                                            variant={'caption'}
+                                            color={
+                                                entry.fulfilled
+                                                    ? 'success.main'
+                                                    : 'text.secondary'
+                                            }
+                                            sx={{
+                                                fontWeight:
+                                                    entry.competitionId === competitionId
+                                                        ? 700
+                                                        : 400,
+                                            }}>
+                                            {entry.competitionLabel}
+                                            {' — '}
+                                            {entry.fulfilled
+                                                ? t('qrParticipant.status.done')
+                                                : t('qrParticipant.status.open')}
+                                            {entry.note ? ` (${entry.note})` : ''}
+                                        </Typography>
+                                    </Stack>
+                                ))}
                             {/* Wofür das Häkchen gilt, steht an der Zeile selbst: an der Waage
                                 wird eine Person nacheinander für mehrere Wettkämpfe gewogen,
                                 und "abgehakt" allein sagt dann zu wenig. */}
