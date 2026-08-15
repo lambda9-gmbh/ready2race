@@ -217,13 +217,24 @@ object SubstitutionService {
 
         val participantWithData = actualRegistrationTeams.flatMap { it.value }.first { it.id == participantId }
 
+        // Der Verein, aus dem ersetzt wird: der MELDENDE Verein dieser Mannschaft, nicht der
+        // Stammverein der ausgewechselten Person.
+        //
+        // Bis zur Mehrfach-Zugehoerigkeit (Migration V202608142000) waren beide immer dasselbe -
+        // eine Person konnte nur von ihrem eigenen Verein gemeldet werden, `participant.club`
+        // war deshalb ein zulaessiger Ersatz. Seither nicht mehr: wird jemand ueber seinen
+        // Zweitverein gemeldet, faende die Ummeldung sonst den Vorrat des Stammvereins vor -
+        // lauter Leute, die mit dieser Mannschaft nichts zu tun haben, waehrend die eigene
+        // Mannschaftskameradin fehlt. Fuer alle Altdaten aendert der Wechsel nichts.
+        val registeringClubId = participantWithData.clubId
+
         // Registered Participants
 
         val subbedOutRegistrationParticipants = getSubbedOutParticipants(registrationParticipants, substitutions)
 
 
         val clubMembersRegistered = registrationParticipants
-            .filter { it.clubId == participant.club }
+            .filter { it.clubId == registeringClubId }
             .filter { it.id != participantId }
             .map { !it.toPossibleSubstitutionParticipantDto() }
 
@@ -254,7 +265,10 @@ object SubstitutionService {
 
         // Not registered Participants (club members)
 
-        val participantsInClub = !ParticipantRepo.getByClubId(participant.club).orDie()
+        // getByClubId liefert seit V202608142000 den vollen Vereinsbestand: Mitglieder plus alle,
+        // die diesen Verein als weiteren Verein tragen. Ohne die Weitung koennte eine ueber den
+        // Zweitverein gemeldete Person zwar starten, aber von niemandem ersetzt werden.
+        val participantsInClub = !ParticipantRepo.getByClubId(registeringClubId).orDie()
         val psNotRegistered = participantsInClub.filter { p ->
             clubMembersRegistered.find { regP -> regP.id == p.id } == null && p.id != participantId
         }

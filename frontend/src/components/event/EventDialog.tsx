@@ -42,6 +42,7 @@ type EventForm = {
     // nicht gibt.
     showBreaksOnPublicBoards: boolean
     publicResultsVisibility: PublicResultsVisibility
+    allowCrossClubRegistration: boolean
 }
 
 const addAction = (formData: EventForm) => {
@@ -79,6 +80,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         allowParticipantSelfRegistration: false,
         showBreaksOnPublicBoards: false,
         publicResultsVisibility: 'FINISHED_ONLY',
+        allowCrossClubRegistration: false,
     }
 
     const formContext = useForm<EventForm>()
@@ -164,6 +166,13 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     label={t('event.allowParticipantSelfRegistration')}
                 />
                 <FormInputCheckbox
+                    name={`allowCrossClubRegistration`}
+                    label={t('event.allowCrossClubRegistration')}
+                />
+                <Typography variant={'body2'} color={'text.secondary'} sx={{mt: -1}}>
+                    {t('event.allowCrossClubRegistrationHint')}
+                </Typography>
+                <FormInputCheckbox
                     name={`showBreaksOnPublicBoards`}
                     label={t('event.showBreaksOnPublicBoards')}
                 />
@@ -211,6 +220,7 @@ function mapFormToCreateRequest(formData: EventForm): CreateEventRequest {
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
+        allowCrossClubRegistration: formData.allowCrossClubRegistration,
         // chainProgressionMode, autoCreateFollowingRounds, executionAutoRefresh und
         // executionAutoRefreshSeconds fehlen bewusst: Sie leben erst im Einstellungen-Tab
         // einer bestehenden Veranstaltung (EventExecutionSettings); neue Events starten mit
@@ -237,6 +247,7 @@ function mapFormToUpdateRequest(formData: EventForm, entity: EventDto): UpdateEv
         allowParticipantSelfRegistration: formData.allowParticipantSelfRegistration,
         showBreaksOnPublicBoards: formData.showBreaksOnPublicBoards,
         publicResultsVisibility: formData.publicResultsVisibility,
+        allowCrossClubRegistration: formData.allowCrossClubRegistration,
         // Nicht Teil dieses Dialogs (siehe ScheduleSettingsPopover) — der Endpunkt kennt aber
         // kein Teil-Update, also gehen die gespeicherten Werte unverändert mit.
         chainProgressionMode: entity.chainProgressionMode,
@@ -266,6 +277,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         allowParticipantSelfRegistration: dto.allowParticipantSelfRegistration,
         showBreaksOnPublicBoards: dto.showBreaksOnPublicBoards ?? false,
         publicResultsVisibility: dto.publicResultsVisibility ?? 'FINISHED_ONLY',
+        allowCrossClubRegistration: dto.allowCrossClubRegistration ?? false,
     }
 }
 

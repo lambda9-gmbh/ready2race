@@ -7,7 +7,7 @@ import {LiveMatchesDto, LiveMatchInfo} from '@api/types.gen.ts'
 import {getLiveMatches} from '@api/sdk.gen.ts'
 import ResultsMatchDialog from '@components/results/ResultsMatchDialog.tsx'
 import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
-import {matchStatusChip} from '@components/event/match/matchStatusChip.ts'
+import {deregisteredChip, matchStatusChip} from '@components/event/match/matchStatusChip.ts'
 import {useNow} from '@components/event/match/useNow.ts'
 import {usePolledFetch} from '@utils/usePolledFetch.ts'
 import {format} from 'date-fns'
@@ -113,6 +113,14 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                                         match.name != null
                                             ? undefined
                                             : matchStatusChip(match.status, match.startTime, now)
+                                    }
+                                    // Auch die öffentliche Liste weist Abmeldungen aus - und zwar
+                                    // als eigenen, leisen Chip, damit sie nicht wie eine Wertung
+                                    // aussieht.
+                                    secondaryChip={
+                                        match.name != null
+                                            ? undefined
+                                            : deregisteredChip(match.status)
                                     }
                                     // Abgesagt, wartende Runde oder Programmpunkt: hinter der
                                     // Karte steht keine Aufstellung, die ein Dialog zeigen könnte.

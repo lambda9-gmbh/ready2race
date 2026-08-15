@@ -266,7 +266,9 @@ object LiveDashboardService {
                             startedAt = startedAt,
                             startTime = startTime,
                             finishedAt = finishedAt,
-                            teamResults = teams.map { LiveDashboardLogic.teamHasResult(it.place, it.failed, it.deregistered) },
+                            // "Erledigt", nicht "gefahren": der Zustand fragt, ob noch jemand auf
+                            // ein Ergebnis wartet - eine Abmeldung zählt dabei mit.
+                            teamResults = teams.map { LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered) },
                             skipped = matchId in skippedMatchIds,
                         ),
                         bye = byeByMatch[matchId],
@@ -563,23 +565,18 @@ object LiveDashboardService {
         // Steht die Veranstaltung auf DEAKTIVIERT, beendet der Aufruf nur diesen Lauf. Das ist die
         // sichere Wahl, solange der Zeitplan Lücken hat: Startzeiten stehen erst fest, wenn die
         // Läufe einer Runde gesetzt sind, und die Kette würde sonst den falschen Lauf greifen.
+        //
+        // Es gibt genau eine Kette, und die läuft am Zeitstrahl entlang. Bis zum 14.08.2026 stand
+        // im else-Zweig eine zweite für Läufe OHNE Slot: sie nahm alle Läufe der nächsten
+        // Startzeit nach der des beendeten Laufs, ohne Tagesgrenze und ohne Rücksicht auf die
+        // Startgruppen des Zeitplans. Ein Lauf ohne Slot wird jetzt von niemandem mehr automatisch
+        // nachgezogen — das ist gewollt: was nicht im Zeitplan steht, ruft der Schiedsrichter
+        // selbst an den Start. Der Zeitstrahl bleibt damit die einzige Quelle für die Frage,
+        // welcher Lauf als Nächstes drankommt.
         if (mode != ChainProgressionMode.DEAKTIVIERT) {
             val slotTime = !EventScheduleRepo.getSlotBySetupMatch(matchId).orDie()
-            // Bei teilweise gepflegtem Zeitstrahl entscheidet jeder Lauf für sich — ein Lauf ohne
-            // Slot nutzt die Legacy-Logik, auch wenn andere Läufe Slots haben.
             if (slotTime != null) {
-                // Zeitstrahl-Modus: der Kette entlang der Slots folgen, an wartenden Slots geduldig
-                // sein (createNewRound stößt die Kette dann später wieder an).
                 !ScheduleChainService.decideAndActivate(eventId, userId)
-            } else {
-                // Legacy: Events ohne Zeitstrahl behalten das bisherige Verhalten.
-                val finishedStart = !LiveDashboardRepo.getMatchStartTime(matchId).orDie()
-                val candidates = (!LiveDashboardRepo.getActivationCandidates(eventId).orDie())
-                    .filter { candidate ->
-                        val start = candidate[COMPETITION_MATCH.START_TIME]
-                        finishedStart == null || (start != null && start > finishedStart)
-                    }
-                !activateNext(candidates, userId)
             }
         }
 
@@ -905,10 +902,25 @@ object LiveDashboardService {
 
         val requirementInfos = requirementRecords.distinctBy { it[PARTICIPANT_REQUIREMENT.ID] }
 
-        val checksByKey = checkRecords.associateBy {
-            it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT]!! to
-                it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT]!!
-        }
+        /**
+         * (Person, Bedingung) -> die maßgebliche abgehakte Zeile.
+         *
+         * Seit V202608141900 kann es je Kombination mehrere Zeilen geben - eine je Tag bzw. je
+         * Wettkampf. Bis die Schiedsrichter-Ansicht die Dimension des gezeigten Laufs selbst
+         * heranzieht (dafür liegt [de.lambda9.ready2race.backend.app.participantRequirement.boundary.RequirementScopeLogic]
+         * bereit), gewinnt hier die zuletzt eingetragene: `associateBy` allein nähme
+         * kommentarlos die letzte Zeile der Abfrage und wäre damit von der Sortierung der
+         * Datenbank abhängig. Für den Vorgabefall "gilt je Veranstaltung" bleibt es bei genau
+         * einer Zeile und damit beim bisherigen Verhalten.
+         */
+        val checksByKey = checkRecords
+            .groupBy {
+                it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT]!! to
+                    it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT]!!
+            }
+            .mapValues { (_, rows) ->
+                rows.maxBy { it[PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.CREATED_AT]!! }
+            }
 
         /** (round, registration) -> substitutions applying to that team in that round, ordered */
         val substitutionsByKey = substitutionRecords
@@ -1077,22 +1089,5 @@ object LiveDashboardService {
             }
         )
     }
-
-    private fun activateNext(candidates: List<Record>, userId: UUID): App<Nothing, Unit> =
-        KIO.comprehension {
-            val nextStart = candidates.firstOrNull()?.get(COMPETITION_MATCH.START_TIME)
-                ?: return@comprehension KIO.unit
-
-            // Alle Läufe derselben Startzeit gemeinsam aktivieren: parallele Starts gehören zusammen.
-            !candidates
-                .filter { it[COMPETITION_MATCH.START_TIME] == nextStart }
-                .traverse {
-                    CompetitionExecutionService.setMatchActivation(
-                        it[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!, activated = true, userId = userId,
-                    )
-                }
-
-            KIO.unit
-        }
 
 }

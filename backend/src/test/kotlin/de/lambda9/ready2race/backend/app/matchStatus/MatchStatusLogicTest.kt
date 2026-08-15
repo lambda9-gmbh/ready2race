@@ -52,6 +52,80 @@ class MatchStatusLogicTest {
         assertEquals(3, MatchStatusLogic.scoredCount(teams))
     }
 
+    // --- racedCount / deregisteredCount: der Vorfall vom 14.08.2026 ---
+
+    /**
+     * Der Vorfall selbst: Ein Fünferlauf, aus dem eine Mannschaft abgemeldet wurde und in dem
+     * sonst niemand gefahren ist. "Erledigt" ist 1 - dagegen ist nichts zu sagen, für dieses Boot
+     * kommt kein Ergebnis mehr. "Gefahren" muss 0 sein; nur daran hängt "Teilweise gewertet",
+     * und genau deshalb stand auf dem Schiedsrichter-Board fälschlich "Teilweise gewertet 1/5".
+     */
+    @Test
+    fun oneDeregisteredOfFiveHasNotRaced() {
+        val teams = listOf(deregistered(), open(), open(), open(), open())
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = null,
+            startTime = start,
+            startedAt = null,
+            finishedAt = null,
+            skipped = false,
+            teams = teams,
+        )
+        assertEquals(MatchState.UPCOMING, status.state)
+        assertEquals(5, status.teamsTotal)
+        assertEquals(1, status.teamsScored)
+        assertEquals(0, status.teamsRaced)
+        assertEquals(1, status.teamsDeregistered)
+    }
+
+    /** Eine Abmeldung neben drei gefahrenen Booten: das IST eine Teilwertung, 3 von 4 erwarteten. */
+    @Test
+    fun oneDeregisteredAndThreePlacedOfFiveIsPartiallyRaced() {
+        val teams = listOf(deregistered(), placed(1), placed(2), placed(3), open())
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = null,
+            startTime = start,
+            startedAt = null,
+            finishedAt = null,
+            skipped = false,
+            teams = teams,
+        )
+        assertEquals(4, status.teamsScored)
+        assertEquals(3, status.teamsRaced)
+        assertEquals(1, status.teamsDeregistered)
+        // 3 gefahren von (5 - 1) erwarteten: die Ablesung "Teilweise gewertet" greift.
+        assertEquals(3, status.teamsRaced)
+        assertEquals(4, status.teamsTotal - status.teamsDeregistered)
+    }
+
+    /**
+     * Alle abgemeldet: Der Lauf gilt weiterhin als erledigt und wartet nur noch auf seinen
+     * Beenden-Klick - sonst bliebe die Aktivierungskette an ihm hängen. Gefahren ist niemand.
+     */
+    @Test
+    fun allDeregisteredStillAwaitsFinish() {
+        val teams = listOf(deregistered(), deregistered(), deregistered())
+        val status = MatchStatusLogic.matchStatus(
+            activatedAt = null,
+            startTime = start,
+            startedAt = null,
+            finishedAt = null,
+            skipped = false,
+            teams = teams,
+        )
+        assertEquals(MatchState.AWAITING_FINISH, status.state)
+        assertEquals(3, status.teamsScored)
+        assertEquals(0, status.teamsRaced)
+        assertEquals(3, status.teamsDeregistered)
+    }
+
+    @Test
+    fun racedCountIgnoresDeregistrations() {
+        assertEquals(0, MatchStatusLogic.racedCount(listOf(deregistered(), open())))
+        assertEquals(2, MatchStatusLogic.racedCount(listOf(placed(1), failed(), deregistered(), open())))
+        assertEquals(1, MatchStatusLogic.deregisteredCount(listOf(placed(1), deregistered(), open())))
+    }
+
     // --- matchStatus ---
 
     /**

@@ -23,9 +23,11 @@ object EventScheduleRepo {
      * für "ganze Runde überspringen" (siehe EventScheduleService.setRoundSkipped), das dieselbe
      * Zustandsableitung braucht wie der Einzel-Slot-Skip, nur für mehrere Zeilen auf einmal.
      *
-     * `match_teams_total`/`match_teams_scored` tragen den Wertungsstand des verknüpften Laufs für
-     * den Status-Chip im Zeitplan bei. Beide sind 0, wo kein Lauf hängt - dort fragt die Anzeige
-     * ohnehin erst `matchId` ab.
+     * `match_teams_total`/`match_teams_scored`/`match_teams_raced`/`match_teams_deregistered`
+     * tragen den Stand des verknüpften Laufs für den Status-Chip im Zeitplan bei. Alle sind 0, wo
+     * kein Lauf hängt - dort fragt die Anzeige ohnehin erst `matchId` ab. Die Trennung zwischen
+     * "erledigt" (scored) und "gefahren" (raced) ist der Kern: der Zustand hängt an der ersten
+     * Zahl, die Ablesung "Teilweise gewertet" an der zweiten.
      */
     fun getSlots(eventId: UUID, setupRoundId: UUID? = null) = Jooq.query {
         val sibling = COMPETITION_SETUP_MATCH.`as`("sibling")
@@ -56,9 +58,19 @@ object EventScheduleRepo {
                 .where(teamInMatch)
         ).`as`("match_teams_total")
 
-        // "Gewertet" ist wortgleich zu LiveDashboardLogic.teamHasResult (Platz ODER ausgeschieden
-        // ODER abgemeldet) und damit genau die Negation von `match_open` in [getChainSlots].
-        // Korrelierte Unterabfrage statt zweitem Query: eine Abfrage bleibt eine Abfrage.
+        // Die Abmeldung dieser Mannschaft für die Runde dieses Slots - dreimal gebraucht, deshalb
+        // einmal benannt.
+        val teamDeregistered = DSL.exists(
+            selectOne()
+                .from(COMPETITION_DEREGISTRATION)
+                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
+        )
+
+        // "Erledigt" ist wortgleich zu LiveDashboardLogic.teamIsSettled (Platz ODER ausgeschieden
+        // ODER abgemeldet) und damit genau die Negation von `match_open` in [getChainSlots]: die
+        // Frage, ob hier noch jemand auf ein Ergebnis wartet. Korrelierte Unterabfrage statt
+        // zweitem Query: eine Abfrage bleibt eine Abfrage.
         val matchTeamsScored = DSL.field(
             DSL.selectCount()
                 .from(COMPETITION_MATCH_TEAM)
@@ -66,14 +78,28 @@ object EventScheduleRepo {
                 .and(
                     COMPETITION_MATCH_TEAM.PLACE.isNotNull
                         .or(COMPETITION_MATCH_TEAM.FAILED.isTrue)
-                        .orExists(
-                            selectOne()
-                                .from(COMPETITION_DEREGISTRATION)
-                                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
-                                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
-                        )
+                        .or(teamDeregistered)
                 )
         ).`as`("match_teams_scored")
+
+        // "Gefahren" ist LiveDashboardLogic.teamHasRaced: Platz ODER ausgeschieden, ohne die
+        // Abgemeldeten. Nur diese Zahl trägt "Teilweise gewertet". Vorher las der Zeitplan dafür
+        // `match_teams_scored`, und ein Lauf mit einer Abmeldung und vier offenen Booten stand als
+        // "Teilweise gewertet 1/5" da - obwohl niemand gefahren war (Vorfall vom 14.08.2026).
+        val matchTeamsRaced = DSL.field(
+            DSL.selectCount()
+                .from(COMPETITION_MATCH_TEAM)
+                .where(teamInMatch)
+                .and(COMPETITION_MATCH_TEAM.PLACE.isNotNull.or(COMPETITION_MATCH_TEAM.FAILED.isTrue))
+                .andNot(teamDeregistered)
+        ).`as`("match_teams_raced")
+
+        val matchTeamsDeregistered = DSL.field(
+            DSL.selectCount()
+                .from(COMPETITION_MATCH_TEAM)
+                .where(teamInMatch)
+                .and(teamDeregistered)
+        ).`as`("match_teams_deregistered")
 
         var condition = EVENT_SCHEDULE_SLOT.EVENT.eq(eventId)
         if (setupRoundId != null) {
@@ -97,6 +123,8 @@ object EventScheduleRepo {
             roundMaterialized,
             matchTeamsTotal,
             matchTeamsScored,
+            matchTeamsRaced,
+            matchTeamsDeregistered,
         )
             .from(EVENT_SCHEDULE_SLOT)
             .leftJoin(COMPETITION_SETUP_MATCH)
@@ -119,10 +147,16 @@ object EventScheduleRepo {
 
     /**
      * ALLE Slots der Veranstaltung für die Aktivierungskette (Task 9). Gleiche Joins/Aliase wie
-     * [getSlots], zusätzlich `match_open` — mindestens eine Mannschaft ohne Ergebnis, wortgleiches
-     * Prädikat zu `LiveDashboardRepo.getActivationCandidates` — und `ACTIVATED_AT`, damit
-     * [ScheduleChain.decideNext] einen bereits an den Start gerufenen Sibling-Lauf derselben
-     * Startzeit von einem frisch aktivierbaren unterscheiden kann.
+     * [getSlots], zusätzlich `match_open` und `ACTIVATED_AT`, damit [ScheduleChain.decideNext]
+     * einen bereits an den Start gerufenen Sibling-Lauf derselben Startzeit von einem frisch
+     * aktivierbaren unterscheiden kann.
+     *
+     * `match_open` ist die Negation von "erledigt" (`LiveDashboardLogic.teamIsSettled`, in SQL
+     * `match_teams_scored` in [getSlots]): mindestens eine Mannschaft, auf deren Ergebnis noch
+     * jemand wartet. **Die Kette fragt bewusst nach "erledigt" und nicht nach "gefahren"** - sonst
+     * bliebe sie an einem Lauf stehen, dessen Boote alle abgemeldet sind, und die Regatta käme
+     * nicht weiter. Die Abmeldung ist damit für die Kette eine Aussage, für die Ablesung
+     * "Teilweise gewertet" aber keine; siehe `LiveDashboardLogic.teamHasRaced`.
      *
      * Bewusst ohne Untergrenze: Bis zum 10.08.2026 stand hier die Startzeit des gerade beendeten
      * Slots (`>= after`), und alles davor war für die Kette unsichtbar. Ein Beenden am zweiten
@@ -343,9 +377,8 @@ object EventScheduleRepo {
 
     /**
      * Zählt die Läufe der Runde, die noch mindestens 2 tatsächlich fahrende Mannschaften haben -
-     * dasselbe "fahrend"-Prädikat wie [de.lambda9.ready2race.backend.app.liveDashboard.control.LiveDashboardRepo.getActivationCandidates]
-     * (nicht `out`, keine Abmeldung für diese Runde), nur pro Lauf gruppiert/gezählt statt auf
-     * Existenz geprüft. >0 heißt: die Runde muss noch gefahren werden, "Runde entfällt" ist dann
+     * dasselbe "fahrend"-Prädikat wie im `match_open` von [getChainSlots] (nicht `out`, keine
+     * Abmeldung für diese Runde), nur pro Lauf gruppiert/gezählt statt auf Existenz geprüft. >0 heißt: die Runde muss noch gefahren werden, "Runde entfällt" ist dann
      * nicht erlaubt (siehe EventScheduleService.setRoundSkipped, RoundHasRunsToRace).
      */
     fun countRaceableMatchesInRound(eventId: UUID, setupRoundId: UUID) = Jooq.query {

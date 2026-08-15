@@ -47,6 +47,29 @@ fun Route.participant() {
             }
         }
 
+        /**
+         * Die vereinsübergreifende Suche (Migration V202608142000). Sie hängt unter dem Verein
+         * und nicht unter der Veranstaltung, weil sie genau dessen Sicht liefert: "wen darf ICH
+         * als {clubId} für {eventId} melden, der noch nicht in meiner Liste steht?".
+         *
+         * Dasselbe Recht wie die Personenliste (READ CLUB). Ein OWN-Nutzer darf nur für den
+         * eigenen Verein suchen — sonst könnte er sich über einen fremden clubId-Pfad dessen
+         * Bestand ausschließen lassen und den Rest der Welt durchsuchen.
+         */
+        get("/search") {
+            call.respondComprehension {
+                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                val clubId = !pathParam("clubId", uuid)
+                val eventId = !queryParam("eventId", uuid)
+                val search = !optionalQueryParam("search")
+                if (scope == Privilege.Scope.OWN && clubId != user.club) {
+                    KIO.fail(AuthError.PrivilegeMissing)
+                } else {
+                    ParticipantService.searchAcrossClubs(eventId, clubId, search)
+                }
+            }
+        }
+
         post {
             call.respondComprehension {
                 val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
@@ -142,6 +165,50 @@ fun Route.participant() {
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
                     ParticipantService.deleteParticipant(id, clubId, user, scope)
+                }
+            }
+
+            /*
+             * Die weiteren Vereine einer Person (Migration V202608142000).
+             *
+             * Kein eigenes Privileg: gepflegt wird die Zugehörigkeit mit demselben Recht, das
+             * auch die Person selbst anlegt und ändert (UPDATE CLUB). Der Zuschnitt bleibt
+             * derselbe wie bei den Stammdaten — nur der STAMMVEREIN und globales Recht. Ein
+             * Zweitverein, der sich selbst eintragen dürfte, wäre kein Zweitverein mehr,
+             * sondern ein Selbstbedienungsladen; der Stammverein erführe davon erst aus der
+             * Meldeliste.
+             *
+             * Die Route sperrt den OWN-Nutzer auf den eigenen Verein, der Service prüft
+             * zusätzlich, dass dieser Verein tatsächlich der Stammverein der Person ist.
+             */
+            route("/club/{additionalClubId}") {
+
+                post {
+                    call.respondComprehension {
+                        val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
+                        val id = !pathParam("participantId", uuid)
+                        val clubId = !pathParam("clubId", uuid)
+                        val additionalClubId = !pathParam("additionalClubId", uuid)
+                        if (scope == Privilege.Scope.OWN && clubId != user.club) {
+                            KIO.fail(AuthError.PrivilegeMissing)
+                        } else {
+                            ParticipantService.addAdditionalClub(id, clubId, additionalClubId, user.id!!)
+                        }
+                    }
+                }
+
+                delete {
+                    call.respondComprehension {
+                        val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
+                        val id = !pathParam("participantId", uuid)
+                        val clubId = !pathParam("clubId", uuid)
+                        val additionalClubId = !pathParam("additionalClubId", uuid)
+                        if (scope == Privilege.Scope.OWN && clubId != user.club) {
+                            KIO.fail(AuthError.PrivilegeMissing)
+                        } else {
+                            ParticipantService.removeAdditionalClub(id, clubId, additionalClubId)
+                        }
+                    }
                 }
             }
         }

@@ -48,6 +48,7 @@ const ResultPanel = ({result, element}: ResultPanelProps) => {
                                 crewMode={streamCrew}
                                 useShortClubNames={names.clubs}
                                 failedFallback={t('event.info.athleteBoard.failed')}
+                                deregisteredFallback={t('event.info.athleteBoard.deregistered')}
                                 size="large"
                             />
                         )}

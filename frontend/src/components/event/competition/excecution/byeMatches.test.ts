@@ -16,6 +16,8 @@ const match = (
             state: 'UPCOMING',
             teamsTotal: overrides.teams ?? 2,
             teamsScored: 0,
+            teamsRaced: 0,
+            teamsDeregistered: 0,
             bye: overrides.bye,
         },
     }) as CompetitionMatchDto

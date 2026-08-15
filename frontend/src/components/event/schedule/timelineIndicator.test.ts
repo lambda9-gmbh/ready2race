@@ -39,6 +39,8 @@ const slot = (
     matchActivatedAt: null,
     matchTeamsTotal: 0,
     matchTeamsScored: 0,
+    matchTeamsRaced: 0,
+    matchTeamsDeregistered: 0,
     ...over,
 })
 

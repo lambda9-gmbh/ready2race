@@ -78,10 +78,12 @@ import {useFullWidthLayout} from '../../../layouts/fullWidthLayout.ts'
 import {debounce} from '@utils/debounce.ts'
 import {delayChipColor, delayParts, latestStartDelaySeconds} from '@utils/scheduleDelay.ts'
 import {
+    deregisteredChip,
     matchStatusChip,
     slotMatchStatus,
     unplannedMatchStatus,
 } from '@components/event/match/matchStatusChip.ts'
+import StatusChip from '@components/event/match/StatusChip.tsx'
 import {byeExplanation} from '@components/event/match/matchBye.ts'
 import ScheduleStartlistExportButton from './ScheduleStartlistExportButton.tsx'
 import ScheduleSettingsPopover from './ScheduleSettingsPopover.tsx'
@@ -712,6 +714,9 @@ const EventSchedule = ({event}: Props) => {
                             <TableBody>
                                 {section.slots.map(slot => {
                                     const chip = stateChipProps(slot, now, t)
+                                    // Für den zweiten, leisen Chip neben dem Zustand. Null ohne
+                                    // verknüpften Lauf - dort gibt es keine Mannschaften.
+                                    const matchStatus = slotMatchStatus(slot)
                                     // Der Schlüssel steht erst zur Laufzeit fest, deshalb die
                                     // gelockerte Signatur — dasselbe Muster wie in stateChipProps.
                                     const translate = t as (
@@ -905,12 +910,29 @@ const EventSchedule = ({event}: Props) => {
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                <Chip
-                                                    size={'small'}
-                                                    label={chip.label}
-                                                    color={chip.color}
-                                                    sx={chip.sx}
-                                                />
+                                                {/* Zustand und Abmelde-Ausweis nebeneinander:
+                                                    der zweite Chip ist bewusst leise und sagt
+                                                    über den Zustand nichts (siehe
+                                                    deregisteredChip). */}
+                                                <Stack
+                                                    direction={'row'}
+                                                    spacing={0.5}
+                                                    useFlexGap
+                                                    sx={{flexWrap: 'wrap'}}>
+                                                    <Chip
+                                                        size={'small'}
+                                                        label={chip.label}
+                                                        color={chip.color}
+                                                        sx={chip.sx}
+                                                    />
+                                                    <StatusChip
+                                                        chip={
+                                                            matchStatus
+                                                                ? deregisteredChip(matchStatus)
+                                                                : null
+                                                        }
+                                                    />
+                                                </Stack>
                                             </TableCell>
                                             <TableCell>
                                                 {slot.durationMinutes != null
@@ -1217,6 +1239,7 @@ const EventSchedule = ({event}: Props) => {
                     onClose={closeDialog}
                     reloadData={reload}
                     unplannedSetupMatches={unplannedSetupMatches}
+                    slots={data?.slots ?? []}
                     editingSlot={editingSlot}
                     presetMatch={presetMatch}
                 />

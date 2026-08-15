@@ -5,6 +5,7 @@ import {
     competitionTag,
     defaultFromSlotId,
     extractMaxReductionMinutes,
+    freeSlotOptionLabel,
     groupSlotsByDay,
     hasBlockingImportRows,
     hasRunningOrFinishedSlots,
@@ -12,6 +13,7 @@ import {
     isCancellable,
     isEditable,
     parseMaxReductionMinutes,
+    plannableFreeSlots,
     slotLabel,
     slotsAfter,
     slotsInRound,
@@ -36,6 +38,8 @@ const slot = (startTime: string, over: Partial<EventScheduleSlotDto> = {}): Even
     matchActivatedAt: null,
     matchTeamsTotal: 0,
     matchTeamsScored: 0,
+    matchTeamsRaced: 0,
+    matchTeamsDeregistered: 0,
     ...over,
 })
 
@@ -439,5 +443,82 @@ describe('advanceOffer', () => {
         const afterLunch = slot('2026-08-17T13:00:00')
         const offer = advanceOffer([skipped, next, lunch, afterLunch], skipped)
         expect(offer?.targets.map(s => s.id)).toEqual([next.id, lunch.id, afterLunch.id])
+    })
+})
+
+describe('plannableFreeSlots', () => {
+    const free = (startTime: string, over: Partial<EventScheduleSlotDto> = {}) =>
+        slot(startTime, {
+            state: 'FREE',
+            name: 'Reserve',
+            setupMatchId: null,
+            competitionName: null,
+            roundName: null,
+            matchName: null,
+            ...over,
+        })
+
+    it('liefert die freien Slots nach Startzeit sortiert', () => {
+        const spaet = free('2026-08-17T14:00:00')
+        const frueh = free('2026-08-16T09:00:00')
+        const mittag = free('2026-08-17T12:00:00')
+        expect(plannableFreeSlots([spaet, frueh, mittag]).map(s => s.id)).toEqual([
+            frueh.id,
+            mittag.id,
+            spaet.id,
+        ])
+    })
+
+    it('lässt Slots mit Lauf und abgesagte Programmpunkte weg', () => {
+        const frei = free('2026-08-17T10:00:00')
+        expect(
+            plannableFreeSlots([
+                frei,
+                slot('2026-08-17T10:30:00', {state: 'WAITING'}),
+                slot('2026-08-17T11:00:00', {state: 'LINKED'}),
+                slot('2026-08-17T11:30:00', {state: 'OBSOLETE'}),
+                // Ein entfallener Programmpunkt ist kein Platz, den man befüllen will.
+                free('2026-08-17T12:00:00', {state: 'SKIPPED'}),
+            ]).map(s => s.id),
+        ).toEqual([frei.id])
+    })
+
+    it('lässt einen freien Slot mit laufendem oder beendetem Lauf weg', () => {
+        expect(
+            plannableFreeSlots([
+                free('2026-08-17T10:00:00', {matchStartedAt: '2026-08-17T10:01:00'}),
+                free('2026-08-17T11:00:00', {matchFinishedAt: '2026-08-17T11:20:00'}),
+            ]),
+        ).toEqual([])
+    })
+
+    it('sortiert die Eingabe nicht um', () => {
+        const spaet = free('2026-08-17T14:00:00')
+        const frueh = free('2026-08-16T09:00:00')
+        const input = [spaet, frueh]
+        plannableFreeSlots(input)
+        expect(input.map(s => s.id)).toEqual([spaet.id, frueh.id])
+    })
+})
+
+describe('freeSlotOptionLabel', () => {
+    // Steht für date-fns mit dem Sprachformat aus t('format.datetime').
+    const formatDateTime = (iso: string) =>
+        `${iso.slice(8, 10)}.${iso.slice(5, 7)}. ${iso.slice(11, 16)}`
+
+    it('stellt Datum und Uhrzeit vor den Slot-Namen', () => {
+        const frei = slot('2026-08-14T10:30:00', {state: 'FREE', name: 'Reserve'})
+        expect(freeSlotOptionLabel(frei, formatDateTime)).toBe('14.08. 10:30 · Reserve')
+    })
+
+    it('lässt ohne Namen die Zeit allein stehen', () => {
+        const ohneNamen = slot('2026-08-14T10:30:00', {
+            state: 'FREE',
+            name: null,
+            competitionName: null,
+            roundName: null,
+            matchName: null,
+        })
+        expect(freeSlotOptionLabel(ohneNamen, formatDateTime)).toBe('14.08. 10:30')
     })
 })

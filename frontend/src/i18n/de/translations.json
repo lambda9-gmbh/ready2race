@@ -40,7 +40,22 @@
         "invalid": "Bitte geben Sie einen gültigen Betrag ein."
       },
       "dateTime": {
-        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
+        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt.",
+        "error": {
+          "disableFuture": "Bitte wählen Sie einen Zeitpunkt in der Vergangenheit.",
+          "disablePast": "Bitte wählen Sie einen Zeitpunkt in der Zukunft.",
+          "minDate": "Der Zeitpunkt liegt vor dem frühesten erlaubten Datum.",
+          "maxDate": "Der Zeitpunkt liegt nach dem spätesten erlaubten Datum.",
+          "minTime": "Die Uhrzeit liegt vor der frühesten erlaubten Zeit.",
+          "maxTime": "Die Uhrzeit liegt nach der spätesten erlaubten Zeit.",
+          "shouldDisableDate": "Dieses Datum ist nicht erlaubt.",
+          "shouldDisableMonth": "Dieser Monat ist nicht erlaubt.",
+          "shouldDisableYear": "Dieses Jahr ist nicht erlaubt.",
+          "shouldDisableTimeHours": "Diese Stunde ist nicht erlaubt.",
+          "shouldDisableTimeMinutes": "Diese Minute ist nicht erlaubt.",
+          "shouldDisableTimeSeconds": "Diese Sekunde ist nicht erlaubt.",
+          "minutesStep": "Diese Minute passt nicht zur erlaubten Schrittweite."
+        }
       },
       "email": {
         "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
@@ -537,6 +552,20 @@
       "external": "Extern",
       "externalClub": "Externer Verein",
       "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
+      "clubs": "Vereine",
+      "additionalClubs": {
+        "manage": "Weitere Vereine verwalten",
+        "title": "Weitere Vereine von {{name}}",
+        "hint": "Eine Person bleibt ein Datensatz. Weitere Vereine dürfen sie zusätzlich melden — ändern oder löschen darf sie nur der Stammverein.",
+        "homeClub": "Stammverein",
+        "current": "Weitere Vereine",
+        "none": "Bisher keine weiteren Vereine.",
+        "add": "Verein suchen",
+        "addSuccess": "Verein hinzugefügt",
+        "addError": "Der Verein konnte nicht hinzugefügt werden",
+        "removeSuccess": "Verein entfernt",
+        "removeError": "Der Verein konnte nicht entfernt werden"
+      },
       "usedInRegistration": "In Meldung",
       "qrCodeId": "Qr Code Wert",
       "qrCodeEdit": "QR Code Wert bearbeiten",
@@ -668,6 +697,8 @@
         "DISABLED": "Es gilt: Folgerunden werden nicht automatisch erzeugt."
       }
     },
+    "allowCrossClubRegistration": "Meldende dürfen Personen anderer Vereine sehen und melden",
+    "allowCrossClubRegistrationHint": "Erlaubt Meldenden, über eine Suche (ab zwei Zeichen) auch Personen anderer Vereine zu finden und zu melden. Die Stammdaten bleiben immer beim Stammverein. Standardmäßig aus.",
     "showBreaksOnPublicBoards": "Pausen auf öffentlichen Anzeigen zeigen",
     "showBreaksOnPublicBoardsHint": "Zeigt Pausen und Programmpunkte aus dem Zeitplan (z. B. \"Mittagspause\") auch auf der Kiosk-Ansicht und der Athleten-Anzeige. Standardmäßig aus, damit öffentliche Anzeigen sparsam bleiben.",
     "publicResultsVisibility": {
@@ -854,6 +885,11 @@
         },
         "isLate": "als Nachmeldung",
         "ratingCategory": "Wertungskategorie",
+        "crossClub": {
+          "label": "Person eines anderen Vereins suchen",
+          "hint": "Ab zwei Zeichen. Treffer erscheinen unten in der Auswahl, gruppiert nach Verein.",
+          "searching": "Suche läuft …"
+        },
         "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
         "infos": "Infos",
         "delete": {
@@ -1660,6 +1696,7 @@
         "cancelled": "Abgesagt",
         "unscheduled": "Ungeplant",
         "inArena": "Arena {{inArena}}/{{total}}",
+        "deregistered": "{{n}} abgemeldet",
         "doesNotTakePlace": "Findet nicht statt",
         "bye": {
           "open": "Freilos{{seed}} · offen",
@@ -1968,6 +2005,14 @@
         "rowMatchNotFoundEmpty": "Wettkampf hat keine Läufe — wird als freier Slot importiert",
         "rowAmbiguous": "Nicht eindeutig — wird als freier Slot importiert",
         "rowDuplicate": "Doppelt in der Datei — Import blockiert",
+        "summary_one": "{{count}} Zeile in der Datei: {{linked}} verknüpft, {{free}} als freier Slot geplant.",
+        "summary_other": "{{count}} Zeilen in der Datei: {{linked}} verknüpft, {{free}} als freier Slot geplant.",
+        "unmatchedWarning_one": "{{count}} Zeile konnte keinem Lauf zugeordnet werden",
+        "unmatchedWarning_other": "{{count}} Zeilen konnten keinem Lauf zugeordnet werden",
+        "unmatchedHint": "Diese Zeilen werden als freie Slots angelegt — der jeweilige Lauf bleibt danach unter „Nicht verplante Läufe“ stehen und fehlt im Zeitstrahl. Meist heißt der Lauf in der Datei anders als im Wettkampf-Setup, weil eine Runde bei weniger Meldungen schrumpft. Bitte die Statusspalte der markierten Zeilen prüfen.",
+        "unmatchedConfirm": "Ich habe die nicht zugeordneten Zeilen geprüft",
+        "onlyNoteworthy_one": "Nur Auffälligkeiten zeigen ({{count}} Zeile)",
+        "onlyNoteworthy_other": "Nur Auffälligkeiten zeigen ({{count}} Zeilen)",
         "apply": "Importieren",
         "error": {
           "duplicateRows_one": "Zeile {{rows}} verweist auf denselben Lauf wie eine andere Zeile. Bitte die doppelte Zeile in der Datei entfernen oder einem anderen Lauf zuordnen und erneut importieren.",
@@ -2015,6 +2060,11 @@
         }
       },
       "allPlanned": "Alle geplanten Läufe sind bereits eingeplant.",
+      "planTarget": "Einplanen auf",
+      "planTargetNew": "Neuer Slot",
+      "planTargetExisting": "Vorhandener freier Slot",
+      "planTargetSlot": "Freier Slot",
+      "planTargetHint": "Startzeit und Dauer werden vom gewählten Slot übernommen. Der freie Slot wird dabei zum Lauf-Slot, sein Name entfällt.",
       "goToExecution": "Zur Durchführung",
       "eventMode": {
         "enable": "Veranstaltungs-Modus einschalten: Zeitplan und Durchführung nebeneinander",
@@ -2293,6 +2343,10 @@
     "checkLatestMinutesBefore": "Spätestens (Minuten vor Start)",
     "publicNote": "Öffentlicher Hinweis (Mein Event)",
     "publicNoteHint": "Wird den Athletinnen und Athleten wörtlich angezeigt — die Beschreibung darüber bleibt intern.",
+    "perEventDay": "Gilt je Wettkampftag",
+    "perEventDayHint": "Die Bedingung muss an jedem Tag neu erfüllt werden. Ohne Haken genügt einmal für die gesamte Veranstaltung.",
+    "perCompetition": "Gilt je Wettkampf",
+    "perCompetitionHint": "Die Bedingung muss für jeden Wettkampf einzeln erfüllt werden. Beide Haken zusammen bedeuten: je Wettkampf und Tag.",
     "namedParticipantRequirements": {
       "title": "Named Participant Bedingungen",
       "description": "Verwalten Sie spezifische Bedingungen für Named Participants",

@@ -5,6 +5,7 @@ import {useCallback, useEffect, useMemo} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
+import {nowAsFormValue} from '@components/form/input/dateTimeValue.ts'
 import {AutocompleteUser} from '@components/user/AutocompleteUser.tsx'
 import {addWorkShift, getWorkTypes, updateWorkShift} from '@api/sdk.gen.ts'
 import {eventIndexRoute} from '@routes'
@@ -58,8 +59,8 @@ const ShiftDialog = (props: BaseEntityDialogProps<WorkShiftWithAssignedUsersDto>
 
     const defaultValues: WorkShiftUpsertDto = {
         workType: '',
-        timeFrom: new Date().toLocaleString(),
-        timeTo: new Date().toLocaleString(),
+        timeFrom: nowAsFormValue(),
+        timeTo: nowAsFormValue(),
         minUser: 0,
         assignedUsers: [],
     }

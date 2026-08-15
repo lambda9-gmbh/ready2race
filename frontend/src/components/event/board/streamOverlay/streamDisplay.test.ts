@@ -66,31 +66,54 @@ describe('crewLines', () => {
 })
 
 describe('teamTrailingLabel', () => {
+    const outcome = (
+        over: Partial<Parameters<typeof teamTrailingLabel>[0]> = {},
+    ): Parameters<typeof teamTrailingLabel>[0] => ({
+        place: null,
+        timeString: null,
+        failed: false,
+        failedReason: null,
+        deregistered: false,
+        deregisteredReason: null,
+        ...over,
+    })
+
     it('Platz + Zeit als Ordinal', () => {
-        expect(
-            teamTrailingLabel(
-                {place: 1, timeString: '3:45.2', failed: false, failedReason: null},
-                'DNF',
-            ),
-        ).toBe('1st 3:45.2')
+        expect(teamTrailingLabel(outcome({place: 1, timeString: '3:45.2'}), 'DNF')).toBe(
+            '1st 3:45.2',
+        )
     })
 
     it('DNF/DNS/DSQ statt Platz/Zeit', () => {
         expect(
-            teamTrailingLabel(
-                {place: null, timeString: null, failed: true, failedReason: 'DNF'},
-                'nicht gewertet',
-            ),
+            teamTrailingLabel(outcome({failed: true, failedReason: 'DNF'}), 'nicht gewertet'),
         ).toBe('DNF')
     })
 
     it('ohne jedes Teilergebnis (Aufstellung) null', () => {
+        expect(teamTrailingLabel(outcome(), 'DNF')).toBeNull()
+    })
+
+    /**
+     * Die Abmeldung ist kein Ergebnis und steht deshalb vor allem anderen — auch in einem Panel,
+     * in dem noch gar nichts gewertet sein kann.
+     */
+    it('nennt eine Abmeldung samt Grund und schlägt dabei jedes Ergebnis', () => {
         expect(
             teamTrailingLabel(
-                {place: null, timeString: null, failed: false, failedReason: null},
+                outcome({deregistered: true, deregisteredReason: 'Krankheit'}),
                 'DNF',
+                'Abgemeldet',
             ),
-        ).toBeNull()
+        ).toBe('Abgemeldet — Krankheit')
+        expect(
+            teamTrailingLabel(outcome({deregistered: true}), 'DNF', 'Abgemeldet'),
+        ).toBe('Abgemeldet')
+    })
+
+    /** Aufrufer ohne die Angabe bleiben beim alten Verhalten. */
+    it('bleibt ohne Abmelde-Beschriftung beim Ergebnis', () => {
+        expect(teamTrailingLabel(outcome({deregistered: true, place: 2}), 'DNF')).toBe('2nd')
     })
 })
 

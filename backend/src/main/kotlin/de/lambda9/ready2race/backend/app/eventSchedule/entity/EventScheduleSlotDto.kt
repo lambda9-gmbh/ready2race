@@ -45,11 +45,23 @@ data class EventScheduleSlotDto(
      */
     val matchTeamsTotal: Int,
     /**
-     * Davon bereits gewertet: Platz gesetzt ODER ausgeschieden ODER abgemeldet, dieselbe Regel wie
-     * `LiveDashboardLogic.teamHasResult`. Aus beiden zusammen liest der Zeitplan "Teilweise
-     * gewertet n/m" ab; ein eigener Zustand ist das ausdrücklich nicht.
+     * Davon erledigt: Platz gesetzt ODER ausgeschieden ODER abgemeldet, dieselbe Regel wie
+     * `LiveDashboardLogic.teamIsSettled`. Daran hängt "alle gewertet" (AWAITING_FINISH) - NICHT
+     * die Ablesung "Teilweise gewertet".
      */
     val matchTeamsScored: Int,
+    /**
+     * Davon tatsächlich gefahren: Platz gesetzt ODER ausgeschieden, ohne die Abgemeldeten
+     * (`LiveDashboardLogic.teamHasRaced`). Zusammen mit [matchTeamsTotal] und
+     * [matchTeamsDeregistered] liest der Zeitplan daraus "Teilweise gewertet n/m" ab; ein eigener
+     * Zustand ist das ausdrücklich nicht.
+     */
+    val matchTeamsRaced: Int = 0,
+    /**
+     * Davon für diese Runde abgemeldet - reiner Ausweis, der als zweiter, leiser Chip neben dem
+     * Zustands-Chip erscheint und über keinen Zustand entscheidet.
+     */
+    val matchTeamsDeregistered: Int = 0,
     /**
      * Gesetzt, wenn der verknüpfte Lauf ein Freilos ist - siehe `MatchStatusLogic.deriveBye`. Null
      * für freie Slots und für Slots ohne erzeugten Lauf: dort gibt es keine Mannschaften, aus denen

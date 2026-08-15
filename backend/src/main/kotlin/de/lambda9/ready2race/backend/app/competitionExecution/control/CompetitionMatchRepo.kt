@@ -205,7 +205,8 @@ object CompetitionMatchRepo {
         matchId: UUID? = null,
     ) = Jooq.query {
         // Kein Boot mehr ohne Ergebnis: abgemeldete und ausgeschiedene Boote zählen nicht mit,
-        // für sie kommt keins mehr (dieselbe Auslegung wie LiveDashboardLogic.teamHasResult).
+        // für sie kommt keins mehr (dieselbe Auslegung wie LiveDashboardLogic.teamIsSettled -
+        // die Frage ist "erledigt", nicht "gefahren").
         val allTeamsScored = notExists(
             selectOne()
                 .from(COMPETITION_MATCH_TEAM)

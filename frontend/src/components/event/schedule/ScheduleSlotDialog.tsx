@@ -2,11 +2,13 @@ import {useCallback, useMemo} from 'react'
 import {useTranslation} from 'react-i18next'
 import {useForm, useWatch} from 'react-hook-form-mui'
 import {Stack, Typography} from '@mui/material'
+import {format} from 'date-fns'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
+import {nowAsFormValue} from '@components/form/input/dateTimeValue.ts'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {createScheduleSlot, updateScheduleSlot} from '@api/sdk.gen.ts'
 import {
@@ -14,14 +16,21 @@ import {
     UnplannedSetupMatchDto,
     UpsertScheduleSlotRequest,
 } from '@api/types.gen.ts'
-import {slotLabel} from './common.ts'
+import {freeSlotOptionLabel, plannableFreeSlots, slotLabel} from './common.ts'
 import {ScheduleApiError, slotActionErrorText, slotActionUnexpectedKey} from './scheduleError.ts'
 import {useFeedback} from '@utils/hooks.ts'
 
 type ScheduleSlotMode = 'MATCH' | 'FREE'
 
+// Wohin der Lauf beim "Einplanen" gesetzt wird: in einen neu angelegten Slot (NEW, der bisherige
+// Weg) oder in einen schon vorhandenen freien Slot (EXISTING). Nur beim Einplanen relevant, beim
+// Anlegen und Bearbeiten über den Zeitplan-Kopf gibt es die Frage nicht.
+type PlanTarget = 'NEW' | 'EXISTING'
+
 type ScheduleSlotForm = {
     mode: ScheduleSlotMode
+    planTarget: PlanTarget
+    targetSlotId: string
     competitionId: string
     roundName: string
     setupMatchId: string
@@ -36,6 +45,8 @@ type Props = {
     onClose: () => void
     reloadData: () => void
     unplannedSetupMatches: UnplannedSetupMatchDto[]
+    /** Alle Slots des Events - Quelle der freien Slots, auf die ein Lauf gelegt werden kann. */
+    slots: EventScheduleSlotDto[]
     editingSlot?: EventScheduleSlotDto
     presetMatch?: UnplannedSetupMatchDto
 }
@@ -45,11 +56,16 @@ const blankValues = (
     presetMatch?: UnplannedSetupMatchDto,
 ): ScheduleSlotForm => ({
     mode: presetMatch || unplannedSetupMatches.length > 0 ? 'MATCH' : 'FREE',
+    // Der neue Slot bleibt die Vorbelegung: Wer aus der Liste heraus einplant, hat meistens noch
+    // gar keinen Zeitplan - die freien Slots aus dem Excel-Import sind der Sonderfall, nicht die
+    // Regel. Ein Umschalten kostet einen Klick, ein versehentlich überschriebener Slot mehr.
+    planTarget: 'NEW',
+    targetSlotId: '',
     competitionId: presetMatch?.competitionId ?? '',
     roundName: presetMatch?.roundName ?? '',
     setupMatchId: presetMatch?.setupMatchId ?? '',
     name: '',
-    startTime: new Date().toLocaleString(),
+    startTime: nowAsFormValue(),
     durationMinutes: null,
 })
 
@@ -58,6 +74,8 @@ const blankValues = (
 // jeden Match-Slot befüllt, unabhängig von der Materialisierung.
 const mapSlotToForm = (slot: EventScheduleSlotDto): ScheduleSlotForm => ({
     mode: slot.state === 'FREE' ? 'FREE' : 'MATCH',
+    planTarget: 'NEW',
+    targetSlotId: '',
     competitionId: slot.competitionId ?? '',
     roundName: slot.roundName ?? '',
     setupMatchId: slot.setupMatchId ?? '',
@@ -85,6 +103,7 @@ const ScheduleSlotDialog = ({
     onClose,
     reloadData,
     unplannedSetupMatches,
+    slots,
     editingSlot,
     presetMatch,
 }: Props) => {
@@ -103,9 +122,30 @@ const ScheduleSlotDialog = ({
     const mode = useWatch({control: formContext.control, name: 'mode'})
     const competitionId = useWatch({control: formContext.control, name: 'competitionId'})
     const roundName = useWatch({control: formContext.control, name: 'roundName'})
+    const planTarget = useWatch({control: formContext.control, name: 'planTarget'})
 
     // Bearbeiten eines bestehenden Lauf-Slots: keine Kaskade, nur Zeit/Dauer änderbar.
     const editingMatchSlot = editingSlot !== undefined && editingSlot.state !== 'FREE'
+
+    const freeSlots = useMemo(() => plannableFreeSlots(slots), [slots])
+
+    // Die Wahl "neuer Slot oder freier Slot" gibt es nur beim Einplanen aus der Liste der nicht
+    // verplanten Läufe (presetMatch) und nur, solange es überhaupt einen freien Slot gibt -
+    // sonst bliebe eine Auswahl mit genau einer Möglichkeit stehen. [mode] gehört mit in die
+    // Bedingung: Wer im offenen Dialog auf "Freier Slot" umschaltet, will einen Programmpunkt
+    // anlegen und keinen bestehenden überschreiben.
+    const offerFreeSlotTarget =
+        presetMatch !== undefined && mode === 'MATCH' && freeSlots.length > 0
+    const placeOnFreeSlot = offerFreeSlotTarget && planTarget === 'EXISTING'
+
+    const freeSlotOptions = useMemo(
+        () =>
+            freeSlots.map(s => ({
+                id: s.id,
+                label: freeSlotOptionLabel(s, iso => format(new Date(iso), t('format.datetime'))),
+            })),
+        [freeSlots, t],
+    )
 
     const competitionOptions = useMemo(() => {
         const seen = new Map<string, string>()
@@ -130,8 +170,24 @@ const ScheduleSlotDialog = ({
         [unplannedSetupMatches, competitionId, roundName],
     )
 
+    // "Einplanen" legt normalerweise einen Slot an - auf einen freien Slot gelegt ist es dagegen
+    // ein Update dieses Slots (der Server verwandelt ihn dabei in einen Lauf-Slot, siehe
+    // EventScheduleService.updateSlot). Für EntityDialog bleibt es beides Mal die Add-Aktion:
+    // der Dialog trägt kein [entity], und aus Sicht des Nutzers entsteht ein Eintrag im Zeitplan.
+    //
+    // Der Body ist derselbe wie beim Anlegen eines Lauf-Slots: Startzeit und Dauer stehen seit der
+    // Slot-Auswahl im Formular (siehe onChange unten), [name] bleibt weg - die XOR-Regel des
+    // Servers (UpsertScheduleSlotRequest.validate) lässt Lauf und Name nie zusammen zu, der Name
+    // des freien Slots fällt also weg. Der Slot wird bewusst NICHT noch einmal aus [freeSlots]
+    // gesucht: Ist er in der Zwischenzeit verschwunden (30-Sekunden-Abgleich, andere Sitzung),
+    // soll der Server ablehnen und nicht stillschweigend ein neuer Slot entstehen.
     const addAction = (formData: ScheduleSlotForm) =>
-        createScheduleSlot({path: {eventId}, body: toRequest(formData)})
+        placeOnFreeSlot
+            ? updateScheduleSlot({
+                  path: {eventId, slotId: formData.targetSlotId},
+                  body: toRequest(formData),
+              })
+            : createScheduleSlot({path: {eventId}, body: toRequest(formData)})
 
     const editAction = (formData: ScheduleSlotForm, entity: EventScheduleSlotDto) =>
         updateScheduleSlot({path: {eventId, slotId: entity.id}, body: toRequest(formData)})
@@ -212,23 +268,68 @@ const ScheduleSlotDialog = ({
                         </>
                     )
                 )}
+                {offerFreeSlotTarget && (
+                    <FormInputRadioButtonGroup
+                        name={'planTarget'}
+                        label={t('event.schedule.planTarget')}
+                        row
+                        options={[
+                            {id: 'NEW', label: t('event.schedule.planTargetNew')},
+                            {id: 'EXISTING', label: t('event.schedule.planTargetExisting')},
+                        ]}
+                    />
+                )}
+                {placeOnFreeSlot && (
+                    <>
+                        <FormInputSelect
+                            name={'targetSlotId'}
+                            label={t('event.schedule.planTargetSlot')}
+                            required
+                            options={freeSlotOptions}
+                            // Zeit und Dauer des gewählten Slots wandern sofort ins Formular,
+                            // statt sie beim Absenden noch einmal nachzuschlagen: Damit ist der
+                            // Request auch dann vollständig, wenn der Slot inzwischen aus der
+                            // Liste gefallen ist - und der Server lehnt ihn dann sichtbar ab.
+                            onChange={(slotId: string) => {
+                                const target = freeSlots.find(s => s.id === slotId)
+                                if (target) {
+                                    formContext.setValue('startTime', target.startTime)
+                                    formContext.setValue(
+                                        'durationMinutes',
+                                        target.durationMinutes ?? null,
+                                    )
+                                }
+                            }}
+                        />
+                        <Typography variant={'body2'} color={'text.secondary'}>
+                            {t('event.schedule.planTargetHint')}
+                        </Typography>
+                    </>
+                )}
                 {((!editingSlot && mode === 'FREE') || (editingSlot && !editingMatchSlot)) && (
                     <FormInputText name={'name'} label={t('entity.name')} required />
                 )}
-                <FormInputDateTime
-                    required
-                    name={'startTime'}
-                    label={t('event.schedule.startTime')}
-                />
-                <FormInputNumber
-                    name={'durationMinutes'}
-                    label={t('event.schedule.duration')}
-                    min={0}
-                    transform={{
-                        output: value =>
-                            value.target.value !== '' ? Number(value.target.value) : null,
-                    }}
-                />
+                {/* Auf einem freien Slot stehen Startzeit und Dauer schon fest - sie noch einmal
+                    einzutippen wäre nicht nur überflüssig, sondern die Gelegenheit, den Slot
+                    versehentlich zu verschieben. */}
+                {!placeOnFreeSlot && (
+                    <>
+                        <FormInputDateTime
+                            required
+                            name={'startTime'}
+                            label={t('event.schedule.startTime')}
+                        />
+                        <FormInputNumber
+                            name={'durationMinutes'}
+                            label={t('event.schedule.duration')}
+                            min={0}
+                            transform={{
+                                output: value =>
+                                    value.target.value !== '' ? Number(value.target.value) : null,
+                            }}
+                        />
+                    </>
+                )}
             </Stack>
         </EntityDialog>
     )

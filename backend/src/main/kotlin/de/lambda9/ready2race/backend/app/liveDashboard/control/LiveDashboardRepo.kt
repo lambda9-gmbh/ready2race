@@ -216,51 +216,6 @@ object LiveDashboardRepo {
             .fetchOne(COMPETITION_MATCH.START_TIME)
     }
 
-    /**
-     * Läufe, die als nächste anstehen: geplant, noch nicht an den Start gerufen und noch ohne
-     * vollständiges Ergebnis. Sortiert nach Startzeit, damit der Aufrufer die früheste Startzeit
-     * greifen kann.
-     */
-    fun getActivationCandidates(eventId: UUID) = Jooq.query {
-        select(
-            COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
-            COMPETITION_MATCH.START_TIME,
-        )
-            .from(COMPETITION_MATCH)
-            .join(COMPETITION_SETUP_MATCH)
-            .on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
-            .join(COMPETITION_SETUP_ROUND)
-            .on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
-            .join(COMPETITION_PROPERTIES)
-            .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
-            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.START_TIME.isNotNull)
-            .and(COMPETITION_MATCH.ACTIVATED_AT.isNull)
-            // Ein beendeter Lauf ist nie wieder Kandidat.
-            .and(COMPETITION_MATCH.FINISHED_AT.isNull)
-            // mindestens eine Mannschaft ohne Ergebnis: der Lauf steht noch aus. Abgemeldete
-            // Mannschaften zählen nicht — auf ihr Ergebnis wartet niemand.
-            .and(
-                DSL.exists(
-                    selectOne()
-                        .from(COMPETITION_MATCH_TEAM)
-                        .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                        .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
-                        .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
-                        .and(COMPETITION_MATCH_TEAM.FAILED.isTrue.not())
-                        .andNotExists(
-                            selectOne()
-                                .from(COMPETITION_DEREGISTRATION)
-                                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
-                                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
-                        )
-                )
-            )
-            .orderBy(COMPETITION_MATCH.START_TIME.asc())
-            .fetch()
-    }
-
     fun getEventRequirements(eventId: UUID) = Jooq.query {
         select(
             PARTICIPANT_REQUIREMENT.ID,
@@ -269,6 +224,10 @@ object LiveDashboardRepo {
             PARTICIPANT_REQUIREMENT.OPTIONAL,
             PARTICIPANT_REQUIREMENT.CHECK_EARLIEST_MINUTES_BEFORE,
             PARTICIPANT_REQUIREMENT.CHECK_LATEST_MINUTES_BEFORE,
+            // Der Geltungsbereich der Bedingung (V202608141900) - er entscheidet, welche
+            // Dimensionen einer Erfüllung überhaupt verglichen werden.
+            PARTICIPANT_REQUIREMENT.PER_EVENT_DAY,
+            PARTICIPANT_REQUIREMENT.PER_COMPETITION,
             EVENT_HAS_PARTICIPANT_REQUIREMENT.NAMED_PARTICIPANT,
         )
             .from(EVENT_HAS_PARTICIPANT_REQUIREMENT)
@@ -278,9 +237,16 @@ object LiveDashboardRepo {
             .fetch()
     }
 
+    /**
+     * Die abgehakten Bedingungen der Veranstaltung. Seit V202608141900 kommen die beiden
+     * Dimensionen (Tag, Wettkampf) mit: eine Person kann zu derselben Bedingung mehrere Zeilen
+     * tragen, und welche davon für einen Lauf zählt, entscheidet
+     * [de.lambda9.ready2race.backend.app.participantRequirement.boundary.RequirementScopeLogic].
+     * Die Schalter der Bedingung selbst liefert `getRequirements` gleich nebenan.
+     */
     fun getChecks(eventId: UUID) = Jooq.query {
         with(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT) {
-            select(PARTICIPANT, PARTICIPANT_REQUIREMENT, CREATED_AT, NOTE)
+            select(PARTICIPANT, PARTICIPANT_REQUIREMENT, EVENT_DAY, COMPETITION, CREATED_AT, NOTE)
                 .from(this)
                 .where(EVENT.eq(eventId))
                 .fetch()

@@ -28,6 +28,8 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): IO<Nothing, Particip
                 optional = optional ?: false,
                 checkInApp = checkInApp ?: false,
                 publiclyVisible = publiclyVisible ?: false,
+                perEventDay = perEventDay ?: false,
+                perCompetition = perCompetition ?: false,
                 checkEarliestMinutesBefore = checkEarliestMinutesBefore,
                 checkLatestMinutesBefore = checkLatestMinutesBefore,
                 createdAt = now,
@@ -51,6 +53,10 @@ fun ParticipantRequirementRecord.toDto(): IO<Nothing, ParticipantRequirementDto>
         // jOOQ generiert die Spalte trotz NOT-NULL-Constraint als Boolean?, wie auch bei
         // checkInApp; ?: false wahrt hier nur den Kotlin-Typ, ändert nichts am DB-Wert.
         publiclyVisible = publiclyVisible ?: false,
+        // Dieselbe Nullbarkeitsfalle wie bei checkInApp/publiclyVisible: die Spalten sind in
+        // der Datenbank NOT NULL, jOOQ typisiert sie trotzdem als Boolean?.
+        perEventDay = perEventDay ?: false,
+        perCompetition = perCompetition ?: false,
         checkEarliestMinutesBefore = checkEarliestMinutesBefore,
         checkLatestMinutesBefore = checkLatestMinutesBefore,
     )
@@ -82,6 +88,8 @@ fun ParticipantRequirementForEventRecord.toRequirementDto() =
         optional = optional!!,
         checkInApp = checkInApp ?: false,
         publiclyVisible = publiclyVisible ?: false,
+        perEventDay = perEventDay ?: false,
+        perCompetition = perCompetition ?: false,
         checkEarliestMinutesBefore = checkEarliestMinutesBefore,
         checkLatestMinutesBefore = checkLatestMinutesBefore,
     )

@@ -40,7 +40,22 @@
         "invalid": "Please select a valid amount."
       },
       "dateTime": {
-        "invalid": "Please select a valid date and time."
+        "invalid": "Please select a valid date and time.",
+        "error": {
+          "disableFuture": "Please select a date and time in the past.",
+          "disablePast": "Please select a date and time in the future.",
+          "minDate": "The date is earlier than the earliest allowed date.",
+          "maxDate": "The date is later than the latest allowed date.",
+          "minTime": "The time is earlier than the earliest allowed time.",
+          "maxTime": "The time is later than the latest allowed time.",
+          "shouldDisableDate": "This date is not allowed.",
+          "shouldDisableMonth": "This month is not allowed.",
+          "shouldDisableYear": "This year is not allowed.",
+          "shouldDisableTimeHours": "This hour is not allowed.",
+          "shouldDisableTimeMinutes": "This minute is not allowed.",
+          "shouldDisableTimeSeconds": "This second is not allowed.",
+          "minutesStep": "This minute does not match the allowed step."
+        }
       },
       "email": {
         "invalid": "Please enter a valid email adress."
@@ -537,6 +552,20 @@
       "external": "External",
       "externalClub": "External club",
       "externalHint": "Select this option if you want to register a member of another club.",
+      "clubs": "Clubs",
+      "additionalClubs": {
+        "manage": "Manage additional clubs",
+        "title": "Additional clubs of {{name}}",
+        "hint": "A person stays one record. Additional clubs may register them as well — only the home club may edit or delete them.",
+        "homeClub": "Home club",
+        "current": "Additional clubs",
+        "none": "No additional clubs yet.",
+        "add": "Search club",
+        "addSuccess": "Club added",
+        "addError": "The club could not be added",
+        "removeSuccess": "Club removed",
+        "removeError": "The club could not be removed"
+      },
       "usedInRegistration": "In Registration",
       "qrCodeId": "Qr Code Value",
       "qrCodeEdit": "Edit QR Code value",
@@ -668,6 +697,8 @@
         "DISABLED": "Currently in effect: following rounds are not created automatically."
       }
     },
+    "allowCrossClubRegistration": "Registrants may see and register participants of other clubs",
+    "allowCrossClubRegistrationHint": "Lets registrants find and register participants of other clubs through a search (from two characters on). Master data always stays with the home club. Off by default.",
     "showBreaksOnPublicBoards": "Show breaks on public boards",
     "showBreaksOnPublicBoardsHint": "Shows breaks and schedule items from the timeline (e.g. \"Lunch break\") on the kiosk view and the athlete board too. Off by default so public boards stay sparse.",
     "publicResultsVisibility": {
@@ -854,6 +885,11 @@
         },
         "isLate": "registered late",
         "ratingCategory": "Rating category",
+        "crossClub": {
+          "label": "Search a participant of another club",
+          "hint": "From two characters on. Matches appear in the selection below, grouped by club.",
+          "searching": "Searching …"
+        },
         "ratingCategoryInvalid": "The selected rating category is not valid for the participants in this team",
         "infos": "Infos",
         "delete": {
@@ -1660,6 +1696,7 @@
         "cancelled": "Cancelled",
         "unscheduled": "Unscheduled",
         "inArena": "Arena {{inArena}}/{{total}}",
+        "deregistered": "{{n}} withdrawn",
         "doesNotTakePlace": "Does not take place",
         "bye": {
           "open": "Bye{{seed}} · open",
@@ -1968,6 +2005,14 @@
         "rowMatchNotFoundEmpty": "Competition has no races — will be imported as a free slot",
         "rowAmbiguous": "Not unique — will be imported as a free slot",
         "rowDuplicate": "Duplicate in the file — import blocked",
+        "summary_one": "{{count}} row in the file: {{linked}} linked, {{free}} planned as a free slot.",
+        "summary_other": "{{count}} rows in the file: {{linked}} linked, {{free}} planned as a free slot.",
+        "unmatchedWarning_one": "{{count}} row could not be matched to a race",
+        "unmatchedWarning_other": "{{count}} rows could not be matched to a race",
+        "unmatchedHint": "These rows are created as free slots — the race in question stays under \"Unplanned races\" afterwards and is missing from the schedule. Usually the race is named differently in the file than in the competition setup, because a round shrinks when there are fewer registrations. Please check the status column of the highlighted rows.",
+        "unmatchedConfirm": "I have checked the unmatched rows",
+        "onlyNoteworthy_one": "Show only issues ({{count}} row)",
+        "onlyNoteworthy_other": "Show only issues ({{count}} rows)",
         "apply": "Import",
         "error": {
           "duplicateRows_one": "Row {{rows}} points to the same run as another row. Please remove the duplicate row from the file or assign it to a different run, then import again.",
@@ -2015,6 +2060,11 @@
         }
       },
       "allPlanned": "All scheduled races are already planned.",
+      "planTarget": "Schedule into",
+      "planTargetNew": "New slot",
+      "planTargetExisting": "Existing free slot",
+      "planTargetSlot": "Free slot",
+      "planTargetHint": "Start time and duration are taken from the selected slot. The free slot becomes a race slot and loses its name.",
       "goToExecution": "Go to execution",
       "eventMode": {
         "enable": "Enable event mode: schedule and execution side by side",
@@ -2293,6 +2343,10 @@
     "checkLatestMinutesBefore": "Latest (minutes before start)",
     "publicNote": "Public note (My Event)",
     "publicNoteHint": "Shown verbatim to the athletes — the description above stays internal.",
+    "perEventDay": "Applies per event day",
+    "perEventDayHint": "The requirement has to be met again on every day. Without the tick, meeting it once covers the whole event.",
+    "perCompetition": "Applies per competition",
+    "perCompetitionHint": "The requirement has to be met for each competition separately. Both ticks together mean: per competition and day.",
     "namedParticipantRequirements": {
       "title": "Named Participant Requirements",
       "description": "Manage specific requirements for named participants",

@@ -34,6 +34,15 @@ data class UpdateEventRequest(
     val showBreaksOnPublicBoards: Boolean,
     /** Ab welchem Zustand ein Lauf als Ergebnis auf den öffentlichen Ansichten erscheint. */
     val publicResultsVisibility: PublicResultsVisibility,
+    /**
+     * Duerfen Meldende Personen anderer Vereine suchen und melden?
+     *
+     * Vorbelegung aus. Steht der Schalter an, findet die Meldemaske ueber eine Suche (ab zwei
+     * Zeichen, gedeckelte Trefferzahl) auch Personen fremder Vereine, und die Vereinspruefung
+     * beim Melden entfaellt. Die Stammdaten bleiben in jedem Fall beim Stammverein; siehe
+     * Migration V202608142000.
+     */
+    val allowCrossClubRegistration: Boolean,
     /** Ob die Durchführungsseite ihren Stand im Hintergrund nachzieht. */
     val executionAutoRefresh: Boolean,
     /** Takt dieses Abgleichs in Sekunden; Grenzen siehe [ExecutionAutoRefresh]. */
@@ -71,6 +80,7 @@ data class UpdateEventRequest(
                 autoCreateFollowingRounds = false,
                 showBreaksOnPublicBoards = false,
                 publicResultsVisibility = PublicResultsVisibility.FINISHED_ONLY,
+                allowCrossClubRegistration = false,
                 executionAutoRefresh = true,
                 executionAutoRefreshSeconds = ExecutionAutoRefresh.DEFAULT_SECONDS,
             )

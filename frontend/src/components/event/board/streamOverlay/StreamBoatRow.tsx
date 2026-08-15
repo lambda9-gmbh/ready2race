@@ -7,6 +7,8 @@ interface StreamBoatRowProps {
     /** Vereins-Kurzform statt der vollen Vereinskette — siehe `streamNameForms`. */
     useShortClubNames: boolean
     failedFallback: string
+    /** Beschriftung einer Abmeldung ("Abgemeldet") - fehlt sie, bleibt die Zeile beim Ergebnis. */
+    deregisteredFallback?: string
     /** 'compact' im Lower-Third, 'large' in den zentrierten Panels — dieselbe Zeile,
      *  nur mit der größeren TV-Grafik-Typografie statt der schmaleren Lower-Third-Schrift. */
     size: 'compact' | 'large'
@@ -35,6 +37,7 @@ const StreamBoatRow = ({
     crewMode,
     useShortClubNames,
     failedFallback,
+    deregisteredFallback,
     size,
     showLaps = true,
     showSecondary = true,
@@ -42,7 +45,7 @@ const StreamBoatRow = ({
     const theme = useTheme()
     const large = size === 'large'
     const {primary, secondary} = crewLines(team, crewMode, useShortClubNames)
-    const trailing = teamTrailingLabel(team, failedFallback)
+    const trailing = teamTrailingLabel(team, failedFallback, deregisteredFallback)
 
     return (
         <Stack direction="row" alignItems="baseline" gap={2} sx={{width: 1}}>

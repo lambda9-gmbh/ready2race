@@ -37,6 +37,13 @@ data class RunningMatchTeamInfo(
     val penaltyNote: String?,
     val failed: Boolean,
     val failedReason: String?,
+    /**
+     * Für diese Runde abgemeldet. Reiner Ausweis für die Anzeige - die Zustandsableitung des Laufs
+     * behandelt eine Abmeldung als "erledigt" (`LiveDashboardLogic.teamIsSettled`), nie als
+     * Wertung.
+     */
+    val deregistered: Boolean = false,
+    val deregistrationReason: String? = null,
     val participants: List<UpcomingMatchParticipantInfo>,
     /** Zwischenzeiten dieses Boots, nachträglich gefüllt (EventInfoService.attachLaps). */
     val laps: List<MatchTeamLapDto> = emptyList(),

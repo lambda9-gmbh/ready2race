@@ -3,7 +3,11 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.club.control.ClubRepo
+import de.lambda9.ready2race.backend.app.club.entity.ClubError
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.participant.control.*
 import de.lambda9.ready2race.backend.app.participant.entity.*
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantHasRequirementForEventRepo
@@ -21,9 +25,11 @@ import de.lambda9.ready2race.backend.calls.responses.ToApiError
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantAdditionalClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pagination.Direction
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -105,6 +111,20 @@ object ParticipantService {
         KIO.ok(ApiResponse.Created(participantId))
     }
 
+    /**
+     * Ob dieser Leser die Kontaktdaten der Person sehen darf.
+     *
+     * Seit der Mehrfach-Zugehörigkeit (Migration V202608142000) steht in der Personenliste eines
+     * Vereins auch, wer ihm nur als Zweitverein angehört. Melden darf er die Person, ihre
+     * Telefonnummer und E-Mail-Adresse gehen ihn nichts an. Wer global liest (Ausrichter,
+     * Verwaltung), sieht weiterhin alles.
+     */
+    private fun hidesContactData(
+        homeClubId: UUID?,
+        clubId: UUID?,
+        scope: Privilege.Scope,
+    ): Boolean = scope == Privilege.Scope.OWN && clubId != null && homeClubId != clubId
+
     fun page(
         params: PaginationParameters<ParticipantSort>,
         clubId: UUID? = null,
@@ -114,11 +134,106 @@ object ParticipantService {
         val total = !ParticipantRepo.count(params.search, clubId, user, scope).orDie()
         val page = !ParticipantRepo.page(params, clubId, user, scope).orDie()
 
-        page.traverse { it.participantDto() }.map {
+        page.traverse { it.participantDto(hidesContactData(it.club, clubId, scope)) }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)
             )
+        }
+    }
+
+    /**
+     * Die vereinsübergreifende Suche für die Meldemaske.
+     *
+     * Drei Riegel, alle drei bewusst hier und nicht erst in der Datenbank:
+     *
+     * 1. Der Schalter der Veranstaltung. Steht er aus — die Vorbelegung —, gibt es keine Treffer.
+     *    Bewusst eine leere Liste statt eines Fehlers: die Oberfläche blendet das Suchfeld dann
+     *    ohnehin aus, und ein Fehlerhinweis wäre für den Meldenden nur Rauschen.
+     * 2. Die Mindestlänge. Ohne Eingabe (und mit einem einzelnen Zeichen) gibt es nichts —
+     *    sonst wäre die Suche eine durchblätterbare Liste aller Personen aller Vereine.
+     * 3. Der Deckel auf der Trefferzahl, siehe [ParticipantRepo.searchAcrossClubs].
+     *
+     * Kein Protokoll: ausdrücklich nicht gewünscht.
+     */
+    fun searchAcrossClubs(
+        eventId: UUID,
+        clubId: UUID,
+        search: String?,
+    ): App<ServiceError, ApiResponse.ListDto<ParticipantSearchResultDto>> = KIO.comprehension {
+        val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
+
+        val trimmed = search?.trim() ?: ""
+
+        if (event.crossClubRegistration != true || trimmed.length < ParticipantRepo.CROSS_CLUB_SEARCH_MIN_LENGTH) {
+            KIO.ok(ApiResponse.ListDto(emptyList()))
+        } else {
+            ParticipantRepo.searchAcrossClubs(trimmed, clubId).orDie()
+                .andThen { records -> records.traverse { it.participantSearchResultDto() } }
+                .map { ApiResponse.ListDto(it) }
+        }
+    }
+
+    /**
+     * Eine Person einem weiteren Verein zuordnen.
+     *
+     * Wer darf das? Der Stammverein und wer global schreiben darf — kein neues Privileg. Das
+     * folgt der Grenze, die auch für die Stammdaten gilt: die Person "gehört" ihrem Stammverein,
+     * also entscheidet er, wer sie außerdem melden darf. Ein Zweitverein könnte sich sonst selbst
+     * eintragen, und der Stammverein erführe es nur aus der Meldeliste.
+     *
+     * Geprüft wird das an zwei Stellen: die Route stellt sicher, dass ein OWN-Nutzer nur für den
+     * eigenen Verein handelt, und [ParticipantRepo.existsByIdAndHomeClub] stellt sicher, dass
+     * dieser Verein auch wirklich der Stammverein ist.
+     */
+    fun addAdditionalClub(
+        participantId: UUID,
+        homeClubId: UUID,
+        additionalClubId: UUID,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !ParticipantRepo.existsByIdAndHomeClub(participantId, homeClubId).orDie()
+            .onFalseFail { ParticipantError.ParticipantNotFound }
+
+        !KIO.failOn(additionalClubId == homeClubId) { ParticipantError.ClubIsHomeClub }
+
+        !ClubRepo.getClub(additionalClubId).orDie().onNullFail { ClubError.ClubNotFound }
+
+        !ParticipantAdditionalClubRepo.exists(participantId, additionalClubId).orDie()
+            .onTrueFail { ParticipantError.ClubAlreadyAdded }
+
+        !ParticipantAdditionalClubRepo.create(
+            ParticipantAdditionalClubRecord(
+                participant = participantId,
+                club = additionalClubId,
+                createdAt = LocalDateTime.now(),
+                createdBy = userId,
+            )
+        ).orDie()
+
+        noData
+    }
+
+    /**
+     * Die Zuordnung wieder lösen. Bestehende Meldungen bleiben stehen — sie hängen an
+     * `competition_registration_named_participant` und kennen keine Vereinsbedingung. Das ist
+     * gewollt: eine gemeldete Mannschaft darf nicht dadurch zerfallen, dass jemand nachträglich
+     * eine Zugehörigkeit aufräumt.
+     */
+    fun removeAdditionalClub(
+        participantId: UUID,
+        homeClubId: UUID,
+        additionalClubId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !ParticipantRepo.existsByIdAndHomeClub(participantId, homeClubId).orDie()
+            .onFalseFail { ParticipantError.ParticipantNotFound }
+
+        val deleted = !ParticipantAdditionalClubRepo.delete(participantId, additionalClubId).orDie()
+
+        if (deleted < 1) {
+            KIO.fail(ParticipantError.ClubNotAdded)
+        } else {
+            noData
         }
     }
 
@@ -148,7 +263,7 @@ object ParticipantService {
 
         val list = !ParticipantRepo.getByClubAndAgeRestriction(clubId, user, scope, ageRestriction).orDie()
 
-        list.traverse { it.participantDto() }
+        list.traverse { it.participantDto(hidesContactData(it.club, clubId, scope)) }
             .map { ApiResponse.ListDto(it) }
     }
 
@@ -285,7 +400,8 @@ object ParticipantService {
         val participant =
             !ParticipantRepo.getParticipant(id, clubId, user, scope).orDie()
                 .onNullFail { ParticipantError.ParticipantNotFound }
-        participant.participantDto().map { ApiResponse.Dto(it) }
+        participant.participantDto(hidesContactData(participant.club, clubId, scope))
+            .map { ApiResponse.Dto(it) }
     }
 
     fun updateParticipant(

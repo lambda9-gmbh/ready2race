@@ -106,6 +106,13 @@ data class RaceClockerFeedRow(
      */
     val hasResult: Boolean get() = isTime || noResultReason != null
 
+    /**
+     * Sagt diese Zeile ausdrücklich, dass die Mannschaft NICHT gestartet ist? Bewusst getrennt von
+     * [hasResult]: Zurückgeschrieben wird ein DNS wie jeder Ausscheidungsgrund, als Startbeleg
+     * zählt es nicht (`RaceClockerPollLogic.startDetected`).
+     */
+    val saysDidNotStart: Boolean get() = noResultReason == DID_NOT_START
+
     companion object {
 
         /**
@@ -114,6 +121,14 @@ data class RaceClockerFeedRow(
          * (and only this set) if RaceClocker ever adds another status.
          */
         val ELIMINATION_CODES = setOf("DNS", "DNF", "DQ")
+
+        /**
+         * "Did not start" - der eine Ausscheidungsgrund, der das Gegenteil eines Starts behauptet,
+         * und der einzige, der regelmäßig VOR dem Rennen feststeht (eine Abmeldung). Für das
+         * Zurückschreiben an die Mannschaft zählt er wie jeder andere Grund; als Beleg dafür, dass
+         * ein Lauf losgegangen ist, taugt er nicht - siehe `RaceClockerPollLogic.startDetected`.
+         */
+        const val DID_NOT_START = "DNS"
 
         /**
          * The earliest recorded start across a set of rows - what a match's `started_at` takes over
