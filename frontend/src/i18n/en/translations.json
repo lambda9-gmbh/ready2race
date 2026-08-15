@@ -2785,7 +2785,10 @@
     "assignmentInfo": "Assignment information"
   },
   "qrScanner": {
-    "title": "Scanner"
+    "title": "Scanner",
+    "cameraError": "Camera could not be opened",
+    "cameraErrorHint": "The camera may be in use by another app or access was denied.",
+    "cameraRetry": "Restart camera"
   },
   "qrEvents": {
     "title": "Events",

@@ -2785,7 +2785,10 @@
     "assignmentInfo": "Zuordnungsinformationen"
   },
   "qrScanner": {
-    "title": "Scanner"
+    "title": "Scanner",
+    "cameraError": "Kamera konnte nicht geöffnet werden",
+    "cameraErrorHint": "Möglicherweise wird die Kamera gerade von einer anderen App verwendet oder der Zugriff wurde verweigert.",
+    "cameraRetry": "Kamera erneut starten"
   },
   "qrEvents": {
     "title": "Events",
