@@ -1554,7 +1554,31 @@
       },
       "mostRecent": "Nyeste tilmeldinger",
       "teams": "Hold",
-      "teamMembers": "Holdmedlemmer"
+      "teamMembers": "Holdmedlemmer",
+      "mail": {
+        "open": "Skriv rundmail",
+        "title": "Rundmail til tilmelderne",
+        "recipients": "Modtagere",
+        "noUser": "ingen bruger længere – får ingen mail",
+        "additionalAddresses": "Yderligere adresser",
+        "addressHint": "Indtast en adresse og tryk Enter",
+        "subject": "Emne",
+        "body": "Tekst",
+        "placeholders": "Pladsholdere: ##recipient##, ##club##, ##event## – erstattes pr. modtager",
+        "attachments": "Vedhæftede filer",
+        "addAttachment": "Vedhæft fil",
+        "attachmentWarning": "De vedhæftede filer fylder tilsammen {{size}} og sendes til hver modtager for sig.",
+        "send": "Send",
+        "success": "{{count}} e-mails sat i kø",
+        "confirm": {
+          "title": "Send rundmail?",
+          "text": "Mailen går til {{count}} modtagere. Når den er sendt, kan den ikke kaldes tilbage."
+        },
+        "error": {
+          "invalidAddress": "Ikke en gyldig adresse: {{address}}",
+          "recipientGone": "En tilmelder har ikke længere en bruger. Åbn dialogen igen."
+        }
+      }
     },
     "participants": "Deltagere",
     "tabs": {
