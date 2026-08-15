@@ -22,9 +22,10 @@ const lap = (
     name: string,
     timeString: string,
     recordedAt: string | null,
+    lapMillis?: number,
 ): {startNumber: number; laps: MatchTeamLapDto[]} => ({
     startNumber,
-    laps: [{name, timeString, recordedAt}] as MatchTeamLapDto[],
+    laps: [{name, timeString, recordedAt, lapMillis}] as MatchTeamLapDto[],
 })
 
 const runningMatch = (teams: ReturnType<typeof lap>[]) =>
@@ -167,14 +168,44 @@ describe('lastLaps', () => {
         expect(laps.map(l => l.startNumber)).toEqual([2, 3, 1])
     })
 
-    it('Runden ohne recordedAt landen hinten, stabil nach Rundenname und Startnummer', () => {
+    it('Runden ohne recordedAt landen hinten, die spätere Marke davon zuerst', () => {
+        // Ohne Zeitstempel entscheidet die Marke: "Runde 2" ist die jüngere Nachricht als
+        // "Runde 1". Bis zum 15.08.2026 sortierte die Liste hier AUFSTEIGEND nach Namen und
+        // stellte damit die älteste Marke nach vorn.
         const m = runningMatch([
             lap(1, 'Runde 2', '0:30.0', null),
             lap(2, 'Runde 1', '0:31.0', '2026-08-13T10:00:00Z'),
             lap(3, 'Runde 1', '0:32.0', null),
         ])
         const laps = lastLaps(m, 10)
-        expect(laps.map(l => l.startNumber)).toEqual([2, 3, 1])
+        expect(laps.map(l => l.startNumber)).toEqual([2, 1, 3])
+    })
+
+    /**
+     * Der Fehler aus dem Livestream: Der RaceClocker-Abruf schrieb alle Runden eines Boots je
+     * Takt neu und gab ihnen denselben Zeitstempel. Damit hatte die Sortierung nichts zu
+     * sortieren und fiel auf den Rundennamen zurück - im Band standen ewig 1, 2 und 3, nie die
+     * zuletzt eingetroffene Zeit. Der Zeitstempel bleibt jetzt am Datensatz stehen; für
+     * Gleichstand innerhalb eines Takts entscheidet die gefahrene Zeit.
+     */
+    it('bei gleichem Zeitstempel gewinnt die spätere Fahrzeit', () => {
+        const gleich = '2026-08-16T09:00:00Z'
+        const m = runningMatch([
+            lap(1, 'Runde 1', '0:30.0', gleich, 30_000),
+            lap(2, 'Runde 2', '1:05.0', gleich, 65_000),
+            lap(3, 'Runde 3', '1:40.0', gleich, 100_000),
+        ])
+        expect(lastLaps(m).map(l => l.lapName)).toEqual(['Runde 3', 'Runde 2', 'Runde 1'])
+    })
+
+    it('ein echter Zeitstempel schlägt die Fahrzeit', () => {
+        // Trifft eine frühe Marke eines langsameren Boots später ein, ist sie die jüngere
+        // Nachricht - der Eingang zählt, nicht die Streckenposition.
+        const m = runningMatch([
+            lap(1, 'Runde 3', '1:40.0', '2026-08-16T09:00:00Z', 100_000),
+            lap(2, 'Runde 1', '0:35.0', '2026-08-16T09:00:30Z', 35_000),
+        ])
+        expect(lastLaps(m).map(l => l.startNumber)).toEqual([2, 1])
     })
 
     it('begrenzt standardmäßig auf drei Einträge', () => {

@@ -14277,6 +14277,14 @@ components:
           format: date-time
           nullable: true
           description: "when the lap time arrived; carries the ordering of the stream lap band"
+        lapMillis:
+          type: integer
+          format: int64
+          nullable: true
+          description: >-
+            Elapsed time at this mark in milliseconds - a sorting aid for the lap band only, the
+            display uses timeString. Marks arriving in the same poll share recordedAt; the higher
+            time is then the more recent news.
 
     UpdateCompetitionMatchRequest:
       type: object

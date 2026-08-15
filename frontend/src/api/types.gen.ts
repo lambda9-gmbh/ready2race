@@ -2626,6 +2626,10 @@ export type MatchTeamLapDto = {
      * when the lap time arrived; carries the ordering of the stream lap band
      */
     recordedAt?: string | null
+    /**
+     * Elapsed time at this mark in milliseconds - a sorting aid for the lap band only, the display uses timeString. Marks arriving in the same poll share recordedAt; the higher time is then the more recent news.
+     */
+    lapMillis?: number | null
 }
 
 /**

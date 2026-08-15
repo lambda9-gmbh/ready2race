@@ -26,6 +26,12 @@ export type StreamLapEntry = {
     lapName: string
     timeString: string
     recordedAt: string | null
+    /**
+     * Gefahrene Zeit an dieser Marke in Millisekunden - nur zum Sortieren, nicht zum Anzeigen
+     * (dafür ist [timeString] da). Trifft mehreres im selben Takt ein, ist die höhere Zeit die
+     * jüngere Nachricht: Dieses Boot war später an der Marke.
+     */
+    lapMillis: number | null
 }
 
 /** Chroma-Voreinstellung des Stream-Overlays — reines Grün. */
@@ -61,6 +67,7 @@ export const lastLaps = (match: AthleteBoardMatch, limit = 3): StreamLapEntry[] 
             lapName: lap.name,
             timeString: lap.timeString,
             recordedAt: lap.recordedAt ?? null,
+            lapMillis: lap.lapMillis ?? null,
         })),
     )
 
@@ -72,7 +79,14 @@ export const lastLaps = (match: AthleteBoardMatch, limit = 3): StreamLapEntry[] 
             if (ta !== null && tb !== null && ta !== tb) return tb - ta // neueste zuerst
             if (ta !== null && tb === null) return -1 // Runde mit Zeit vor Runde ohne
             if (ta === null && tb !== null) return 1
-            const nameCompare = a.lapName.localeCompare(b.lapName)
+            // Gleicher Zeitstempel heißt: im selben Takt eingetroffen. Dann entscheidet die
+            // gefahrene Zeit - wer später an der Marke war, ist die jüngere Nachricht. Der
+            // Rundenname taugt dafür nicht: nach ihm stand ewig 1, 2, 3 im Band, weil der
+            // Abruf früher alle Runden mit demselben Zeitstempel neu schrieb.
+            if (a.lapMillis != null && b.lapMillis != null && a.lapMillis !== b.lapMillis) {
+                return b.lapMillis - a.lapMillis
+            }
+            const nameCompare = b.lapName.localeCompare(a.lapName, undefined, {numeric: true})
             if (nameCompare !== 0) return nameCompare
             return a.startNumber - b.startNumber
         })

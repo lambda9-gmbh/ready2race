@@ -1552,8 +1552,10 @@ object CompetitionExecutionService {
                     }.orDie()
                 }
 
-                !CompetitionMatchTeamLapRepo.deleteByTeam(team.id!!).orDie()
-
+                // Upsert statt Löschen + Einfügen: `created_at` ist der Zeitpunkt, zu dem eine
+                // Marke ZUERST da war, und genau daran hängt die Reihenfolge des Rundenbands im
+                // Livestream. Beim vollständigen Ersetzen trug jede Runde den Zeitstempel des
+                // letzten Takts - alle gleich, bei jedem Takt neu.
                 if (start != null) {
                     val records = row.laps.mapIndexed { index, lap ->
                         var millis = java.time.Duration.between(start, lap.time).toMillis()
@@ -1568,9 +1570,12 @@ object CompetitionExecutionService {
                             createdBy = userId,
                         )
                     }
-                    if (records.isNotEmpty()) {
-                        !CompetitionMatchTeamLapRepo.create(records).orDie()
-                    }
+                    !CompetitionMatchTeamLapRepo.upsert(records).orDie()
+                    // Was der Feed nicht mehr führt, verschwindet - eine zurückgenommene Marke
+                    // bliebe sonst stehen.
+                    !CompetitionMatchTeamLapRepo.deleteBeyond(team.id!!, records.map { it.position!! }).orDie()
+                } else {
+                    !CompetitionMatchTeamLapRepo.deleteByTeam(team.id!!).orDie()
                 }
 
                 KIO.unit
