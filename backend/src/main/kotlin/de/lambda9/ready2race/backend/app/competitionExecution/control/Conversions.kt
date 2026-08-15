@@ -103,7 +103,6 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                 deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
                                 failed = team.failed,
                                 failedReason = team.failedReason,
-                                bye = team.bye,
                                 penaltySeconds = team.penaltySeconds,
                                 penaltyNote = team.penaltyNote,
                                 laps = team.laps.map { lap ->
@@ -144,7 +143,6 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                     place = team.place,
                                     failed = team.failed,
                                     deregistered = team.deregistered,
-                                    bye = team.bye,
                                 )
                             },
                             teamsInArena = teamsInArenaPerMatch[index],
@@ -239,7 +237,6 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                         out = team.out!!,
                         failed = team.failed!!,
                         failedReason = team.failedReason,
-                        bye = team.bye ?: false,
                         penaltySeconds = team.penaltySeconds,
                         penaltyNote = team.penaltyNote,
                         ratingCategory = team.ratingCategoryId?.let {

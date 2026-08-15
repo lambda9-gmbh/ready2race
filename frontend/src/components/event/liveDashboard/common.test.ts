@@ -66,12 +66,6 @@ describe('teamIsSettled', () => {
     it('erkennt ein offenes Boot', () => {
         expect(teamIsSettled(team({}))).toBe(false)
     })
-
-    it('erwartet von einem Freilos kein Ergebnis', () => {
-        // Sonst erreichte ein Lauf mit Freilos nie "alle gewertet" und die Kette bliebe an ihm
-        // hängen - dieselbe Begründung wie bei der Abmeldung.
-        expect(teamIsSettled(team({bye: true}))).toBe(true)
-    })
 })
 
 describe('teamHasRaced', () => {
@@ -88,11 +82,6 @@ describe('teamHasRaced', () => {
     it('zählt ein abgemeldetes Boot nicht als gefahren', () => {
         expect(teamHasRaced(team({deregistered: true}))).toBe(false)
         expect(teamIsSettled(team({deregistered: true}))).toBe(true)
-    })
-
-    it('zählt ein Freilos nicht als gefahren - es war nicht auf dem Wasser', () => {
-        expect(teamHasRaced(team({bye: true}))).toBe(false)
-        expect(teamIsSettled(team({bye: true}))).toBe(true)
     })
 
     it('erkennt ein offenes Boot', () => {

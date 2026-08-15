@@ -261,15 +261,7 @@ object CompetitionExecutionService {
                 val currentTeamsWithOutcome =
                     currentRoundMatches.filter { it.second != null }.mapIndexed { matchIdx, match ->
                         match.second!!.teams
-                            // Ein vergebenes Freilos (V202608151900) steigt vor den platzierten
-                            // Booten auf: Es hat keinen Platz - nach der reinen Platz-Sortierung
-                            // landete es am Ende und fiele aus der Folgerunde heraus, also genau
-                            // andersherum als gewollt. Dass es damit die beste Setzung des Laufs
-                            // bekommt, ist die absichtliche Vereinfachung; die Bahnen der
-                            // Folgerunde lassen sich dort weiterhin tauschen.
                             .sortedWith(compareBy<CompetitionMatchTeamWithRegistration> { team ->
-                                if (team.bye) 0 else 1
-                            }.thenBy { team ->
                                 team.place ?: Int.MAX_VALUE
                             }.thenBy { team -> team.startNumber }) // This is required for teams that are deregistered but would still move on to the next round (f.e. losers bracket / both teams deregistered)
                             .mapIndexed { teamIdx, team ->
@@ -611,15 +603,9 @@ object CompetitionExecutionService {
 
         } else {
 
-            // Ein Boot mit vergebenem Freilos (V202608151900) zählt hier wie ein DNF nicht mit: Es
-            // hat keinen Platz und soll auch keinen bekommen, dürfte die Runde aber nicht
-            // blockieren - sonst wäre der Wettkampf genau dann festgefahren, wenn das Freilos
-            // gebraucht wird.
             val placesAreMissing = currentRound.matches.any { match ->
                 !match.teams.map { it.place }
-                    .containsAll(
-                        (1..match.teams.filter { !it.deregistered && !it.failed && !it.out && !it.bye }.size).toList()
-                    )
+                    .containsAll((1..match.teams.filter { !it.deregistered && !it.failed && !it.out }.size).toList())
             }
 
             if (placesAreMissing)
@@ -818,20 +804,11 @@ object CompetitionExecutionService {
 
         !prepareForNewPlaces(matchId)
 
-        // Boote mit vergebenem Freilos (V202608151900) sind hier nicht zu werten: Sie sind nicht
-        // gefahren, bekommen weder Platz noch Zeit und dürfen die lückenlose Platzfolge der
-        // tatsächlich gefahrenen Boote nicht verschieben - dieselbe Sonderstellung wie bei
-        // `failed`. Die Kennung kommt aus der Datenbank, nicht aus dem Aufruf: Das Freilos ist
-        // eine Entscheidung der Schiedsrichter, keine Angabe des Ergebnisformulars.
-        val byeRegistrations = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
-            .map { teams -> teams.filter { it.bye == true }.mapNotNull { it.competitionRegistration }.toSet() }
-        val scoredResults = request.teamResults.filter { !it.failed && it.registrationId !in byeRegistrations }
-
-        val noPlaces = scoredResults.any { it.place == null }
+        val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
 
         // Validate places are continuous when provided
         if (!noPlaces) {
-            val places = scoredResults.mapNotNull { it.place }.sorted()
+            val places = request.teamResults.filter { !it.failed }.mapNotNull { it.place }.sorted()
             places.forEachIndexed { index, place ->
                 val expected = index + 1
                 !KIO.failOn(expected != place) {
@@ -841,7 +818,7 @@ object CompetitionExecutionService {
         }
 
         val calculatedPlaces: List<Pair<UUID, Timecode?>> =
-            scoredResults
+            request.teamResults.filter { !it.failed }
                 .map { result ->
                     result.registrationId to result.timeString?.let { timestring -> (!Parser.timecode(timestring) { it.orDie() }) }
                 }
@@ -849,12 +826,6 @@ object CompetitionExecutionService {
 
         !request.teamResults.traverse { result ->
             KIO.comprehension {
-
-                // Das Freilos bleibt, wie es ist: ohne Platz, ohne Zeit, ohne DNF. Ein
-                // Formular, das seine Zeile trotzdem mitschickt, soll es nicht überschreiben.
-                if (result.registrationId in byeRegistrations) {
-                    return@comprehension unit
-                }
 
                 val record =
                     !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, result.registrationId).orDie()
@@ -1812,72 +1783,6 @@ object CompetitionExecutionService {
      * Bewusst ohne [checkUpdateMatchResult]: Das würde Freilose abweisen (wie bei [reopenMatch]),
      * und auch ein versehentlich quittiertes Freilos soll sich zurücksetzen lassen.
      */
-    /**
-     * Vergibt oder nimmt das Freilos eines einzelnen Boots in diesem Lauf zurück - es kommt dann
-     * ohne Start in die Folgerunde.
-     *
-     * Warum ein eigener Weg und nicht "trag ihm einfach einen Platz ein": Ein Platz behauptet ein
-     * gefahrenes Rennen. Er stünde im Vorlaufergebnis, in der Urkunde und in der Platzberechnung,
-     * und alle Boote, die wirklich gefahren sind, rutschten eine Position nach hinten. Das Freilos
-     * lässt Platz und Zeit ausdrücklich leer und wirkt nur an der einen Stelle, an der es wirken
-     * soll: beim Setzen der Folgerunde.
-     *
-     * Gesperrt, sobald die Folgerunde erzeugt ist - dieselbe Stromrichtung wie bei [resetMatch]:
-     * die Setzung der nächsten Runde ist dann bereits aus diesem Stand gezogen, ein nachträgliches
-     * Freilos änderte nichts mehr und suggerierte das Gegenteil. Abhilfe ist dieselbe: erst die
-     * Folgerunde löschen.
-     *
-     * Ein Boot, das den Lauf gar nicht erst erreicht hat (`out`, weil abgemeldet), bekommt kein
-     * Freilos: Es steht nicht zur Wahl, es ist aus dem Wettkampf heraus.
-     */
-    fun updateTeamBye(
-        eventId: UUID,
-        competitionId: UUID,
-        matchId: UUID,
-        userId: UUID,
-        request: UpdateTeamByeRequest,
-    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
-        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
-
-        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
-        !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }.none { it.id == matchId }) {
-            CompetitionExecutionError.MatchNotFound
-        }
-
-        val currentRound = getCurrentAndNextRound(setupRounds).first
-            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
-        currentRound.matches.find { it.competitionSetupMatch == matchId }
-            ?: return@comprehension KIO.fail(CompetitionExecutionError.ResetBlockedByNextRound)
-
-        val team = !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, request.registrationId).orDie()
-            .onNullFail { CompetitionExecutionError.MatchTeamNotFound }
-        !KIO.failOn(team.out == true) { CompetitionExecutionError.MatchTeamNotFound }
-
-        !CompetitionMatchTeamRepo.update(team) {
-            bye = request.bye
-            // Ein Freilos hat nichts gefahren: ein etwa schon eingetragener Platz und ein
-            // gesetztes DNF gehören damit weg, sonst behauptete das Ergebnis beides zugleich.
-            if (request.bye) {
-                place = null
-                placesCalculated = false
-                failed = false
-                failedReason = null
-            }
-            updatedBy = userId
-            updatedAt = LocalDateTime.now()
-        }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
-
-        if (request.bye) {
-            !TimecodeRepo.delete(team.id).orDie()
-            !CompetitionMatchTeamRepo.update(team) { timecode = null }.orDie()
-        }
-
-        // Startlisten und öffentliche Anzeigen führen das Freilos mit.
-        EventChangeMarker.bump(eventId)
-
-        noData
-    }
-
     fun resetMatch(
         eventId: UUID,
         competitionId: UUID,

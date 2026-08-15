@@ -49,7 +49,6 @@ const ResultPanel = ({result, element}: ResultPanelProps) => {
                                 useShortClubNames={names.clubs}
                                 failedFallback={t('event.info.athleteBoard.failed')}
                                 deregisteredFallback={t('event.info.athleteBoard.deregistered')}
-                                byeFallback={t('event.competition.execution.teamBye.label')}
                                 size="large"
                             />
                         )}

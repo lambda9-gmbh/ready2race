@@ -835,9 +835,6 @@ select cmt.id,
        cmt.out,
        cmt.failed,
        cmt.failed_reason,
-       -- Vergebenes Freilos (V202608151900): kommt ohne Start weiter, hat deshalb weder Platz
-       -- noch Zeit. Nicht das strukturelle Freilos - das steht am Lauf (bye_name).
-       cmt.bye,
        cmt.penalty_seconds,
        cmt.penalty_note,
        cr.club                                                                 as club_id,

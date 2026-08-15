@@ -15,7 +15,6 @@ const team = (overrides: Partial<CompetitionMatchTeamDto> = {}): CompetitionMatc
     startNumber: 1,
     deregistered: false,
     failed: false,
-    bye: false,
     ...overrides,
 })
 

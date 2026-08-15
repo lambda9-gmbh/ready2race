@@ -1,6 +1,5 @@
 import {
     CompetitionMatchDto,
-    CompetitionMatchTeamDto,
     CompetitionRoundDto,
     StartListFileType,
 } from '@api/types.gen.ts'
@@ -40,7 +39,6 @@ import {
     updateMatchActivation,
     updateMatchByeMustRace,
 } from '@api/sdk.gen.ts'
-import {updateTeamBye} from '@api/sdk.gen.ts'
 import {matchErrorText} from '@components/event/competition/excecution/executionError.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {
@@ -291,63 +289,6 @@ const CompetitionExecutionRound = ({
      * bleibt gültig. Nur in der jüngsten Runde; hat die Folgerunde schon Läufe, lehnt der Server
      * mit einem eigenen Fehlercode ab (siehe executionError.ts).
      */
-    /**
-     * Freilos vergeben oder zurücknehmen: Das Boot kommt ohne Start in die Folgerunde und bleibt
-     * im Vorlauf ohne Platz und ohne Zeit. Bewusst mit Rückfrage - es ist eine
-     * Schiedsrichter-Entscheidung, kein Tippfehler-Korrektur-Knopf.
-     */
-    const handleTeamBye = async (
-        match: CompetitionMatchDto,
-        team: CompetitionMatchTeamDto,
-        bye: boolean,
-    ) => {
-        confirmAction(
-            async () => {
-                props.setSubmitting(true)
-                const {error} = await updateTeamBye({
-                    path: {
-                        eventId: eventId,
-                        competitionId: competitionId,
-                        competitionMatchId: match.id,
-                    },
-                    body: {registrationId: team.registrationId, bye},
-                })
-                props.setSubmitting(false)
-                if (error) {
-                    const text = matchErrorText(error)
-                    feedback.error(
-                        text === undefined
-                            ? t('event.competition.execution.teamBye.error')
-                            : t(text.key, text.values),
-                    )
-                } else {
-                    feedback.success(
-                        bye
-                            ? t('event.competition.execution.teamBye.granted')
-                            : t('event.competition.execution.teamBye.revoked'),
-                    )
-                }
-                props.reloadRoundDto()
-            },
-            {
-                title: t('event.competition.execution.teamBye.confirmation.title'),
-                content: (
-                    <Typography>
-                        {bye
-                            ? t('event.competition.execution.teamBye.confirmation.grant', {
-                                  team: team.actualClubName ?? team.clubName,
-                              })
-                            : t('event.competition.execution.teamBye.confirmation.revoke', {
-                                  team: team.actualClubName ?? team.clubName,
-                              })}
-                    </Typography>
-                ),
-                okText: t('common.ok'),
-                cancelText: t('common.cancel'),
-            },
-        )
-    }
-
     const handleResetMatch = async (match: CompetitionMatchDto) => {
         confirmAction(
             async () => {
@@ -1073,57 +1014,21 @@ const CompetitionExecutionRound = ({
                                                         </Typography>
                                                     </TableCell>
                                                     <TableCell width="10%">
-                                                        {/* Das Freilos steht vor Platz und DNF:
-                                                            Es sagt, dass hier nichts gewertet
-                                                            wird, und ist damit die stärkere
-                                                            Aussage über diese Zeile. */}
-                                                        {team.bye
+                                                        {team.deregistered
                                                             ? t(
-                                                                  'event.competition.execution.teamBye.label',
-                                                              )
-                                                            : team.deregistered
-                                                              ? t(
-                                                                    'event.competition.registration.deregister.deregistered',
-                                                                ) +
-                                                                (team.deregistrationReason
-                                                                    ? ` (${team.deregistrationReason})`
-                                                                    : '')
-                                                              : team.failed
-                                                                ? failedLabel(
-                                                                      team.failedReason,
-                                                                      t(
-                                                                          'event.competition.execution.results.failed',
-                                                                      ),
-                                                                  )
-                                                                : team.place}
-                                                        {/* Nur in der aktuellen Runde und nur für
-                                                            Boote, die noch im Rennen sind: eine
-                                                            abgemeldete Mannschaft ist aus dem
-                                                            Wettkampf heraus, das Backend lehnt
-                                                            sie ohnehin ab. */}
-                                                        {roundIndex === 0 && !team.deregistered && (
-                                                            <Box>
-                                                                <LoadingButton
-                                                                    size={'small'}
-                                                                    variant={'text'}
-                                                                    pending={submitting}
-                                                                    onClick={() =>
-                                                                        handleTeamBye(
-                                                                            match,
-                                                                            team,
-                                                                            !team.bye,
-                                                                        )
-                                                                    }>
-                                                                    {team.bye
-                                                                        ? t(
-                                                                              'event.competition.execution.teamBye.revoke',
-                                                                          )
-                                                                        : t(
-                                                                              'event.competition.execution.teamBye.grant',
-                                                                          )}
-                                                                </LoadingButton>
-                                                            </Box>
-                                                        )}
+                                                                  'event.competition.registration.deregister.deregistered',
+                                                              ) +
+                                                              (team.deregistrationReason
+                                                                  ? ` (${team.deregistrationReason})`
+                                                                  : '')
+                                                            : team.failed
+                                                              ? failedLabel(
+                                                                    team.failedReason,
+                                                                    t(
+                                                                        'event.competition.execution.results.failed',
+                                                                    ),
+                                                                )
+                                                              : team.place}
                                                     </TableCell>
                                                     <TableCell width="20%">
                                                         {team.timeString}
