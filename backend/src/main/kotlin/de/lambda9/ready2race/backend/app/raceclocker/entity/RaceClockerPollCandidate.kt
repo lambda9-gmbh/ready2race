@@ -21,5 +21,16 @@ data class RaceClockerPollCandidate(
      * Fall, für den der Abruf im Feed nach einer gemessenen Startzeit sieht.
      */
     val startedAt: LocalDateTime?,
+    /**
+     * Wann der automatische Abruf für diesen Lauf pausiert wurde (Handeingabe, Datei-Upload,
+     * Deaktivieren, Reset) — null, solange die Automatik ihn beschreiben darf.
+     *
+     * Ein pausierter Lauf kommt bewusst trotzdem als Kandidat zurück: Er darf nicht mehr
+     * BESCHRIEBEN werden, aber sein Zustand zählt weiter für den Takt der Veranstaltung. Vorher
+     * fiel er schon in der Abfrage heraus, und eine Handeingabe in den einzigen aktivierten Lauf
+     * kippte damit die GANZE Veranstaltung vom schnellen in den langsamen Takt — für die übrigen
+     * Läufe der Runde sah das aus, als stünde der Abruf (beobachtet am Regattatag 14.08.2026).
+     */
+    val autoPausedAt: LocalDateTime?,
     val target: RaceClockerMatchTarget,
 )

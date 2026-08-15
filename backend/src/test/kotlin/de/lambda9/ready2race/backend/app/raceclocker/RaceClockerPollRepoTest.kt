@@ -305,12 +305,30 @@ class RaceClockerPollRepoTest {
         assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
     }
 
-    /** Wer von Hand eingetragen hat, hat das letzte Wort - bis er den Lauf wieder freigibt. */
+    /**
+     * Wer von Hand eingetragen hat, hat das letzte Wort - aber nur für DIESEN Lauf. Der pausierte
+     * Lauf kommt deshalb weiter als Kandidat zurück, markiert über [RaceClockerPollCandidate
+     * .autoPausedAt]: Der Job überspringt sein Schreiben, aber seine Aktivierung zählt weiter für
+     * den Takt der Veranstaltung. Als die Abfrage ihn noch herausfilterte, schaltete eine
+     * Handeingabe in den einzigen aktivierten Lauf die ganze Veranstaltung auf den langsamen
+     * Takt - für die übrigen Läufe der Runde sah das aus, als stünde der Abruf (Regattatag
+     * 14.08.2026).
+     */
     @Test
-    fun aPausedMatchIsExcluded() = testComprehension {
-        val eventId = seed(autoPausedAt = now).eventId
+    fun aPausedMatchStaysACandidateAndCarriesItsPause() = testComprehension {
+        val seeded = seed(autoPausedAt = now)
 
-        assertEquals(emptyList(), !RaceClockerPollRepo.getCandidates(eventId))
+        val candidate = (!RaceClockerPollRepo.getCandidates(seeded.eventId)).single()
+        assertEquals(seeded.matchId, candidate.matchId)
+        assertEquals(now, candidate.autoPausedAt)
+    }
+
+    /** Die Gegenprobe zur Markierung: Ein unpausierter Lauf trägt keine. */
+    @Test
+    fun anUnpausedMatchCarriesNoPause() = testComprehension {
+        val seeded = seed()
+
+        assertEquals(null, (!RaceClockerPollRepo.getCandidates(seeded.eventId)).single().autoPausedAt)
     }
 
     /**
