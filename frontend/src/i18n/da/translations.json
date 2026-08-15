@@ -2735,7 +2735,17 @@
     "show": "Vis QR-kode",
     "deleteConfirm": "Vil du virkelig slette QR-koden?",
     "noQrCodeAssigned": "Ingen QR-kode tildelt",
-    "cameraError": "Kameraet kan ikke startes"
+    "cameraError": "Kameraet kan ikke startes",
+    "unlinked": {
+      "title": "Dette bånd er ikke knyttet endnu",
+      "intro": "Kig forbi sekretariatet og få det knyttet til dit navn — så har du hele dit stævne lige her:",
+      "benefitMatches": "Dine løb med starttider på et øjeblik",
+      "benefitCountdown": "Nedtælling til din næste start",
+      "benefitResults": "Dine tider og placeringer straks efter målgang",
+      "benefitSubstitute": "Også løb, hvor du er sat ind som reserve",
+      "benefitLive": "Alt opdaterer sig selv — ingen genindlæsning",
+      "rescan": "Scan derefter blot båndet igen."
+    }
   },
   "qrAppuser": {
     "title": "QR-appbruger",
