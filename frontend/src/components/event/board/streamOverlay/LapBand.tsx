@@ -9,14 +9,20 @@ interface LapBandProps {
     element: BoardElement
 }
 
-/** Startversatz eines neu eintreffenden Rundeneintrags — schiebt sichtbar von rechts herein. */
-const LAP_ENTER_OFFSET = 260
+/**
+ * Startversatz eines neu eintreffenden Rundeneintrags. NEGATIV: Der neue Eintrag kommt von links
+ * herein und schiebt die älteren nach rechts aus dem Band - dieselbe Richtung, in der die Zeiten
+ * gedanklich eintreffen. Vorher kam er von rechts hereingefahren und lief damit gegen die
+ * Leserichtung der Reihe (neueste links).
+ */
+const LAP_ENTER_OFFSET = -260
 
 /**
  * Modus „Rundenanzeige": schmales Bauchband unten (~10 vh), bis zu drei zuletzt
  * eingetroffene Rundenzeiten nebeneinander — neueste links, mit Akzentrand. Eine neue
- * Rundenzeit schiebt per translateX-FLIP von rechts herein, die übrigen rücken nach
- * (FlipList mit axis="x" übernimmt beides über dieselbe Positionsmessung).
+ * Rundenzeit schiebt per translateX-FLIP von links herein, die übrigen rücken nach rechts
+ * und die älteste fällt hinten heraus (FlipList mit axis="x" übernimmt beides über dieselbe
+ * Positionsmessung).
  */
 const LapBand = ({laps, element}: LapBandProps) => {
     const theme = useTheme()
@@ -44,7 +50,11 @@ const LapBand = ({laps, element}: LapBandProps) => {
                     axis="x"
                     enterOffset={LAP_ENTER_OFFSET}
                     items={laps}
-                    keyOf={lap => `${lap.startNumber}-${lap.lapName}-${lap.recordedAt ?? ''}`}
+                    // Der Schlüssel darf den Erfassungszeitpunkt NICHT enthalten: Solange der Abruf
+                    // ihn je Takt neu vergab, galt jede Runde bei jedem Takt als neuer Eintrag und
+                    // das Band animierte im Sekundentakt durch. Boot und Marke identifizieren die
+                    // Zeile eindeutig.
+                    keyOf={lap => `${lap.startNumber}-${lap.lapName}`}
                     // `flex`/`minWidth` müssen auf FlipLists Wrapper-<div> sitzen — das ist
                     // das tatsächliche Flex-Item der Stack-Row, nicht diese innere Box.
                     itemStyle={{flex: '1 1 0', minWidth: '16rem'}}

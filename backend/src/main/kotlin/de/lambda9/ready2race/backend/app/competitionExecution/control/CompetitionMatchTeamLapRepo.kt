@@ -14,7 +14,47 @@ object CompetitionMatchTeamLapRepo {
 
     fun create(records: List<CompetitionMatchTeamLapRecord>) = COMPETITION_MATCH_TEAM_LAP.insert(records)
 
-    /** Alle Runden eines Boots - der Abruf ersetzt sie je Takt vollständig (Löschen + Einfügen). */
+    /**
+     * Schreibt die Runden eines Boots, ohne ihren Erfassungszeitpunkt zu verlieren.
+     *
+     * Der Abruf ersetzte sie bis zum 15.08.2026 je Takt vollständig (Löschen + Einfügen mit
+     * `created_at = now`). Damit trug jede Runde denselben, bei jedem Takt neuen Zeitstempel -
+     * und das Rundenband des Livestreams, das "zuletzt eingetroffen" danach sortiert, hatte
+     * nichts zu sortieren: Es fiel auf den Rundennamen zurück und zeigte ewig 1, 2, 3.
+     *
+     * Der Upsert trifft die Zeile über den eindeutigen Index (Boot, Position) und lässt
+     * `created_at` stehen. Der Zeitstempel bedeutet damit, was sein Name sagt: wann diese Marke
+     * zum ersten Mal da war. Name und Zeit werden nachgezogen - der Zeitnehmer darf eine Marke
+     * umbenennen oder korrigieren.
+     */
+    fun upsert(records: List<CompetitionMatchTeamLapRecord>) = Jooq.query {
+        with(COMPETITION_MATCH_TEAM_LAP) {
+            records.forEach { record ->
+                insertInto(this)
+                    .set(record)
+                    .onConflict(COMPETITION_MATCH_TEAM, POSITION)
+                    .doUpdate()
+                    .set(NAME, record.name)
+                    .set(LAP_MILLIS, record.lapMillis)
+                    .execute()
+            }
+        }
+    }
+
+    /**
+     * Löscht die Marken jenseits von [keepPositions] - das Gegenstück zum Upsert, für den Fall,
+     * dass der Zeitnehmer eine Marke wieder entfernt. Ohne das bliebe sie stehen, weil der Upsert
+     * nur schreibt, was der Feed liefert.
+     */
+    fun deleteBeyond(teamId: UUID, keepPositions: Collection<Int>) =
+        COMPETITION_MATCH_TEAM_LAP.delete {
+            COMPETITION_MATCH_TEAM.eq(teamId).and(
+                if (keepPositions.isEmpty()) org.jooq.impl.DSL.trueCondition()
+                else POSITION.notIn(keepPositions)
+            )
+        }
+
+    /** Alle Runden eines Boots - beim Zurücksetzen eines Laufs. */
     fun deleteByTeam(teamId: UUID) = COMPETITION_MATCH_TEAM_LAP.delete { COMPETITION_MATCH_TEAM.eq(teamId) }
 
     fun getByTeams(teamIds: List<UUID>) = COMPETITION_MATCH_TEAM_LAP.select { COMPETITION_MATCH_TEAM.`in`(teamIds) }

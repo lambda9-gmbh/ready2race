@@ -40,6 +40,13 @@ data class MatchTeamLapDto(
     val name: String,
     val timeString: String,
     val recordedAt: LocalDateTime? = null,
+    /**
+     * Die gefahrene Zeit als Zahl - reine Sortierhilfe des Rundenbands, angezeigt wird
+     * [timeString]. Trifft im selben Abruf mehreres ein, tragen die Marken denselben
+     * [recordedAt]; dann ist die höhere Zeit die jüngere Nachricht, weil dieses Boot später an
+     * der Marke war.
+     */
+    val lapMillis: Long? = null,
 )
 
 /**
@@ -56,4 +63,5 @@ fun matchTeamLapDto(name: String, lapMillis: Long, recordedAt: LocalDateTime? = 
         millisecondPrecision = Timecode.MillisecondPrecision.ONE,
     ).toString(),
     recordedAt = recordedAt,
+    lapMillis = lapMillis,
 )
