@@ -108,10 +108,27 @@ export const streamOverlayContent = (
             return laps.length > 0 ? {kind: 'laps', match: running, laps} : null
         }
         default:
-            return running
-                ? {kind: 'running', match: running}
-                : latestResult
-                  ? {kind: 'result', result: latestResult}
-                  : null
+            return autoContent(running, latestResult)
     }
+}
+
+/**
+ * Der Auto-Modus: was die Kachel zeigt, wenn niemand von Hand umschaltet.
+ *
+ * Ein Lauf, der nur an den Start gerufen ist (PREPARING), verdrängt das jüngste Ergebnis
+ * nicht mehr. Vorher tat er es: Kaum war das nächste Rennen aktiviert, verschwand das
+ * Ergebnis des eben gefahrenen aus dem Stream — für die Zuschauer sprang die Grafik auf ein
+ * Rennen, das noch minutenlang am Steg lag, und die Zeiten des gerade beendeten Laufs waren
+ * nie zu lesen. Erst der belegte Start übernimmt.
+ *
+ * Nur solange es noch gar kein Ergebnis gibt (der erste Lauf des Tages), ist der vorbereitete
+ * Lauf das Beste, was die Kachel zeigen kann — besser als eine leere Key-Fläche.
+ */
+export const autoContent = (
+    running: AthleteBoardMatch | null | undefined,
+    latestResult: AthleteBoardResult | null | undefined,
+): StreamOverlayContent => {
+    if (running && running.state === 'RUNNING') return {kind: 'running', match: running}
+    if (latestResult) return {kind: 'result', result: latestResult}
+    return running ? {kind: 'running', match: running} : null
 }
