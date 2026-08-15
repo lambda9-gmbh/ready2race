@@ -26,6 +26,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_HAS_PARTICIPANT_REQUIREMENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT
+import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_REQUIREMENT
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.testing.kio.TestComprehensionScope
@@ -393,6 +394,47 @@ class ParticipantRequirementApproveForParticipantTest {
 
         val competitions = fulfillments(seed, seed.ilka).mapNotNull { it.competition }.toSet()
         assertEquals(setOf(seed.competitionA, seed.competitionB), competitions)
+    }
+
+    /**
+     * Der Abgleich einer veranstaltungsweiten Bedingung darf keine zweite Zeile anlegen, wenn die
+     * vorhandene aus der Bestandsmigration V202608141900 stammt und einen Tag trägt.
+     *
+     * Vor der Umstellung auf den Upsert fragte der Abgleich nur, ob IRGENDEINE Zeile existiert,
+     * und zog dann bloß die Notiz nach. Genau dieses Verhalten muss für Bedingungen ohne Schalter
+     * erhalten bleiben - sonst wächst die Tabelle bei jedem Abgleich um eine Zeile je Person.
+     */
+    @Test
+    fun bulkMaintenanceDoesNotDuplicateAStampedLegacyRow() = testComprehension {
+        val seed = seed()
+
+        // Der Bestand: abgehakt, aber mit Tag gestempelt - wie ihn die Migration hinterlassen hat.
+        !PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.insert(
+            ParticipantHasRequirementForEventRecord(
+                event = seed.eventId,
+                participant = seed.ilka,
+                participantRequirement = seed.requirementId,
+                eventDay = seed.tagHeute,
+                competition = null,
+                note = "aus dem Bestand",
+                createdBy = SYSTEM_USER,
+                createdAt = now,
+            )
+        )
+
+        !ParticipantRequirementService.approveRequirementForEvent(
+            seed.eventId,
+            ParticipantRequirementCheckForEventUpsertDto(
+                requirementId = seed.requirementId,
+                approvedParticipants = listOf(CheckedParticipantRequirement(id = seed.ilka, note = "geprüft")),
+            ),
+            SYSTEM_USER,
+        )
+
+        val rows = fulfillments(seed, seed.ilka)
+        assertEquals(1, rows.size, "die Bestandszeile bleibt die einzige")
+        assertEquals(seed.tagHeute, rows.single().eventDay, "und behält ihren Stempel")
+        assertEquals("geprüft", rows.single().note, "nachgezogen wird nur die Notiz")
     }
 
     /**
