@@ -53,13 +53,32 @@ const InvoiceTable = (props: Props) => {
                 const organization = row.billedToOrganization ?? row.billedToName
                 const name = row.billedToName !== organization ? row.billedToName : undefined
                 return (
-                    <Stack>
+                    <Stack sx={{py: 0.5}}>
                         <Typography>{organization ?? '-'}</Typography>
-                        {name && (
+                        {row.billedToContacts.length > 0 ? (
+                            // Die Empfaenger sind der aktuelle Stand des Vereins, nicht der zur
+                            // Rechnungserstellung - hierhin geht die Rechnung heute raus.
+                            row.billedToContacts.map(contact => (
+                                <Typography
+                                    key={contact.email}
+                                    variant={'caption'}
+                                    color={'text.secondary'}>
+                                    {contact.name !== organization && `${contact.name} · `}
+                                    <Link
+                                        href={`mailto:${contact.email}`}
+                                        color={'inherit'}
+                                        onClick={e => e.stopPropagation()}>
+                                        {contact.email}
+                                    </Link>
+                                </Typography>
+                            ))
+                        ) : name ? (
+                            // Rueckfallebene: der Verein hat keine Nutzer mehr, dann bleibt nur
+                            // der zur Rechnungserstellung festgehaltene Name.
                             <Typography variant={'caption'} color={'text.secondary'}>
                                 {name}
                             </Typography>
-                        )}
+                        ) : null}
                     </Stack>
                 )
             },

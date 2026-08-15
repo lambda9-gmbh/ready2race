@@ -2181,11 +2181,17 @@ export type InviteRequest = {
     callbackUrl: string
 }
 
+export type InvoiceContactDto = {
+    name: string
+    email: string
+}
+
 export type InvoiceDto = {
     id: string
     invoiceNumber: string
     billedToOrganization?: string
     billedToName?: string
+    billedToContacts: Array<InvoiceContactDto>
     totalAmount: string
     createdAt: string
     paidAt?: string
