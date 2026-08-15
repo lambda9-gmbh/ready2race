@@ -123,6 +123,42 @@ export const crewLines = (
 }
 
 /**
+ * Alle Trennzeichen, die in den beiden Crew-Zeilen vorkommen können: Vereinskette
+ * (`ClubComposition.SEPARATOR` im Backend), Teamname-Anhang (`clubLabel`) und
+ * Besatzungskette (`participantsLabel`). Eine gemeinsame Liste reicht — welcher Text in
+ * welcher Zeile steht, entscheidet `streamCrew`, die Trennzeichen bleiben dieselben.
+ */
+export const CREW_UNIT_SEPARATORS = [' / ', ' | ', ' · '] as const
+
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * Zerlegt eine bereits zusammengefügte Aufzählung in Einheiten, zwischen denen umgebrochen
+ * werden darf — nie mitten in einem Vereins- oder Athletennamen. Jede Einheit nimmt ihr
+ * nachfolgendes Trennzeichen mit, damit keine Zeile mit einem einsamen „/" beginnt; die
+ * Leerzeichen des angeklebten Trennzeichens werden geschützt (NBSP), weil ein normales
+ * Leerzeichen am Ende eines `inline-block` beim Zeilenumbruch kollabiert und das „/" sonst
+ * ohne Abstand am Namen klebte.
+ */
+export const enumerationUnits = (
+    text: string,
+    separators: readonly string[] = CREW_UNIT_SEPARATORS,
+): string[] => {
+    if (!text) return []
+    const usable = separators.filter(separator => separator.length > 0)
+    if (usable.length === 0) return [text]
+    // split mit fangender Gruppe liefert [Stück, Trenner, Stück, Trenner, …, Stück].
+    const parts = text.split(new RegExp(`(${usable.map(escapeRegExp).join('|')})`))
+    const units: string[] = []
+    for (let i = 0; i < parts.length; i += 2) {
+        const separator = parts[i + 1]
+        const unit = parts[i] + (separator ? separator.replace(/ /g, '\u00A0') : '')
+        if (unit) units.push(unit)
+    }
+    return units
+}
+
+/**
  * Platz/Zeit, DNF/DNS/DSQ oder „Abgemeldet" einer Bootszeile — null ohne jedes Teilergebnis
  * (Aufstellung).
  *
