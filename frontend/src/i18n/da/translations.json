@@ -2761,7 +2761,10 @@
     "assignmentInfo": "Tildelingsinformation"
   },
   "qrScanner": {
-    "title": "Scanner"
+    "title": "Scanner",
+    "cameraError": "Kameraet kunne ikke åbnes",
+    "cameraErrorHint": "Kameraet bruges muligvis af en anden app, eller adgangen blev nægtet.",
+    "cameraRetry": "Genstart kameraet"
   },
   "qrEvents": {
     "title": "Arrangementer",
