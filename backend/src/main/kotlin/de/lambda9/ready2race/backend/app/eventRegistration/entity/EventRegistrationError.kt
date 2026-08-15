@@ -15,6 +15,11 @@ sealed interface EventRegistrationError : ServiceError {
     data object SelfRegistrationOnlyForSingleCompetitions : EventRegistrationError
     data object OnlyAvailableForClubUsers : EventRegistrationError
     data object DocumentsAlreadyAccepted : EventRegistrationError
+    data object MailWithoutRecipients : EventRegistrationError
+
+    data class MailRecipientNotFound(val registrationId: UUID) : EventRegistrationError
+    data class MailRecipientWithoutUser(val registrationId: UUID) : EventRegistrationError
+    data class MailAddressInvalid(val address: String) : EventRegistrationError
 
     data class InvalidRegistration(val msg: String) : EventRegistrationError
     data class UpsertParticipantNotFound(val id: UUID) : EventRegistrationError
@@ -136,6 +141,28 @@ sealed interface EventRegistrationError : ServiceError {
         DocumentsAlreadyAccepted -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "The event documents have already been accepted"
+        )
+
+        MailWithoutRecipients -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "No recipients selected"
+        )
+
+        is MailRecipientNotFound -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Registration with id: $registrationId does not belong to this event"
+        )
+
+        // Passiert, wenn der Dialog offen stand, während der Nutzer gelöscht wurde. Lieber der
+        // ganze Versand abgelehnt als eine Rundmail, die still einen Verein auslässt.
+        is MailRecipientWithoutUser -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "Registration with id: $registrationId has no user to send to"
+        )
+
+        is MailAddressInvalid -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Not a usable email address: $address"
         )
     }
 }

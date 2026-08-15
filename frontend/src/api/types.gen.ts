@@ -3421,6 +3421,25 @@ export type RatingCategoryToEventRequest = {
 
 export type RegistrationInvoiceType = 'REGULAR' | 'LATE'
 
+export type RegistrationMailRecipientDto = {
+    registrationId: string
+    clubId: string
+    clubName: string
+    name?: string
+    email?: string
+}
+
+export type RegistrationMailRequest = {
+    subject: string
+    body: string
+    registrationIds: Array<string>
+    additionalAddresses: Array<string>
+}
+
+export type RegistrationMailResultDto = {
+    enqueued: number
+}
+
 export type ResendAccessTokenRequest = {
     callbackUrl: string
 }
@@ -6334,6 +6353,30 @@ export type AcceptEventRegistrationDocumentsError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type GetRegistrationMailRecipientsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRegistrationMailRecipientsResponse = Array<RegistrationMailRecipientDto>
+
+export type GetRegistrationMailRecipientsError = ApiError
+
+export type SendRegistrationMailData = {
+    body: {
+        request: RegistrationMailRequest
+        files?: Array<Blob | File>
+    }
+    path: {
+        eventId: string
+    }
+}
+
+export type SendRegistrationMailResponse = RegistrationMailResultDto
+
+export type SendRegistrationMailError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventRegistrationTemplateData = {
     path: {
