@@ -2247,6 +2247,7 @@
       "showHeader": "Kopfzeile mit Name und Uhr",
       "stream": {
         "running": "Läuft",
+        "preparing": "In Vorbereitung",
         "result": "Ergebnis",
         "upcoming": "Als Nächstes",
         "mode": {

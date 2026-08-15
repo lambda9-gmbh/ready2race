@@ -5,6 +5,7 @@ import {
     crewLines,
     formatCountdownClock,
     roundMatchLabel,
+    runningBadge,
     solidOr,
     streamNameForms,
     teamTrailingLabel,
@@ -190,5 +191,21 @@ describe('streamNameForms', () => {
             competitions: true,
             clubs: true,
         })
+    })
+})
+
+/**
+ * Bug vom Regattatag (14.08.): das Badge sagte „LÄUFT", sobald ein Lauf nur an den Start
+ * gerufen war (PREPARING) — der Running-Block des Servers führt auch diese Läufe, und
+ * Slot 0 nimmt den letzten daraus. Andere Zustände als PREPARING/RUNNING liefert der
+ * Block nicht (LiveDashboardLogic.deriveMatchState mit activatedAt != null).
+ */
+describe('runningBadge', () => {
+    it('PREPARING: „In Vorbereitung" ohne Indikator-Punkt — der Punkt heißt „on air"', () => {
+        expect(runningBadge('PREPARING')).toEqual({labelKey: 'preparing', indicator: false})
+    })
+
+    it('RUNNING: „LÄUFT" mit Punkt', () => {
+        expect(runningBadge('RUNNING')).toEqual({labelKey: 'running', indicator: true})
     })
 })

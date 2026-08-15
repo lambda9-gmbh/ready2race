@@ -2241,6 +2241,7 @@
       "showHeader": "Sidehoved med navn og ur",
       "stream": {
         "running": "I gang",
+        "preparing": "Under forberedelse",
         "result": "Resultat",
         "upcoming": "Næste",
         "mode": {
