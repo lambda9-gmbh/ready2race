@@ -1581,7 +1581,31 @@
       },
       "mostRecent": "Latest registrations",
       "teams": "Teams",
-      "teamMembers": "Team members"
+      "teamMembers": "Team members",
+      "mail": {
+        "open": "Write bulk mail",
+        "title": "Bulk mail to registrants",
+        "recipients": "Recipients",
+        "noUser": "no user left – will not receive a mail",
+        "additionalAddresses": "Additional addresses",
+        "addressHint": "Type an address and press Enter",
+        "subject": "Subject",
+        "body": "Text",
+        "placeholders": "Placeholders: ##recipient##, ##club##, ##event## – replaced per recipient",
+        "attachments": "Attachments",
+        "addAttachment": "Attach file",
+        "attachmentWarning": "The attachments add up to {{size}} and are sent to every recipient separately.",
+        "send": "Send",
+        "success": "{{count}} emails enqueued",
+        "confirm": {
+          "title": "Send bulk mail?",
+          "text": "The mail goes out to {{count}} recipients. Once sent it cannot be recalled."
+        },
+        "error": {
+          "invalidAddress": "Not a valid address: {{address}}",
+          "recipientGone": "One registrant no longer has a user. Please reopen the dialog."
+        }
+      }
     },
     "participants": "Participants",
     "tabs": {
