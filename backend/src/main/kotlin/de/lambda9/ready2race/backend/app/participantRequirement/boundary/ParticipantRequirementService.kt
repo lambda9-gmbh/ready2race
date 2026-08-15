@@ -241,18 +241,26 @@ object ParticipantRequirementService {
         // folgenlos.
         !dto.approvedParticipants.traverse<Any?, ParticipantRequirementError, CheckedParticipantRequirement, Unit> { approved ->
             KIO.comprehension {
-                !ParticipantHasRequirementForEventRepo.upsertFulfillment(
-                    ParticipantHasRequirementForEventRecord(
-                        event = eventId,
-                        participant = approved.id,
-                        participantRequirement = dto.requirementId,
-                        eventDay = key.eventDay,
-                        competition = key.competition,
-                        note = approved.note,
-                        createdBy = userId,
-                        createdAt = LocalDateTime.now(),
-                    )
-                ).orDie()
+                // Geschrieben wird nur, wo der Rahmen noch NICHT abgedeckt ist. Ein bedingungsloser
+                // Upsert wäre subtil falsch: Er trifft die eindeutige Zeile (Person, Bedingung,
+                // Tag, Wettkampf) und legt deshalb bei einer veranstaltungsweiten Bedingung eine
+                // zweite Zeile an, sobald die vorhandene aus der Bestandsmigration V202608141900
+                // stammt und einen Tag trägt. Abgedeckt war die Person vorher wie nachher - nur
+                // stünde sie danach doppelt in der Tabelle.
+                if (approved.id !in coveredBefore) {
+                    !ParticipantHasRequirementForEventRepo.upsertFulfillment(
+                        ParticipantHasRequirementForEventRecord(
+                            event = eventId,
+                            participant = approved.id,
+                            participantRequirement = dto.requirementId,
+                            eventDay = key.eventDay,
+                            competition = key.competition,
+                            note = approved.note,
+                            createdBy = userId,
+                            createdAt = LocalDateTime.now(),
+                        )
+                    ).orDie()
+                }
 
                 // Die Notiz gehört dem Abgleich: Anders als beim Doppel-Scan an der Waage ist
                 // eine geleerte Notiz hier eine Ansage und keine fehlende Angabe - deshalb wird
