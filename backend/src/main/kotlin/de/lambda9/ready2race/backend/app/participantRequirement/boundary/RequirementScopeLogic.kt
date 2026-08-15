@@ -113,6 +113,42 @@ object RequirementScopeLogic {
         }
     }
 
+    /** Ein Lauf, wie ihn [frameStart] zum Suchen des ersten Laufs braucht. */
+    data class MatchStart(
+        val eventDay: UUID?,
+        val competition: UUID?,
+        val startTime: LocalDateTime?,
+    )
+
+    /**
+     * Der Start des ERSTEN Laufs des Bezugsrahmens - der Punkt, gegen den das Erledigungsfenster
+     * rechnet.
+     *
+     * Die Regel lautet "je Tag und je Wettkampf", nicht "je Lauf": Wer einmal für einen Wettkampf
+     * an einem Tag gewogen ist, ist es für alle Runden dieses Wettkampfs an diesem Tag - Vorlauf,
+     * Viertelfinale, Halbfinale und Finale sind Runden desselben Wettkampfs. Gerechnet wurde
+     * trotzdem gegen den gerade angezeigten Lauf, und damit stand dieselbe Waage am Vorlauf auf
+     * "rechtzeitig" und am Finale vier Stunden später auf "zu früh" (Regattatag 15.08.2026).
+     *
+     * Verglichen werden nur die Dimensionen, die der jeweilige Schalter verlangt - dieselbe Regel
+     * wie in [covers]. Ohne Schalter gibt es keinen Rahmen, der über den Lauf hinausginge: dann
+     * bleibt es beim [fallback], also beim Lauf selbst.
+     */
+    fun frameStart(
+        scope: Scope,
+        match: MatchScope,
+        starts: Collection<MatchStart>,
+        fallback: LocalDateTime?,
+    ): LocalDateTime? {
+        if (!scope.perEventDay && !scope.perCompetition) return fallback
+
+        val inFrame = starts.filter { candidate ->
+            (!scope.perEventDay || candidate.eventDay == match.eventDay) &&
+                (!scope.perCompetition || candidate.competition == match.competition)
+        }
+        return inFrame.mapNotNull { it.startTime }.minOrNull() ?: fallback
+    }
+
     /**
      * Der Bezugszeitpunkt, gegen den das Erledigungsfenster einer Bedingung rechnet.
      *

@@ -37,6 +37,14 @@ enum class TimeCheckStatus { OK, TOO_EARLY, LATE, NOT_CHECKED }
 data class TimeCheckDto(
     val deltaMinutes: Long?,
     val status: TimeCheckStatus,
+    /**
+     * Der Start, gegen den gerechnet wurde. Bei einer Bedingung je Tag und/oder je Wettkampf ist
+     * das der ERSTE Lauf dieses Rahmens, nicht der gerade gezeigte - die Ansicht muss das
+     * dazusagen können, sonst liest sich eine Abweichung als Aussage über diesen Lauf.
+     */
+    val referenceStartTime: java.time.LocalDateTime? = null,
+    /** true, wenn [referenceStartTime] ein anderer Lauf ist als der gezeigte. */
+    val referenceIsFrameStart: Boolean = false,
 )
 
 data class LiveDashboardRequirementStatusDto(

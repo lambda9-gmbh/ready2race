@@ -16525,6 +16525,18 @@ components:
           nullable: true
         status:
           $ref: '#/components/schemas/TimeCheckStatus'
+        referenceStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: >-
+            Der Start, gegen den gerechnet wurde. Bei einer Bedingung je Tag und/oder je Wettkampf
+            ist das der ERSTE Lauf dieses Rahmens, nicht der gerade gezeigte Lauf.
+        referenceIsFrameStart:
+          type: boolean
+          description: >-
+            true, wenn referenceStartTime ein anderer Lauf ist als der gezeigte - dann muss die
+            Ansicht dazusagen, worauf sich die Abweichung bezieht.
 
     LiveDashboardRequirementStatusDto:
       type: object

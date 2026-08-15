@@ -3816,6 +3816,14 @@ export type ThemeConfigDto = {
 export type TimeCheckDto = {
     deltaMinutes?: number | null
     status: TimeCheckStatus
+    /**
+     * Der Start, gegen den gerechnet wurde. Bei einer Bedingung je Tag und/oder je Wettkampf ist das der ERSTE Lauf dieses Rahmens, nicht der gerade gezeigte Lauf.
+     */
+    referenceStartTime?: string | null
+    /**
+     * true, wenn referenceStartTime ein anderer Lauf ist als der gezeigte - dann muss die Ansicht dazusagen, worauf sich die Abweichung bezieht.
+     */
+    referenceIsFrameStart?: boolean
 }
 
 export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'

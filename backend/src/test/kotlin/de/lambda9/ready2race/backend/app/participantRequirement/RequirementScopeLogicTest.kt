@@ -256,4 +256,115 @@ class RequirementScopeLogicTest {
             ),
         )
     }
+
+    // ---------------------------------------------------------------------------------------
+    // frameStart: der erste Lauf des Bezugsrahmens
+    // ---------------------------------------------------------------------------------------
+
+    private fun start(day: UUID?, competition: UUID?, hour: Int) = RequirementScopeLogic.MatchStart(
+        eventDay = day,
+        competition = competition,
+        startTime = LocalDateTime.of(2026, 8, 16, hour, 0),
+    )
+
+    /**
+     * Der Fall vom Regattatag: Vorlauf 12:00, Viertelfinale 14:00, Halbfinale 16:00, Finale
+     * 18:00 - alles derselbe Wettkampf am selben Tag. Wer einmal gewogen ist, ist es für alle
+     * vier; gerechnet wird deshalb gegen den ersten, nicht gegen den gerade gezeigten Lauf.
+     */
+    @Test
+    fun theFirstMatchOfCompetitionAndDayIsTheReference() {
+        val laeufe = listOf(
+            start(tag1, wettkampfA, 12),
+            start(tag1, wettkampfA, 14),
+            start(tag1, wettkampfA, 16),
+            start(tag1, wettkampfA, 18),
+        )
+        val scope = RequirementScopeLogic.Scope(perEventDay = true, perCompetition = true)
+
+        // Egal, welcher Lauf gerade angezeigt wird - der Bezug bleibt der 12-Uhr-Lauf.
+        val ausSicht18Uhr = RequirementScopeLogic.frameStart(
+            scope,
+            RequirementScopeLogic.MatchScope(eventDay = tag1, competition = wettkampfA),
+            laeufe,
+            fallback = LocalDateTime.of(2026, 8, 16, 18, 0),
+        )
+        assertEquals(LocalDateTime.of(2026, 8, 16, 12, 0), ausSicht18Uhr)
+    }
+
+    @Test
+    fun anotherCompetitionOrDayHasItsOwnFirstMatch() {
+        val laeufe = listOf(
+            start(tag1, wettkampfA, 12),
+            start(tag1, wettkampfB, 9),
+            start(tag2, wettkampfA, 8),
+        )
+        val scope = RequirementScopeLogic.Scope(perEventDay = true, perCompetition = true)
+
+        assertEquals(
+            LocalDateTime.of(2026, 8, 16, 9, 0),
+            RequirementScopeLogic.frameStart(
+                scope,
+                RequirementScopeLogic.MatchScope(eventDay = tag1, competition = wettkampfB),
+                laeufe,
+                null,
+            ),
+            "der frühe Lauf des anderen Wettkampfs zählt nur für diesen",
+        )
+        assertEquals(
+            LocalDateTime.of(2026, 8, 16, 8, 0),
+            RequirementScopeLogic.frameStart(
+                scope,
+                RequirementScopeLogic.MatchScope(eventDay = tag2, competition = wettkampfA),
+                laeufe,
+                null,
+            ),
+            "und der morgige Tag hat seinen eigenen ersten Lauf",
+        )
+    }
+
+    /** Nur tagesbezogen: der erste Lauf des Tages, quer über alle Wettkämpfe. */
+    @Test
+    fun aDayScopedRequirementReferencesTheFirstMatchOfTheDay() {
+        val laeufe = listOf(start(tag1, wettkampfA, 12), start(tag1, wettkampfB, 9))
+        assertEquals(
+            LocalDateTime.of(2026, 8, 16, 9, 0),
+            RequirementScopeLogic.frameStart(
+                RequirementScopeLogic.Scope(perEventDay = true, perCompetition = false),
+                RequirementScopeLogic.MatchScope(eventDay = tag1, competition = wettkampfA),
+                laeufe,
+                null,
+            ),
+        )
+    }
+
+    /** Ohne Schalter gibt es keinen Rahmen über den Lauf hinaus - es bleibt beim Lauf selbst. */
+    @Test
+    fun withoutSwitchesTheMatchItselfStaysTheReference() {
+        val eigenerStart = LocalDateTime.of(2026, 8, 16, 18, 0)
+        assertEquals(
+            eigenerStart,
+            RequirementScopeLogic.frameStart(
+                RequirementScopeLogic.Scope.forWholeEvent,
+                RequirementScopeLogic.MatchScope(eventDay = tag1, competition = wettkampfA),
+                listOf(start(tag1, wettkampfA, 12)),
+                fallback = eigenerStart,
+            ),
+        )
+    }
+
+    /** Kennt die Ansicht die Läufe des Rahmens nicht, bleibt der Lauf selbst der Bezug. */
+    @Test
+    fun anEmptyFrameFallsBackToTheMatch() {
+        val eigenerStart = LocalDateTime.of(2026, 8, 16, 18, 0)
+        assertEquals(
+            eigenerStart,
+            RequirementScopeLogic.frameStart(
+                RequirementScopeLogic.Scope(perEventDay = true, perCompetition = true),
+                RequirementScopeLogic.MatchScope(eventDay = tag1, competition = wettkampfA),
+                emptyList(),
+                fallback = eigenerStart,
+            ),
+        )
+    }
 }

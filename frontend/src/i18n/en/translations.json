@@ -1871,7 +1871,8 @@
         "LATE": "Fulfilled late",
         "NOT_CHECKED": "Pending",
         "beforeStart": "{{delta}} before start",
-        "afterStart": "{{delta}} after start"
+        "afterStart": "{{delta}} after start",
+        "frameReference": "relative to the first match of this competition on this day ({{time}})"
       },
       "checkSeverity": {
         "manage": "Manage checks",
