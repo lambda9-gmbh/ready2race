@@ -207,6 +207,8 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                         variant="subtitle2"
                                                         fontWeight="bold">
                                                         {`${participant.firstname} ${participant.lastname}`}
+                                                        {participant.year != null &&
+                                                            ` (${t('club.participant.yearShort', {year: participant.year})})`}
                                                     </Typography>
                                                     <Divider />
                                                     <Stack spacing={0.5}>
@@ -398,7 +400,19 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                             <TableCell
                                                 sx={{
                                                     width: '30%',
-                                                }}>{`${participant.firstname} ${participant.lastname}`}</TableCell>
+                                                }}>
+                                                {`${participant.firstname} ${participant.lastname}`}
+                                                {participant.year != null && (
+                                                    <Typography
+                                                        variant={'caption'}
+                                                        color={'text.secondary'}
+                                                        sx={{display: 'block'}}>
+                                                        {t('club.participant.yearShort', {
+                                                            year: participant.year,
+                                                        })}
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
                                             <TableCell sx={{width: '25%'}}>
                                                 {np.namedParticipantName}
                                             </TableCell>

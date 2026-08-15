@@ -549,6 +549,7 @@
       "gender": "Køn",
       "role": "Rolle",
       "year": "Fødselsår",
+      "yearShort": "årg. {{year}}",
       "external": "Ekstern",
       "externalClub": "Ekstern klub",
       "externalHint": "Vælg denne mulighed, hvis du vil tilmelde et medlem af en anden klub.",
