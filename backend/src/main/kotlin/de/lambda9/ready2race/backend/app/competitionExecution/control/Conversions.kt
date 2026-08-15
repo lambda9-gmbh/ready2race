@@ -144,6 +144,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                                     place = team.place,
                                     failed = team.failed,
                                     deregistered = team.deregistered,
+                                    bye = team.bye,
                                 )
                             },
                             teamsInArena = teamsInArenaPerMatch[index],

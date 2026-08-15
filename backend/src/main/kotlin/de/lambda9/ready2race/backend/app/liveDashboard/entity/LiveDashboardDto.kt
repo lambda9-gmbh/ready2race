@@ -134,6 +134,12 @@ data class LiveDashboardTeamDto(
     val startedAt: java.time.LocalDateTime?,
     val failed: Boolean,
     val failedReason: String?,
+    /**
+     * Vergebenes Freilos (V202608151900): kommt ohne Start in die Folgerunde, hat deshalb weder
+     * Platz noch Zeit. Zählt als erledigt, aber nicht als gefahren - siehe
+     * [LiveDashboardLogic.teamIsSettled].
+     */
+    val bye: Boolean = false,
     /** Zeitstrafe in Sekunden; die Ergebniszeit enthält sie bereits. */
     val penaltySeconds: Int?,
     val penaltyNote: String?,

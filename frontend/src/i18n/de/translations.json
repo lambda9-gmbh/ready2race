@@ -1444,6 +1444,11 @@
         "allRequirements": "Alle aktiven Bedingungen",
         "submit": "Exportieren",
         "error": "Der Export konnte nicht erstellt werden."
+      },
+      "scope": {
+        "competitionHelp": "Der Abgleich gilt nur für diesen Wettkampf - Bestätigungen anderer Wettkämpfe bleiben unberührt.",
+        "chooseCompetition": "Diese Bedingung gilt je Wettkampf. Bitte zuerst den Wettkampf wählen.",
+        "todayOnly": "Diese Bedingung gilt je Wettkampftag. Der Abgleich schreibt und räumt nur den heutigen Tag."
       }
     },
     "action": {

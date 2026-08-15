@@ -76,6 +76,7 @@ object CompetitionMatchTeamRepo {
                 COMPETITION_MATCH_TEAM.START_NUMBER,
                 COMPETITION_MATCH_TEAM.PLACE,
                 COMPETITION_MATCH_TEAM.FAILED,
+                COMPETITION_MATCH_TEAM.BYE,
                 COMPETITION_MATCH_TEAM.FAILED_REASON,
                 COMPETITION_MATCH_TEAM.PENALTY_SECONDS,
                 COMPETITION_MATCH_TEAM.PENALTY_NOTE,
@@ -148,6 +149,10 @@ object CompetitionMatchTeamRepo {
             select(
                 COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
                 COMPETITION_MATCH_TEAM.START_NUMBER,
+                // Platz und Zeit fragt diese Abfrage bewusst nicht ab (siehe KDoc). Das Freilos
+                // ist kein Ergebnis, sondern wie die Abmeldung eine Feststellung vor dem Rennen -
+                // und gehört deshalb auch in den anstehenden Lauf.
+                COMPETITION_MATCH_TEAM.BYE,
                 COMPETITION_REGISTRATION.NAME.`as`("team_name"),
                 COMPETITION_REGISTRATION.TEAM_NUMBER,
                 CLUB.NAME.`as`("club_name"),
@@ -211,6 +216,7 @@ object CompetitionMatchTeamRepo {
                 COMPETITION_MATCH_TEAM.START_NUMBER,
                 COMPETITION_MATCH_TEAM.PLACE,
                 COMPETITION_MATCH_TEAM.FAILED,
+                COMPETITION_MATCH_TEAM.BYE,
                 COMPETITION_MATCH_TEAM.FAILED_REASON,
                 COMPETITION_MATCH_TEAM.PENALTY_SECONDS,
                 COMPETITION_MATCH_TEAM.PENALTY_NOTE,

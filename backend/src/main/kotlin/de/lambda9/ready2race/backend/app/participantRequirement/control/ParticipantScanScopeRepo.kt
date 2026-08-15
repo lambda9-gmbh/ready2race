@@ -52,4 +52,30 @@ object ParticipantScanScopeRepo {
                 )
             }
     }
+
+    /**
+     * Alle Wettkämpfe der Veranstaltung - die Auswahl für den Abgleich im Verwaltungs-UI, der
+     * anders als der Scan an der Waage nicht von einer Person ausgeht, sondern von der Bedingung.
+     */
+    fun getCompetitionsOfEvent(eventId: UUID): JIO<List<ParticipantScanCompetitionDto>> = Jooq.query {
+        select(
+            COMPETITION.ID,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES.NAME,
+            COMPETITION_PROPERTIES.SHORT_NAME,
+        )
+            .from(COMPETITION)
+            .join(COMPETITION_PROPERTIES)
+            .on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION.EVENT.eq(eventId))
+            .orderBy(COMPETITION_PROPERTIES.IDENTIFIER)
+            .fetch { r ->
+                ParticipantScanCompetitionDto(
+                    id = r[COMPETITION.ID]!!,
+                    identifier = r[COMPETITION_PROPERTIES.IDENTIFIER],
+                    name = r[COMPETITION_PROPERTIES.NAME]!!,
+                    shortName = r[COMPETITION_PROPERTIES.SHORT_NAME],
+                )
+            }
+    }
 }

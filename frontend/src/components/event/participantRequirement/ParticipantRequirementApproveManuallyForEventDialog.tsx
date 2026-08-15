@@ -1,10 +1,15 @@
 import EntityDialog from '@components/EntityDialog.tsx'
 import {BaseEntityDialogProps} from '@utils/types.ts'
-import {ParticipantForEventDto} from '@api/types.gen.ts'
-import {Stack} from '@mui/material'
-import {approveParticipantRequirementsForEvent, getParticipantsForEventInApp} from '@api/sdk.gen.ts'
+import {ParticipantForEventDto, ParticipantScanCompetitionDto} from '@api/types.gen.ts'
+import {Alert, MenuItem, Stack, TextField} from '@mui/material'
+import {
+    approveParticipantRequirementsForEvent,
+    getEventScanScope,
+    getParticipantsForEventInApp,
+} from '@api/sdk.gen.ts'
 import {useForm} from 'react-hook-form-mui'
-import {useCallback, useMemo} from 'react'
+import {useCallback, useMemo, useState} from 'react'
+import {competitionLabel, covers} from '@components/qrApp/requirementScope.ts'
 import {eventRoute} from '@routes'
 import FormInputTransferList from '@components/form/input/FormInputTransferList.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -17,6 +22,13 @@ export type ParticipantRequirementApproveManuallyForEventForm = {
     isGlobal: boolean
     namedParticipantId?: string
     namedParticipantName?: string
+    /**
+     * Die Geltung der Bedingung (V202608141900). Der Abgleich ersetzt den vollständigen Zustand
+     * und muss deshalb wissen, WOFÜR - ohne Wettkampf löschte er bei einer wettkampfbezogenen
+     * Bedingung die Bestätigungen aller anderen Wettkämpfe mit.
+     */
+    perEventDay?: boolean
+    perCompetition?: boolean
     approvedParticipants: Array<ParticipantForEventDto & {note?: string}>
 }
 
@@ -26,6 +38,31 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
     const {eventId} = eventRoute.useParams()
     const feedback = useFeedback()
     const {t} = useTranslation()
+    const [competitionId, setCompetitionId] = useState<string | null>(null)
+    const [competitions, setCompetitions] = useState<ParticipantScanCompetitionDto[]>([])
+    const [todayEventDayId, setTodayEventDayId] = useState<string | null>(null)
+
+    const perCompetition = props.entity?.perCompetition === true
+    const perEventDay = props.entity?.perEventDay === true
+
+    // Der Rahmen kommt vom Server: den heutigen Wettkampftag bestimmt dieselbe Regel, die ihn
+    // beim Speichern einträgt - eine zweite Quelle für "heute" wäre eine zu viel.
+    useFetch(signal => getEventScanScope({signal, path: {eventId}}), {
+        onResponse: ({data, error}) => {
+            if (error || !data) {
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('event.competition.competitions'),
+                    }),
+                )
+                return
+            }
+            setCompetitions(data.competitions)
+            setTodayEventDayId(data.todayEventDayId ?? null)
+        },
+        preCondition: () => props.entity?.requirementId != null,
+        deps: [eventId, props.entity],
+    })
 
     const editAction = (formData: ParticipantRequirementApproveManuallyForEventForm) => {
         return approveParticipantRequirementsForEvent({
@@ -37,6 +74,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
                     note: p.note,
                 })),
                 namedParticipantId: formData.namedParticipantId,
+                competitionId: perCompetition ? (competitionId ?? undefined) : undefined,
             },
         })
     }
@@ -90,20 +128,49 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
             ?.note,
     }))
 
+    // Angehakt ist, wessen Bestätigung DIESEN Rahmen abdeckt - dieselbe Regel wie an der Waage
+    // und vor dem Start. Ohne sie stünde jemand, der für einen anderen Wettkampf gewogen wurde,
+    // hier als erledigt, und das Speichern schriebe seine Bestätigung nie für den gewählten.
+    const scanContext = {todayEventDayId, competitionId}
+    const isApproved = useCallback(
+        (p: ParticipantForEventDto) =>
+            (p.participantRequirementsChecked ?? []).some(
+                r =>
+                    r.id === props.entity?.requirementId &&
+                    covers({perEventDay, perCompetition}, r, scanContext),
+            ),
+        [props.entity, perEventDay, perCompetition, todayEventDayId, competitionId],
+    )
+
     const onOpen = useCallback(() => {
         formContext.reset(
             props.entity
                 ? {
                       ...props.entity,
-                      approvedParticipants: options.filter(p =>
-                          p.participantRequirementsChecked?.some(
-                              r => r.id === props.entity?.requirementId,
-                          ),
-                      ),
+                      approvedParticipants: options.filter(isApproved),
                   }
                 : {},
         )
-    }, [props.entity, filteredParticipants])
+    }, [props.entity, filteredParticipants, isApproved])
+
+    // Ein Wettkampfwechsel ist ein anderer Zustand: die Liste muss neu vorbelegt werden, sonst
+    // trüge der Abgleich die Häkchen des vorigen Wettkampfs in den neuen.
+    const onCompetitionChange = (id: string) => {
+        setCompetitionId(id)
+        formContext.setValue(
+            'approvedParticipants',
+            options.filter(p =>
+                (p.participantRequirementsChecked ?? []).some(
+                    r =>
+                        r.id === props.entity?.requirementId &&
+                        covers({perEventDay, perCompetition}, r, {
+                            todayEventDayId,
+                            competitionId: id,
+                        }),
+                ),
+            ),
+        )
+    }
 
     return (
         <EntityDialog
@@ -118,10 +185,40 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
                     ? ` (${props.entity.namedParticipantName})`
                     : ''
             }`}>
-            <Stack>
+            <Stack spacing={2}>
+                {perCompetition && (
+                    <TextField
+                        select
+                        fullWidth
+                        label={t('qrParticipant.competitionLabel')}
+                        helperText={t('event.participantRequirement.scope.competitionHelp')}
+                        value={competitionId ?? ''}
+                        onChange={e => onCompetitionChange(e.target.value)}>
+                        {competitions.map(competition => (
+                            <MenuItem key={competition.id} value={competition.id}>
+                                {competitionLabel(competition)}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                )}
+
+                {perCompetition && competitionId === null && (
+                    <Alert severity="info">
+                        {t('event.participantRequirement.scope.chooseCompetition')}
+                    </Alert>
+                )}
+
+                {perEventDay && (
+                    <Alert severity={todayEventDayId === null ? 'warning' : 'info'}>
+                        {todayEventDayId === null
+                            ? t('qrParticipant.noEventDayToday')
+                            : t('event.participantRequirement.scope.todayOnly')}
+                    </Alert>
+                )}
+
                 {participantsPending ? (
                     <Throbber />
-                ) : (
+                ) : perCompetition && competitionId === null ? null : (
                     <FormInputTransferList
                         name={'approvedParticipants'}
                         options={options}

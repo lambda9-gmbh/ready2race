@@ -1444,6 +1444,11 @@
         "allRequirements": "Alle aktive betingelser",
         "submit": "Eksportér",
         "error": "Eksporten kunne ikke oprettes."
+      },
+      "scope": {
+        "competitionHelp": "Afstemningen gælder kun for denne konkurrence - bekræftelser for andre konkurrencer røres ikke.",
+        "chooseCompetition": "Dette krav gælder pr. konkurrence. Vælg først konkurrencen.",
+        "todayOnly": "Dette krav gælder pr. stævnedag. Afstemningen skriver og rydder kun dagen i dag."
       }
     },
     "action": {

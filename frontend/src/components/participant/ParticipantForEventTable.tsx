@@ -193,6 +193,14 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                                         name: r.name,
                                         assignmentType: 'global',
                                         qrCodeRequired: false,
+                                        perEventDay: r.perEventDay,
+                                        perCompetition: r.perCompetition,
+                                        // Seit V202608141900 kann dieselbe Bedingung mehrfach
+                                        // bestätigt sein - je Tag und je Wettkampf eine Zeile.
+                                        checkedCount:
+                                            row.participantRequirementsChecked?.filter(
+                                                c => c.id === r.id,
+                                            ).length ?? 0,
                                         checked:
                                             row.participantRequirementsChecked?.some(c => c.id === r.id) ??
                                             false,
@@ -204,12 +212,21 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
 
                             // Add named participant requirements for this specific participant
                             namedParticipantRequirements.forEach(req => {
+                                const scopeOf = globalRequirements.find(
+                                    r => r.id === req.requirementId,
+                                )
                                 requirementMap.set(req.requirementId, {
                                     id: req.requirementId,
                                     name: req.requirementName,
                                     assignmentType: 'named',
                                     participantName: req.participantName || 'Unknown',
                                     qrCodeRequired: req.qrCodeRequired,
+                                    perEventDay: scopeOf?.perEventDay,
+                                    perCompetition: scopeOf?.perCompetition,
+                                    checkedCount:
+                                        row.participantRequirementsChecked?.filter(
+                                            c => c.id === req.requirementId,
+                                        ).length ?? 0,
                                     checked:
                                         row.participantRequirementsChecked?.some(
                                             c => c.id === req.requirementId,
@@ -231,8 +248,19 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                                     <Stack spacing={0.5} sx={{width: 1}}>
                                         {!isMobile && (
                                             <Typography variant="caption" color="text.secondary">
-                                                ({row.participantRequirementsChecked?.length ?? 0}/
-                                                {deduplicatedRequirements.length})
+                                                (
+                                                {
+                                                    new Set(
+                                                        (row.participantRequirementsChecked ?? [])
+                                                            .filter(req =>
+                                                                deduplicatedRequirements.some(
+                                                                    ddReq => req.id === ddReq.id,
+                                                                ),
+                                                            )
+                                                            .map(req => req.id),
+                                                    ).size
+                                                }
+                                                /{deduplicatedRequirements.length})
                                             </Typography>
                                         )}
                                         <Stack spacing={0.5} sx={{pl: 0.5}}>
@@ -265,9 +293,21 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                             return (
                                 <Stack direction={'row'} spacing={1} alignItems={'center'}>
                                     <Typography>
-                                        {row.participantRequirementsChecked?.filter(req =>
-                                            deduplicatedRequirements.some(ddReq => req.id === ddReq.id),
-                                        ).length ?? 0}
+                                        {/* Gezählt werden BEDINGUNGEN, nicht Erfüllungs-Zeilen:
+                                            seit V202608141900 kann dieselbe Bedingung je Tag und
+                                            je Wettkampf mehrfach bestätigt sein, und die Spalte
+                                            zeigte dann "3/2" - mehr erfüllt als gefordert. */}
+                                        {
+                                            new Set(
+                                                (row.participantRequirementsChecked ?? [])
+                                                    .filter(req =>
+                                                        deduplicatedRequirements.some(
+                                                            ddReq => req.id === ddReq.id,
+                                                        ),
+                                                    )
+                                                    .map(req => req.id),
+                                            ).size
+                                        }
                                         /{deduplicatedRequirements.length}{' '}
                                     </Typography>
                                     <HtmlTooltip
@@ -287,6 +327,24 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                                                                 ? t('participantRequirement.global')
                                                                 : req.participantName}
                                                             ){req.qrCodeRequired && ' (QR)'}
+                                                            {/* Ein Haken allein sagt bei einer
+                                                                dimensionierten Bedingung zu
+                                                                wenig: er kann für einen anderen
+                                                                Wettkampf oder Tag gelten. */}
+                                                            {(req.perCompetition || req.perEventDay) &&
+                                                                ` — ${
+                                                                    req.perCompetition && req.perEventDay
+                                                                        ? t(
+                                                                              'qrParticipant.scope.perCompetitionAndDay',
+                                                                          )
+                                                                        : req.perCompetition
+                                                                          ? t(
+                                                                                'qrParticipant.scope.perCompetition',
+                                                                            )
+                                                                          : t(
+                                                                                'qrParticipant.scope.perEventDay',
+                                                                            )
+                                                                }: ${req.checkedCount}`}
                                                             {req.note && ` [ ${req.note} ]`}
                                                         </Typography>
                                                     </Stack>
@@ -375,6 +433,9 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                             requirementId: r.id,
                             requirementName: r.name,
                             isGlobal: true,
+                            // Die Geltung entscheidet, ob der Abgleich einen Wettkampf braucht.
+                            perEventDay: r.perEventDay,
+                            perCompetition: r.perCompetition,
                             approvedParticipants: [],
                         })
                     },
@@ -395,6 +456,13 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                             isGlobal: false,
                             namedParticipantId: np.id,
                             namedParticipantName: np.name,
+                            // Die rollengebundene Liste trägt die Schalter nicht mit - sie
+                            // stehen an der Bedingung selbst, also in requirementsData.
+                            perEventDay: requirementsData?.data.find(r => r.id === req.requirementId)
+                                ?.perEventDay,
+                            perCompetition: requirementsData?.data.find(
+                                r => r.id === req.requirementId,
+                            )?.perCompetition,
                             approvedParticipants: [],
                         })
                     },

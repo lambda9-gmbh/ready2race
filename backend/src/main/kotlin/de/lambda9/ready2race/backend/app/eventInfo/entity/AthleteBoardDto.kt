@@ -104,6 +104,13 @@ data class AthleteBoardTeam(
     val failed: Boolean = false,
     val failedReason: String? = null,
     /**
+     * Vergebenes Freilos (V202608151900): Das Boot kommt ohne Start in die Folgerunde und hat
+     * deshalb weder Platz noch Zeit. Ohne diese Angabe stünde seine Zeile auf jeder Anzeige
+     * leer da und sähe aus wie ein Ergebnis, das noch fehlt.
+     */
+    val bye: Boolean = false,
+
+    /**
      * Für diese Runde abgemeldet. Bis zum 14.08.2026 kannte nur der Ergebnisblock diese Angabe;
      * in den Blöcken `upcoming` und `running` stand ein abgemeldetes Boot wie jedes andere in der
      * Aufstellung. Das Boot bleibt bewusst stehen (eine Crew am Steg kann ein spurlos
@@ -198,6 +205,13 @@ data class AthleteBoardResultTeam(
     val penaltyNote: String?,
     val failed: Boolean,
     val failedReason: String?,
+    /**
+     * Vergebenes Freilos (V202608151900): Das Boot kommt ohne Start in die Folgerunde und hat
+     * deshalb weder Platz noch Zeit. Ohne diese Angabe stünde seine Zeile auf jeder Anzeige
+     * leer da und sähe aus wie ein Ergebnis, das noch fehlt.
+     */
+    val bye: Boolean,
+
     /**
      * Abgemeldet für diese Runde. Solche Mannschaften haben weder Platz noch Zeit und werden
      * deshalb ausdrücklich als abgemeldet gekennzeichnet, statt still zu verschwinden - sonst
