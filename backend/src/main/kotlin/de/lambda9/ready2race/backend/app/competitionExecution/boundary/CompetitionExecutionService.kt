@@ -1835,7 +1835,7 @@ object CompetitionExecutionService {
             // GESETZT statt geleert: Solange RaceClocker den alten Stand noch führt, würde der
             // nächste Poll-Takt die soeben gelöschten Ergebnisse sofort wieder einspielen - der
             // Reset höbe sich selbst auf (Nutzer-Beobachtung 12.08.2026). Die Kette ist dieselbe
-            // wie beim Deaktivieren eines Laufs (getCandidates filtert pausierte Läufe bereits):
+            // wie beim Deaktivieren eines Laufs (der Takt überspringt markiert-pausierte Läufe):
             // Reset → Abruf pausiert → Schiedsrichter räumt den Lauf in RaceClocker auf →
             // bewusstes Fortsetzen über den bestehenden Knopf ([resumeRaceClockerAutoPull]).
             raceclockerAutoPausedAt = now

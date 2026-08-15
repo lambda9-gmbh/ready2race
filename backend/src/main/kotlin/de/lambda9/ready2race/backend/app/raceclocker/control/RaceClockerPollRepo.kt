@@ -51,9 +51,17 @@ object RaceClockerPollRepo {
      * [de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo.getForRaceClockerPull]
      * - das eine Rennen des Wettkampfs.
      *
-     * Ausgeschlossen sind hier nur die harten Fälle: beendet, pausiert, kein RaceClocker, kein
+     * Ausgeschlossen sind hier nur die harten Fälle: beendet, kein RaceClocker, kein
      * angewähltes Rennen, Slot abgesagt. Das Zeitfenster fehlt bewusst - es hängt an `now` und gehört in die prüfbare
      * Logik, nicht in SQL.
+     *
+     * PAUSIERTE Läufe kommen seit dem 15.08.2026 MIT zurück (als [RaceClockerPollCandidate.autoPausedAt]
+     * markiert) statt herauszufallen: Die Pause gilt je Lauf und darf nur das SCHREIBEN dieses
+     * einen Laufs stoppen. Fiel der Lauf schon hier heraus, zählte seine Aktivierung nicht mehr
+     * für den Takt - eine Handeingabe in den einzigen aktivierten Lauf schaltete die ganze
+     * Veranstaltung auf den langsamen Takt, und die übrigen Läufe der Runde wirkten eingefroren.
+     * Wer nicht beschrieben werden darf, entscheidet der Job ([RaceClockerPollService.pollEvent]),
+     * nicht diese Abfrage.
      */
     fun getCandidates(eventId: UUID) = Jooq.query {
         // timing_system wird nirgends projiziert und braucht deshalb keinen Alias. Das ist wichtig:
@@ -74,6 +82,8 @@ object RaceClockerPollRepo {
             COMPETITION_MATCH.ACTIVATED_AT,
             // Der Ist-Start entscheidet, ob der Abruf ihn im Feed noch nachtragen muss.
             COMPETITION_MATCH.STARTED_AT,
+            // Die Pause je Lauf: markiert statt gefiltert, siehe KDoc.
+            COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT,
             // Freilose tragen ihren materialisierten Namen (V202608121300) - dieselbe Koaleszenz
             // wie startlist_view, sonst fände der Wellennamen-Abgleich die exportierte Welle nicht.
             DSL.coalesce(COMPETITION_MATCH.BYE_NAME, COMPETITION_SETUP_MATCH.NAME).`as`("match_name"),
@@ -100,7 +110,6 @@ object RaceClockerPollRepo {
             .join(RACECLOCKER_RACE).on(RACECLOCKER_RACE.ID.eq(COMPETITION.RACECLOCKER_RACE))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.FINISHED_AT.isNull)
-            .and(COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT.isNull)
             .and(timingSystem.eq(TimingSystem.RACECLOCKER.name))
             // Ein abgesagter Slot bleibt abgesagt, auch wenn in RaceClocker jemand die Welle
             // startet. Die volle Zustandsableitung (EventScheduleLogic.deriveSlotState) ist hier
@@ -119,6 +128,7 @@ object RaceClockerPollRepo {
                     startTime = record[COMPETITION_MATCH.START_TIME],
                     activatedAt = record[COMPETITION_MATCH.ACTIVATED_AT],
                     startedAt = record[COMPETITION_MATCH.STARTED_AT],
+                    autoPausedAt = record[COMPETITION_MATCH.RACECLOCKER_AUTO_PAUSED_AT],
                     target = RaceClockerMatchTarget(
                         waveName = WaveName.format(
                             matchName = record["match_name", String::class.java],
@@ -137,10 +147,11 @@ object RaceClockerPollRepo {
     /**
      * Ob dieser Lauf gerade für die Automatik pausiert ist.
      *
-     * [getCandidates] filtert das schon einmal, aber am Anfang des Takts. Zwischen dieser Lesung und
-     * dem Schreiben liegt der HTTP-Abruf mit zehn Sekunden Zeitlimit - lang genug, dass
-     * ein Schiedsrichter dazwischen von Hand einträgt und damit pausiert. Der Job fragt deshalb ein
-     * zweites Mal, in derselben Transaktion wie das Schreiben, und lässt den Lauf dann in Ruhe.
+     * Der Takt sortiert Pausierte schon am Anfang aus (Markierung aus [getCandidates], Partition in
+     * `pollEvent`). Zwischen dieser Lesung und dem Schreiben liegt aber der HTTP-Abruf mit zehn
+     * Sekunden Zeitlimit - lang genug, dass ein Schiedsrichter dazwischen von Hand einträgt und
+     * damit pausiert. Der Job fragt deshalb ein zweites Mal, in derselben Transaktion wie das
+     * Schreiben, und lässt den Lauf dann in Ruhe.
      */
     fun isAutoPaused(matchId: UUID) = Jooq.query {
         fetchExists(
