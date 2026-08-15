@@ -72,18 +72,20 @@ object AutoRoundProgressionLogic {
      * Start könnte, also auch niemanden, der ihn beendet.
      */
     private fun hasNoScoringTeams(match: CompetitionMatchWithTeams): Boolean =
-        match.teams.all { it.deregistered || it.failed || it.out }
+        match.teams.all { it.deregistered || it.failed || it.out || it.bye }
 
     /**
      * Ob in einem Lauf alle Plätze vergeben sind — dieselbe Bedingung wie in
      * `CompetitionExecutionService.checkRoundCreation`, der Prüfung hinter dem Knopf „Nächste Runde
      * erstellen": die Plätze müssen die Folge `1..n` über alle Boote enthalten, die überhaupt
      * gewertet werden. Abgemeldete, ausgeschiedene und ausgefallene Boote (DNF, Disqualifikation,
-     * Nichtantritt) zählen nicht mit — für sie kommt kein Ergebnis mehr. Für einen Lauf ganz ohne
+     * Nichtantritt) zählen nicht mit — für sie kommt kein Ergebnis mehr. Ebenso wenig ein Boot mit
+     * vergebenem Freilos (V202608151900): Es ist nicht gefahren, bekommt keinen Platz und würde die
+     * Runde sonst genau dann festhalten, wenn das Freilos gebraucht wird. Für einen Lauf ganz ohne
      * wertbares Boot ist die Bedingung damit trivial erfüllt: `1..0` ist die leere Folge.
      */
     private fun placesAreSet(match: CompetitionMatchWithTeams): Boolean {
-        val scoring = match.teams.filter { !it.deregistered && !it.failed && !it.out }
+        val scoring = match.teams.filter { !it.deregistered && !it.failed && !it.out && !it.bye }
         return match.teams.map { it.place }.containsAll((1..scoring.size).toList())
     }
 

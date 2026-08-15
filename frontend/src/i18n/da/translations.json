@@ -1343,6 +1343,19 @@
           "startTimeManagedBySchedule": "Starttidspunktet for dette løb styres via tidsplanen og kan ikke ændres her. Justér slotten under fanen Tidsplan.",
           "resetBlockedByNextRound": "Løbet kan ikke længere nulstilles: Den næste runde er allerede oprettet ud fra resultaterne. Slet først den nyere runde, og nulstil derefter løbet.",
           "teamsNotMatching": "De indsendte både passer ikke til bådene i dette løb — opstillingen er sandsynligvis ændret i mellemtiden (ombytning eller afmelding). Genindlæs visningen, og gem igen."
+        },
+        "teamBye": {
+          "label": "Oversidder",
+          "grant": "Giv oversidder",
+          "revoke": "Fjern oversidder",
+          "granted": "Oversidder givet.",
+          "revoked": "Oversidder fjernet.",
+          "error": "Oversidderen kunne ikke ændres.",
+          "confirmation": {
+            "title": "Oversidder",
+            "grant": "{{team}} går videre til næste runde uden at ro. I løbet får båden hverken placering eller tid; de øvrige både beholder deres.",
+            "revoke": "Fjern oversidderen for {{team}}? Båden går så kun videre via en placering."
+          }
         }
       },
       "timing": {

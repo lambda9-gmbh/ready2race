@@ -20,6 +20,14 @@ data class CompetitionMatchTeamDto(
     val deregistrationReason: String?,
     val failed: Boolean,
     val failedReason: String?,
+    /**
+     * Vergebenes Freilos (V202608151900): Das Boot kommt ohne Start in die Folgerunde. Es hat
+     * deshalb weder Platz noch Zeit - gefahren ist es nichts, was zu werten wäre. Nicht zu
+     * verwechseln mit dem strukturellen Freilos, das aus der Besetzung entsteht und seinen Namen
+     * am Lauf trägt (competition_match.bye_name).
+     */
+    val bye: Boolean = false,
+
     /** Zeitstrafe in Sekunden; die Ergebniszeit enthält sie bereits. */
     val penaltySeconds: Int?,
     val penaltyNote: String?,

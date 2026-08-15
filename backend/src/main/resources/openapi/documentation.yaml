@@ -1580,6 +1580,39 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/team-bye:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateTeamBye
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTeamByeRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/activation:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -13943,6 +13976,18 @@ components:
           nullable: true
           description: "Set while this match's pairing comes from a recalculation and the match has not been called to the start yet"
 
+    UpdateTeamByeRequest:
+      type: object
+      required:
+        - registrationId
+        - bye
+      properties:
+        registrationId:
+          type: string
+          format: uuid
+        bye:
+          type: boolean
+
     CompetitionMatchTeamDto:
       type: object
       required:
@@ -13954,6 +13999,7 @@ components:
         - startNumber
         - deregistered
         - failed
+        - bye
       properties:
         registrationId:
           type: string
@@ -13987,6 +14033,12 @@ components:
           type: string
         failed:
           type: boolean
+        bye:
+          type: boolean
+          description: >-
+            Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb
+            weder Platz noch Zeit. Nicht das strukturelle Freilos (ein Boot allein in seinem
+            Lauf), das seinen Namen am Lauf traegt.
         failedReason:
           type: string
         penaltySeconds:

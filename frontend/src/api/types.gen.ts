@@ -965,6 +965,10 @@ export type CompetitionMatchTeamDto = {
     deregistrationLocked?: boolean
     deregistrationReason?: string
     failed: boolean
+    /**
+     * Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder Platz noch Zeit. Nicht das strukturelle Freilos (ein Boot allein in seinem Lauf), das seinen Namen am Lauf traegt.
+     */
+    bye: boolean
     failedReason?: string
     /**
      * Time penalty in seconds; the result time already includes it
@@ -4042,6 +4046,11 @@ export type UpdateQrCodeRequirementDto = {
     qrCodeRequired: boolean
 }
 
+export type UpdateTeamByeRequest = {
+    registrationId: string
+    bye: boolean
+}
+
 export type UpdateThemeRequest = {
     primary: PrimaryColors
     textColor: TextColors
@@ -5133,6 +5142,19 @@ export type UpdateMatchDataData = {
 export type UpdateMatchDataResponse = void
 
 export type UpdateMatchDataError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateTeamByeData = {
+    body: UpdateTeamByeRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateTeamByeResponse = void
+
+export type UpdateTeamByeError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UpdateMatchActivationData = {
     body: UpdateCompetitionMatchActivationRequest
