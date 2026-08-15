@@ -85,27 +85,6 @@ fun Route.competitionExecution() {
                     }
                 }
             }
-            // Freilos für ein einzelnes Boot: kommt ohne Start in die Folgerunde.
-            route("/team-bye") {
-                put {
-                    call.respondComprehension {
-                        val user = !authenticate(Privilege.UpdateEventGlobal)
-                        val eventId = !pathParam("eventId", uuid)
-                        val competitionId = !pathParam("competitionId", uuid)
-                        val competitionMatchId = !pathParam("competitionMatchId", uuid)
-
-                        val body = !receiveKIO(UpdateTeamByeRequest.example)
-                        CompetitionExecutionService.updateTeamBye(
-                            eventId = eventId,
-                            competitionId = competitionId,
-                            matchId = competitionMatchId,
-                            userId = user.id!!,
-                            request = body,
-                        )
-                    }
-                }
-            }
-
             route("/activation") {
                 put {
                     call.respondComprehension {

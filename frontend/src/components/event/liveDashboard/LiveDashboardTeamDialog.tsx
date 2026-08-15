@@ -273,13 +273,6 @@ const TeamDialog = ({
                                 label={t('event.liveDashboard.team.deregistered')}
                             />
                         )}
-                        {team.bye && (
-                            <Chip
-                                size="small"
-                                color="info"
-                                label={t('event.competition.execution.teamBye.label')}
-                            />
-                        )}
                     </Stack>
                     {/*
                         Notizen zwischen Schiedsrichtern ("Boje berührt") - Kommunikation, keine

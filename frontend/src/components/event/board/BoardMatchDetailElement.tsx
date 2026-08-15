@@ -244,12 +244,9 @@ const BoardMatchDetailElement = ({
                   team.startNumber,
                   team,
                   {
-                      // Freilos und Abmeldung stehen vor allem anderen: beide sind kein Ergebnis,
-                      // sondern die Feststellung, dass dieses Boot nicht fährt - das Freilos mit
-                      // dem Zusatz, dass es trotzdem weiterkommt.
-                      label: team.bye
-                          ? t('event.competition.execution.teamBye.label')
-                          : team.deregistered
+                      // Die Abmeldung steht vor allem anderen: sie ist kein Ergebnis, sondern
+                      // die Feststellung, dass dieses Boot nicht fährt.
+                      label: team.deregistered
                           ? team.deregisteredReason
                               ? `${t('event.info.athleteBoard.deregistered')} — ${team.deregisteredReason}`
                               : t('event.info.athleteBoard.deregistered')

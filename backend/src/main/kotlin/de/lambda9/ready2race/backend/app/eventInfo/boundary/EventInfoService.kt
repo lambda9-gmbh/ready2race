@@ -553,7 +553,6 @@ object EventInfoService {
                     timeString = timeStringOrNull(first, timePrecision),
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
-                    bye = first[COMPETITION_MATCH_TEAM.BYE] == true,
                     penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
                     penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
                     deregistered = first.get("deregistered", Boolean::class.java),
@@ -630,7 +629,6 @@ object EventInfoService {
                     clubsFull = clubs.full.ifEmpty { null },
                     deregistered = first.get("deregistered", Boolean::class.java) == true,
                     deregistrationReason = first.get("deregistration_reason", String::class.java),
-                    bye = first[COMPETITION_MATCH_TEAM.BYE] == true,
                     participants = groupedRecords.mapNotNull { record ->
                         record.get("participant_id", UUID::class.java)?.let {
                             UpcomingMatchParticipantInfo(
@@ -683,7 +681,6 @@ object EventInfoService {
                     penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
-                    bye = first[COMPETITION_MATCH_TEAM.BYE] == true,
                     deregistered = first.get("deregistered", Boolean::class.java) == true,
                     deregistrationReason = first.get("deregistration_reason", String::class.java),
                     participants = groupedRecords.mapNotNull { record ->

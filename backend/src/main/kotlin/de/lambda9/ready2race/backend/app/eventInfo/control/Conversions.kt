@@ -138,7 +138,6 @@ fun RunningMatchTeamInfo.toAthleteBoardTeam(
     penaltyNote = penaltyNote,
     failed = failed,
     failedReason = failedReason,
-    bye = bye,
     deregistered = deregistered,
     deregisteredReason = deregistrationReason,
     laps = laps,
@@ -156,7 +155,6 @@ fun UpcomingMatchTeamInfo.toAthleteBoardTeam(
     registeringClub = if (includeDetails) clubName else null,
     deregistered = deregistered,
     deregisteredReason = deregistrationReason,
-    bye = bye,
     participants = participants.map {
         it.toAthleteBoardParticipant(includeDetails, requirements[it.participantId] ?: emptyList())
     },
@@ -188,7 +186,7 @@ fun RunningMatchInfo.toAthleteBoardMatch(
             startTime = startTime,
             finishedAt = null,
             teamResults = teams.map {
-                LiveDashboardLogic.teamIsSettled(it.currentPosition, it.failed, it.deregistered, it.bye)
+                LiveDashboardLogic.teamIsSettled(it.currentPosition, it.failed, it.deregistered)
             },
         ),
         startState = AthleteBoardLogic.startState(startTime, now, showCountdown),
@@ -257,7 +255,6 @@ fun LatestMatchResultInfo.toAthleteBoardResult(
             penaltyNote = it.penaltyNote,
             failed = it.failed,
             failedReason = it.failedReason,
-            bye = it.bye,
             deregistered = it.deregistered,
             deregisteredReason = it.deregisteredReason,
             laps = it.laps,
@@ -304,10 +301,6 @@ fun UpcomingMatchTeamInfo.toRunningMatchTeamInfo() = RunningMatchTeamInfo(
     penaltyNote = null,
     failed = false,
     failedReason = null,
-    // Das Freilos ist wie die Abmeldung kein Ergebnis, sondern ein Ausweis: Es sagt, dass dieses
-    // Boot nicht fährt, und gehört deshalb auch in den anstehenden Zweig, in dem noch gar nichts
-    // gewertet sein kann.
-    bye = bye,
     // Die Abmeldung ist kein Ergebnis, sondern ein Ausweis - sie darf die Zurückhaltung von
     // Ergebnissen nicht betreffen und wird deshalb hier durchgereicht.
     deregistered = deregistered,
@@ -336,12 +329,7 @@ fun RunningMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
         finishedAt = null,
         skipped = false,
         teams = teams.map {
-            MatchStatusTeam(
-                place = it.currentPosition,
-                failed = it.failed,
-                deregistered = it.deregistered,
-                bye = it.bye,
-            )
+            MatchStatusTeam(place = it.currentPosition, failed = it.failed, deregistered = it.deregistered)
         },
     ),
     executionOrder = executionOrder,
@@ -373,11 +361,7 @@ fun UpcomingCompetitionMatchInfo.toLiveMatchInfo() = LiveMatchInfo(
         startedAt = null,
         finishedAt = null,
         skipped = cancelled,
-        teams = teams.map {
-            // Anstehender Lauf: Platz und DNF gibt es hier noch nicht, das Freilos schon - es ist
-            // eine Entscheidung vor dem Rennen und keine Wertung.
-            MatchStatusTeam(place = null, failed = false, deregistered = it.deregistered, bye = it.bye)
-        },
+        teams = teams.map { MatchStatusTeam(place = null, failed = false, deregistered = it.deregistered) },
     ),
     executionOrder = executionOrder,
     cancelled = cancelled,

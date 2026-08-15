@@ -57,8 +57,6 @@ object MyEventLogic {
         val penaltySeconds: Int?,
         val penaltyNote: String?,
         val failed: Boolean,
-        /** Vergebenes Freilos - kommt ohne Start weiter (V202608151900). */
-        val bye: Boolean = false,
         val failedReason: String?,
         val deregistered: Boolean,
         val deregisteredReason: String?,
@@ -172,7 +170,6 @@ object MyEventLogic {
         penaltySeconds = penaltySeconds,
         penaltyNote = penaltyNote,
         failed = failed,
-        bye = bye,
         failedReason = failedReason,
         deregistered = deregistered,
         deregisteredReason = deregisteredReason,

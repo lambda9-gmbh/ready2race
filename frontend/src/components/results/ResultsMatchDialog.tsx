@@ -139,14 +139,7 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                         ? 'h5'
                                                                         : 'body1'
                                                                 }>
-                                                                {/* Das Freilos zuerst: kein
-                                                        Ergebnis, sondern die Feststellung, dass
-                                                        dieses Boot ohne Start weiterkommt. */}
-                                                                {team.bye
-                                                                    ? t(
-                                                                          'event.competition.execution.teamBye.label',
-                                                                      )
-                                                                    : team.categoryPlace
+                                                                {team.categoryPlace
                                                                     ? `${team.categoryPlace}.`
                                                                     : team.failed
                                                                       ? failedLabel(

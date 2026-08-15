@@ -211,7 +211,6 @@ object LiveDashboardService {
                         startedAt = first.get("team_started_at", LocalDateTime::class.java),
                         failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                         failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
-                        bye = first[COMPETITION_MATCH_TEAM.BYE] == true,
                         penaltySeconds = first[COMPETITION_MATCH_TEAM.PENALTY_SECONDS],
                         penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
                         deregistered = deregistered,
@@ -269,9 +268,7 @@ object LiveDashboardService {
                             finishedAt = finishedAt,
                             // "Erledigt", nicht "gefahren": der Zustand fragt, ob noch jemand auf
                             // ein Ergebnis wartet - eine Abmeldung zählt dabei mit.
-                            teamResults = teams.map {
-                                LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered, it.bye)
-                            },
+                            teamResults = teams.map { LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered) },
                             skipped = matchId in skippedMatchIds,
                         ),
                         bye = byeByMatch[matchId],

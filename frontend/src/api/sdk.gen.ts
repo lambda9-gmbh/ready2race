@@ -180,9 +180,6 @@ import type {
     UpdateMatchDataData,
     UpdateMatchDataError,
     UpdateMatchDataResponse,
-    UpdateTeamByeData,
-    UpdateTeamByeError,
-    UpdateTeamByeResponse,
     UpdateMatchActivationData,
     UpdateMatchActivationError,
     UpdateMatchActivationResponse,
@@ -1719,17 +1716,6 @@ export const updateMatchData = <ThrowOnError extends boolean = false>(
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data',
     })
-}
-
-export const updateTeamBye = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateTeamByeData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<UpdateTeamByeResponse, UpdateTeamByeError, ThrowOnError>(
-        {
-            ...options,
-            url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/team-bye',
-        },
-    )
 }
 
 export const updateMatchActivation = <ThrowOnError extends boolean = false>(
