@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.CHECKE
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.select
+import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import java.util.*
@@ -153,6 +154,39 @@ object ParticipantHasRequirementForEventRepo {
             if (perEventDay) EVENT_DAY.isNotDistinctFrom(eventDayId) else DSL.trueCondition(),
             if (perCompetition) COMPETITION.isNotDistinctFrom(competitionId) else DSL.trueCondition(),
         )
+    }
+
+    /**
+     * Wer im übergebenen Rahmen gerade bestätigt ist - dieselbe Bedingung wie
+     * [deleteCoveringWhereParticipantNotInList], nur lesend.
+     *
+     * Der Abgleich braucht das, bevor er löscht: Danach ist nicht mehr feststellbar, wem etwas
+     * genommen wurde, und genau diese Frage stellte sich am Regattatag (siehe die Revisionsspur,
+     * Migration V202608152000).
+     */
+    fun getCoveringParticipantIds(
+        eventId: UUID,
+        participantRequirementId: UUID,
+        perEventDay: Boolean,
+        eventDayId: UUID?,
+        perCompetition: Boolean,
+        competitionId: UUID?,
+    ): JIO<Set<UUID>> = Jooq.query {
+        with(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT) {
+            select(PARTICIPANT)
+                .from(this)
+                .where(
+                    DSL.and(
+                        EVENT.eq(eventId),
+                        PARTICIPANT_REQUIREMENT.eq(participantRequirementId),
+                        if (perEventDay) EVENT_DAY.isNotDistinctFrom(eventDayId) else DSL.trueCondition(),
+                        if (perCompetition) COMPETITION.isNotDistinctFrom(competitionId) else DSL.trueCondition(),
+                    )
+                )
+                .fetchSet(PARTICIPANT)
+                .filterNotNull()
+                .toSet()
+        }
     }
 
     /**

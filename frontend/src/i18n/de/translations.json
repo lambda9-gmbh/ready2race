@@ -1449,6 +1449,27 @@
         "competitionHelp": "Der Abgleich gilt nur für diesen Wettkampf - Bestätigungen anderer Wettkämpfe bleiben unberührt.",
         "chooseCompetition": "Diese Bedingung gilt je Wettkampf. Bitte zuerst den Wettkampf wählen.",
         "todayOnly": "Diese Bedingung gilt je Wettkampftag. Der Abgleich schreibt und räumt nur den heutigen Tag."
+      },
+      "log": {
+        "title": "Protokoll der Bedingungen",
+        "action": "Protokoll aller Bedingungen",
+        "actionFor": "Protokoll: {{name}}",
+        "empty": "Noch keine Änderungen protokolliert.",
+        "when": "Wann",
+        "action_col": "Was",
+        "scope": "Gilt für",
+        "source": "Weg",
+        "by": "Von",
+        "wholeEvent": "ganze Veranstaltung",
+        "actions": {
+          "APPROVED": "bestätigt",
+          "REVOKED": "zurückgenommen"
+        },
+        "sources": {
+          "SCAN": "Scan-App",
+          "BULK": "Abgleich",
+          "IMPORT": "Datei-Import"
+        }
       }
     },
     "action": {

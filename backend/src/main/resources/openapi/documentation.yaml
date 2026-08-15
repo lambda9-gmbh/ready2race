@@ -4771,6 +4771,53 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/log:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getParticipantRequirementLog
+      parameters:
+        - name: requirementId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: participantId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Requirement log successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantRequirementLogEntryDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement/scanScope:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -12175,6 +12222,71 @@ components:
           format: uuid
           nullable: true
           description: "Wettkampf, den diese Bestaetigung abdeckt - null heisst ohne Wettkampfbezug"
+
+    ParticipantRequirementLogAction:
+      type: string
+      enum: [APPROVED, REVOKED]
+
+    ParticipantRequirementLogSource:
+      type: string
+      enum: [SCAN, BULK, IMPORT]
+
+    ParticipantRequirementLogEntryDto:
+      type: object
+      required:
+        - id
+        - participantId
+        - participantName
+        - requirementId
+        - requirementName
+        - action
+        - source
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+        participantName:
+          type: string
+        clubName:
+          type: string
+          nullable: true
+        requirementId:
+          type: string
+          format: uuid
+        requirementName:
+          type: string
+        action:
+          $ref: '#/components/schemas/ParticipantRequirementLogAction'
+        source:
+          $ref: '#/components/schemas/ParticipantRequirementLogSource'
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionName:
+          type: string
+          nullable: true
+        eventDayId:
+          type: string
+          format: uuid
+          nullable: true
+        eventDayDate:
+          type: string
+          format: date
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          nullable: true
 
     ParticipantScanCompetitionDto:
       type: object

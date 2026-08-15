@@ -1449,6 +1449,27 @@
         "competitionHelp": "This reconciliation applies to the chosen competition only - approvals for other competitions stay untouched.",
         "chooseCompetition": "This requirement is checked per competition. Please choose the competition first.",
         "todayOnly": "This requirement is checked per event day. The reconciliation writes and clears today only."
+      },
+      "log": {
+        "title": "Requirement log",
+        "action": "Log of all requirements",
+        "actionFor": "Log: {{name}}",
+        "empty": "No changes logged yet.",
+        "when": "When",
+        "action_col": "What",
+        "scope": "Applies to",
+        "source": "Via",
+        "by": "By",
+        "wholeEvent": "whole event",
+        "actions": {
+          "APPROVED": "approved",
+          "REVOKED": "revoked"
+        },
+        "sources": {
+          "SCAN": "scan app",
+          "BULK": "reconciliation",
+          "IMPORT": "file import"
+        }
       }
     },
     "action": {

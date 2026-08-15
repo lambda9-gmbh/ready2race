@@ -1449,6 +1449,27 @@
         "competitionHelp": "Afstemningen gælder kun for denne konkurrence - bekræftelser for andre konkurrencer røres ikke.",
         "chooseCompetition": "Dette krav gælder pr. konkurrence. Vælg først konkurrencen.",
         "todayOnly": "Dette krav gælder pr. stævnedag. Afstemningen skriver og rydder kun dagen i dag."
+      },
+      "log": {
+        "title": "Log over krav",
+        "action": "Log over alle krav",
+        "actionFor": "Log: {{name}}",
+        "empty": "Ingen ændringer logget endnu.",
+        "when": "Hvornår",
+        "action_col": "Hvad",
+        "scope": "Gælder for",
+        "source": "Via",
+        "by": "Af",
+        "wholeEvent": "hele stævnet",
+        "actions": {
+          "APPROVED": "bekræftet",
+          "REVOKED": "trukket tilbage"
+        },
+        "sources": {
+          "SCAN": "scan-app",
+          "BULK": "afstemning",
+          "IMPORT": "filimport"
+        }
       }
     },
     "action": {
