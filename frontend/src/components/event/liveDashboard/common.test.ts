@@ -21,6 +21,8 @@ import {
     isLiveMatch,
     latestTeamNote,
     liveMatches,
+    matchCardSubtitle,
+    matchCardTitle,
     matchControls,
     nextUpEntry,
     openResultTeams,
@@ -603,6 +605,79 @@ describe('competitionLabel', () => {
                 competitionShortName: 'CM 1x',
             }),
         ).toBe('Coastal Männer Einer')
+    })
+})
+
+/**
+ * Rückmeldung vom Regattatag (14.08.2026): die Kartenüberschrift wechselte ihre Form mit der
+ * Datenlage — mal nur „AF1", mal nur die Runde, mal der Wettkampf — und las sich am Steg wie ein
+ * Wechsel je Zustand. Jetzt führt der Wettkampf immer, unabhängig davon, welche Namensfelder der
+ * Lauf trägt.
+ */
+describe('matchCardTitle', () => {
+    const benannt = {
+        competitionName: 'Coastal Männer Einer',
+        competitionIdentifier: '12',
+        competitionShortName: 'CM 1x',
+        roundName: 'Achtelfinale',
+        matchName: 'AF1',
+    }
+
+    it('führt den Wettkampf auch bei benanntem Lauf — vorher stand dort nur „AF1"', () => {
+        expect(matchCardTitle(benannt, 'short')).toBe('12 CM 1x · AF1')
+        expect(matchCardTitle(benannt)).toBe('Coastal Männer Einer · AF1')
+    })
+
+    it('nimmt ersatzweise die Runde, wenn der Lauf keinen Namen hat', () => {
+        expect(matchCardTitle({...benannt, matchName: null}, 'short')).toBe(
+            '12 CM 1x · Achtelfinale',
+        )
+    })
+
+    it('bleibt beim Wettkampf allein, wenn weder Lauf noch Runde benannt sind', () => {
+        expect(matchCardTitle({...benannt, matchName: null, roundName: null}, 'short')).toBe(
+            '12 CM 1x',
+        )
+    })
+
+    it('trägt ohne Wettkampfangaben wenigstens den Laufnamen', () => {
+        expect(
+            matchCardTitle({
+                competitionName: '',
+                competitionIdentifier: null,
+                competitionShortName: null,
+                roundName: 'Achtelfinale',
+                matchName: 'AF1',
+            }),
+        ).toBe('AF1')
+    })
+})
+
+describe('matchCardSubtitle', () => {
+    it('trägt Kategorie und Runde — der Wettkampf steht schon in der Überschrift', () => {
+        expect(
+            matchCardSubtitle({
+                categoryName: 'Senioren',
+                roundName: 'Achtelfinale',
+                matchName: 'AF1',
+            }),
+        ).toBe('Senioren · Achtelfinale')
+    })
+
+    it('lässt die Runde weg, wenn sie mangels Laufname die Überschrift unterscheidet', () => {
+        expect(
+            matchCardSubtitle({
+                categoryName: 'Senioren',
+                roundName: 'Achtelfinale',
+                matchName: null,
+            }),
+        ).toBe('Senioren')
+    })
+
+    it('bleibt ohne Kategorie bei der Runde allein', () => {
+        expect(
+            matchCardSubtitle({categoryName: null, roundName: 'Achtelfinale', matchName: 'AF1'}),
+        ).toBe('Achtelfinale')
     })
 })
 
