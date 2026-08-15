@@ -14618,11 +14618,23 @@ components:
         reason:
           type: string
 
+    InvoiceContactDto:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+
     InvoiceDto:
       type: object
       required:
         - id
         - invoiceNumber
+        - billedToContacts
         - totalAmount
         - createdAt
       properties:
@@ -14635,6 +14647,10 @@ components:
           type: string
         billedToName:
           type: string
+        billedToContacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceContactDto'
         totalAmount:
           type: string
           format: decimal

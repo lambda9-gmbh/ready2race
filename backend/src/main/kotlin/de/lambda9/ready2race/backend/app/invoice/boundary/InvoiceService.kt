@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.invoice.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService.fullName
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.bankAccount.control.BankAccountRepo
@@ -36,7 +37,9 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.dtoResponse
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceForEventRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationInvoiceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceDocumentDataRecord
@@ -77,13 +80,28 @@ object InvoiceService {
 
     private val retryAfterError = 5.minutes
 
+    // Die Empfaenger stehen nicht auf der Rechnung, sondern haengen am Verein - es sind dieselben
+    // Nutzer, an die produceNextRegistrationInvoice das PDF verschickt. Fuer eine ganze Seite
+    // werden sie in einer Abfrage geholt, damit nicht jede Zeile einzeln nachlaedt.
+    private fun contactsByClub(
+        page: List<InvoiceForEventRegistrationRecord>,
+    ): App<Nothing, Map<UUID, List<AppUserRecord>>> {
+        val clubIds = page.mapNotNull { it.club }.distinct()
+        return if (clubIds.isEmpty()) {
+            KIO.ok(emptyMap())
+        } else {
+            AppUserRepo.getByClubs(clubIds).orDie().map { users -> users.groupBy { it.club!! } }
+        }
+    }
+
     fun page(
         params: PaginationParameters<InvoiceForEventRegistrationSort>,
     ): App<InvoiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
 
         val total = !InvoiceRepo.count(params.search).orDie()
         val page = !InvoiceRepo.page(params).orDie()
-        page.traverse { it.toDto() }.map {
+        val contacts = !contactsByClub(page)
+        page.traverse { it.toDto(contacts[it.club] ?: emptyList()) }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total),
@@ -100,7 +118,8 @@ object InvoiceService {
 
         val total = !InvoiceRepo.countForEvent(id, params.search, user, scope).orDie()
         val page = !InvoiceRepo.pageForEvent(id, params, user, scope).orDie()
-        page.traverse { it.toDto() }.map {
+        val contacts = !contactsByClub(page)
+        page.traverse { it.toDto(contacts[it.club] ?: emptyList()) }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total),
@@ -124,7 +143,8 @@ object InvoiceService {
 
         val total = !InvoiceRepo.countForRegistration(id, params.search).orDie()
         val page = !InvoiceRepo.pageForRegistration(id, params).orDie()
-        page.traverse { it.toDto() }.map {
+        val contacts = !contactsByClub(page)
+        page.traverse { it.toDto(contacts[it.club] ?: emptyList()) }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total),
