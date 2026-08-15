@@ -4466,12 +4466,48 @@ paths:
       - $ref: '#/components/parameters/eventId'
     post:
       operationId: approveParticipantRequirementsForEvent
+      description: >-
+        Replaces the COMPLETE approval state of one requirement - participants missing from
+        the payload lose their approval. Meant for the bulk maintenance dialog that sends the
+        full state; single approvals (QR scan app) must use /approve/participant instead.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ParticipantRequirementCheckForEventUpsertDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/approve/participant:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: approveParticipantRequirementForParticipant
+      description: >-
+        Approves or revokes one requirement for exactly ONE participant - strictly additive
+        and idempotent on record level, other participants, competitions and event days stay
+        untouched. Used by the QR scan app. Dimensions follow the requirement's switches:
+        with perEventDay the current event day is recorded, with perCompetition the optional
+        competitionId decides which competition the approval is for.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequirementApproveForParticipantDto'
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -12183,6 +12219,37 @@ components:
           type: string
           format: uuid
           nullable: true
+
+    ParticipantRequirementApproveForParticipantDto:
+      type: object
+      required:
+        - requirementId
+        - participantId
+        - approved
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+        approved:
+          type: boolean
+        note:
+          type: string
+          nullable: true
+        namedParticipantId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >-
+            For requirements with perCompetition - the competition this approval is for.
+            Without it the fulfillment is stored without competition reference, which
+            deliberately covers no match while the switch is on.
 
     # captcha
 

@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.participant.boundary.ParticipantService
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
@@ -125,6 +126,17 @@ object ParticipantRequirementService {
             }
         }
 
+    /**
+     * Ersetzt den KOMPLETTEN Bestätigungszustand einer Bedingung - Massen-Pflege im
+     * Verwaltungs-UI, dessen Transfer-Liste den Gesamtzustand als Payload schickt. Wer nicht
+     * in [ParticipantRequirementCheckForEventUpsertDto.approvedParticipants] steht, verliert
+     * seine Bestätigung.
+     *
+     * Deshalb ist dieser Weg für Aufrufer mit nur EINEM Datensatz ungeeignet: die Scan-App
+     * hat ihn früher mit genau der gescannten Person aufgerufen und damit alle übrigen
+     * Bestätigungen der Bedingung gelöscht (Waage-Vorfall am Regattatag). Einzelne
+     * Bestätigungen gehen über [approveRequirementForParticipant].
+     */
     fun approveRequirementForEvent(
         eventId: UUID,
         dto: ParticipantRequirementCheckForEventUpsertDto,
@@ -163,6 +175,84 @@ object ParticipantRequirementService {
         !forUpdate.traverse {
             ParticipantHasRequirementForEventRepo.updateNote(it.id, eventId, dto.requirementId, it.note)
         }.orDie()
+
+        noData
+    }
+
+    /**
+     * Bestätigt oder widerruft eine Bedingung für genau EINE Person - der Weg der Scan-App.
+     *
+     * Rein additiv und idempotent auf Datensatz-Ebene: geschrieben oder gelöscht wird nur der
+     * Datensatz dieser Person, andere Personen, Wettkämpfe und Tage bleiben unberührt; ein
+     * Doppel-Scan derselben Person ist kein Fehler (siehe
+     * [ParticipantHasRequirementForEventRepo.upsertFulfillment]).
+     *
+     * Die Dimensionen der Erfüllung folgen den Schaltern der Bedingung (V202608141900):
+     * bei `perEventDay` zählt der Wettkampftag des Scan-Zeitpunkts - die Waage steht am
+     * Veranstaltungsort, "heute" ist der Tag, für den gewogen wird. Bei `perCompetition`
+     * entscheidet [ParticipantRequirementApproveForParticipantDto.competitionId]; ohne Angabe
+     * wird ohne Wettkampfbezug gespeichert, was bewusst keinen Lauf abdeckt
+     * (vorsichtige Richtung, siehe [RequirementScopeLogic.covers]). Der Widerruf löscht
+     * dimensionsbewusst über [ParticipantHasRequirementForEventRepo.deleteCovering] - so
+     * verschwinden bei veranstaltungsweiten Bedingungen auch die tags-gestempelten Zeilen aus
+     * der Bestandsmigration, bei tagesbezogenen aber nur der heutige Tag.
+     */
+    fun approveRequirementForParticipant(
+        eventId: UUID,
+        dto: ParticipantRequirementApproveForParticipantDto,
+        userId: UUID,
+    ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+
+        if (!!EventHasParticipantRequirementRepo.exists(eventId, dto.requirementId, dto.namedParticipantId).orDie()) {
+            return@comprehension KIO.fail(ParticipantRequirementError.NotFound)
+        }
+
+        val requirement = !ParticipantRequirementRepo.get(dto.requirementId).orDie()
+            .onNullFail { ParticipantRequirementError.NotFound }
+        val scope = RequirementScopeLogic.Scope(
+            perEventDay = requirement.perEventDay == true,
+            perCompetition = requirement.perCompetition == true,
+        )
+
+        // Der Tag wird nur bestimmt, wenn er gebraucht wird - eventDayOf greift bei
+        // eintägigen Veranstaltungen auf den einzigen Tag zurück, sonst zählt das Datum.
+        val eventDay = if (scope.perEventDay) {
+            !EventDayRepo.getByEvent(eventId).orDie().map { days ->
+                RequirementScopeLogic.eventDayOf(
+                    LocalDateTime.now(),
+                    days.map { RequirementScopeLogic.EventDayRef(it.id!!, it.date!!) },
+                )
+            }
+        } else {
+            null
+        }
+        val match = RequirementScopeLogic.MatchScope(eventDay = eventDay, competition = dto.competitionId)
+
+        if (dto.approved) {
+            val key = RequirementScopeLogic.keyFor(scope, match)
+            !ParticipantHasRequirementForEventRepo.upsertFulfillment(
+                ParticipantHasRequirementForEventRecord(
+                    event = eventId,
+                    participant = dto.participantId,
+                    participantRequirement = dto.requirementId,
+                    eventDay = key.eventDay,
+                    competition = key.competition,
+                    note = dto.note,
+                    createdBy = userId,
+                    createdAt = LocalDateTime.now(),
+                )
+            ).orDie()
+        } else {
+            !ParticipantHasRequirementForEventRepo.deleteCovering(
+                eventId = eventId,
+                participantRequirementId = dto.requirementId,
+                participantId = dto.participantId,
+                perEventDay = scope.perEventDay,
+                eventDayId = match.eventDay,
+                perCompetition = scope.perCompetition,
+                competitionId = match.competition,
+            ).orDie()
+        }
 
         noData
     }

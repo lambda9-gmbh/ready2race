@@ -2967,6 +2967,18 @@ export type ParticipantRegisterRequest = {
     registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
 }
 
+export type ParticipantRequirementApproveForParticipantDto = {
+    requirementId: string
+    participantId: string
+    approved: boolean
+    note?: string | null
+    namedParticipantId?: string | null
+    /**
+     * For requirements with perCompetition - the competition this approval is for. Without it the fulfillment is stored without competition reference, which deliberately covers no match while the switch is on.
+     */
+    competitionId?: string | null
+}
+
 export type ParticipantRequirementCheckForEventConfigDto = {
     requirementId: string
     separator?: string
@@ -6491,6 +6503,20 @@ export type ApproveParticipantRequirementsForEventData = {
 export type ApproveParticipantRequirementsForEventResponse = void
 
 export type ApproveParticipantRequirementsForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type ApproveParticipantRequirementForParticipantData = {
+    body: ParticipantRequirementApproveForParticipantDto
+    path: {
+        eventId: string
+    }
+}
+
+export type ApproveParticipantRequirementForParticipantResponse = void
+
+export type ApproveParticipantRequirementForParticipantError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError

@@ -1,7 +1,7 @@
 import {Alert, Box, Button, Stack} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {
-    approveParticipantRequirementsForEvent,
+    approveParticipantRequirementForParticipant,
     deleteQrCode,
     getParticipantRequirementsForParticipant,
     getParticipantsForEventInApp,
@@ -92,11 +92,15 @@ const QrParticipantPage = () => {
     ) => {
         if (!qr.response?.id) return
         setSubmitting(true)
-        await approveParticipantRequirementsForEvent({
+        // Bewusst der additive Einzel-Endpunkt: der Ersetzen-Endpunkt (approve) erwartet den
+        // kompletten Zustand und würde alle nicht mitgeschickten Bestätigungen löschen.
+        await approveParticipantRequirementForParticipant({
             path: {eventId},
             body: {
                 requirementId,
-                approvedParticipants: checked !== false ? [{id: qr.response.id, note: typeof checked === 'string' ? checked : undefined}] : [],
+                participantId: qr.response.id,
+                approved: checked !== false,
+                note: typeof checked === 'string' ? checked : undefined,
                 namedParticipantId: namedParticipantId,
             },
         })
