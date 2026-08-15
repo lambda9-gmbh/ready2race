@@ -37,6 +37,71 @@ class BoardLogicTest {
         assertEquals("R-spät", BoardLogic.resolveOffset(0, running, upcoming, results).match?.competitionName)
     }
 
+    /**
+     * Überlappter Betrieb: das nächste Rennen ist an den Start gerufen, während das laufende
+     * noch fährt. Der Block führt beide, nach geplantem Start sortiert — vor dem Vorrang des
+     * Fahrenden sprang das Lower-Third im Livestream auf das vorbereitete Rennen.
+     */
+    @Test
+    fun zeroPrefersTheRacingMatchOverThePreparedOne() {
+        val mitVorbereitetem = listOf(
+            match("R-fährt"),
+            match("R-vorbereitet").copy(state = MatchState.PREPARING),
+        )
+        assertEquals(
+            "R-fährt",
+            BoardLogic.resolveOffset(0, mitVorbereitetem, upcoming, results).match?.competitionName,
+        )
+    }
+
+    /**
+     * Der vorbereitete Lauf liegt hinter dem Cursor und gehört damit nicht in die
+     * Vergangenheit: −1 muss weiterhin das jüngste Ergebnis treffen, nicht ihn.
+     */
+    @Test
+    fun thePreparedMatchDoesNotSlipIntoTheNegativeSlots() {
+        val mitVorbereitetem = listOf(
+            match("R-fährt"),
+            match("R-vorbereitet").copy(state = MatchState.PREPARING),
+        )
+        assertEquals(
+            "E-neu",
+            BoardLogic.resolveOffset(-1, mitVorbereitetem, upcoming, results).result?.competitionName,
+        )
+    }
+
+    /**
+     * Der Lauf am Steg bleibt sichtbar - er rückt auf die Zukunftsseite. Ein aktivierter Lauf
+     * fällt aus dem Upcoming-Block heraus (ACTIVATED_AT is null dort); ohne diesen Schritt
+     * wäre er auf der Athleten-Anzeige nirgends mehr zu sehen, obwohl genau er die Boote am
+     * Ufer betrifft.
+     */
+    @Test
+    fun thePreparedMatchBecomesTheNextSlot() {
+        val mitVorbereitetem = listOf(
+            match("R-fährt"),
+            match("R-vorbereitet").copy(state = MatchState.PREPARING),
+        )
+        assertEquals(
+            "R-vorbereitet",
+            BoardLogic.resolveOffset(1, mitVorbereitetem, upcoming, results).match?.competitionName,
+        )
+        assertEquals(
+            "U1",
+            BoardLogic.resolveOffset(2, mitVorbereitetem, upcoming, results).match?.competitionName,
+        )
+    }
+
+    /** Fährt keiner, ist der vorbereitete Lauf das Aktuellste, was die Arena zu zeigen hat. */
+    @Test
+    fun withoutARacingMatchThePreparedOneTakesTheCursor() {
+        val nurVorbereitet = listOf(match("R-vorbereitet").copy(state = MatchState.PREPARING))
+        assertEquals(
+            "R-vorbereitet",
+            BoardLogic.resolveOffset(0, nurVorbereitet, upcoming, results).match?.competitionName,
+        )
+    }
+
     @Test
     fun negativeOffsetsWalkThroughEarlierRunningThenResults() {
         // -1 ist der parallel laufende frühere Lauf, erst -2 erreicht die Ergebnisse.

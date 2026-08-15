@@ -8,7 +8,10 @@ import {
     MatchTeamLapDto,
 } from '@api/types.gen.ts'
 
-const match = (name: string) => ({matchName: name, teams: []}) as unknown as AthleteBoardMatch
+// Mit Zustand, wie ihn der Server immer mitliefert: seit dem Vorrang des fahrenden Laufs
+// entscheidet er im AUTO-Modus mit, ob die Kachel den Lauf oder das Ergebnis zeigt.
+const match = (name: string) =>
+    ({matchName: name, state: 'RUNNING', teams: []}) as unknown as AthleteBoardMatch
 const result = (name: string) => ({matchName: name}) as unknown as AthleteBoardResult
 const slot = (offset: number, m?: AthleteBoardMatch, r?: AthleteBoardResult): BoardMatchSlotDto =>
     ({offset, match: m ?? null, result: r ?? null}) as BoardMatchSlotDto
@@ -61,6 +64,30 @@ describe('streamOverlayContent', () => {
         expect(streamOverlayContent(view([slot(0, preparing)]), 'AUTO')).toMatchObject({
             kind: 'running',
         })
+    })
+
+    it('AUTO lässt das jüngste Ergebnis stehen, solange der nächste Lauf nur vorbereitet ist', () => {
+        // Der Punkt aus dem Regattatag: Kaum war das nächste Rennen an den Start gerufen,
+        // sprang die Kachel darauf um - die Zeiten des eben gefahrenen Laufs waren nie zu
+        // lesen. Der bloße Aufruf zum Start reicht dafür nicht mehr.
+        const preparing = {
+            matchName: 'VF2',
+            state: 'PREPARING',
+            teams: [],
+        } as unknown as AthleteBoardMatch
+        const content = streamOverlayContent(
+            view([slot(0, preparing), slot(-1, undefined, result('VF1'))]),
+            'AUTO',
+        )
+        expect(content).toMatchObject({kind: 'result', result: {matchName: 'VF1'}})
+    })
+
+    it('AUTO schaltet auf den Lauf um, sobald er wirklich gestartet ist', () => {
+        const content = streamOverlayContent(
+            view([slot(0, match('VF2')), slot(-1, undefined, result('VF1'))]),
+            'AUTO',
+        )
+        expect(content).toMatchObject({kind: 'running', match: {matchName: 'VF2'}})
     })
 
     it('RUNNING zeigt kein Ergebnis als Rückfall', () => {
