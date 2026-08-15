@@ -102,7 +102,18 @@ data class MyEventRequirementDto(
      */
     val publicNote: String?,
     val optional: Boolean,
+    /**
+     * Erfüllt - und zwar VOLLSTÄNDIG: Bei einer Bedingung je Wettkampf und/oder je Tag heißt das
+     * "für jeden Rahmen, in dem diese Person startet". Wer für einen von zwei Wettkämpfen
+     * gewogen ist, steht hier auf nicht erfüllt und findet den Grund in [scopes].
+     */
     val fulfilled: Boolean,
+    /**
+     * Die Aufschlüsselung, sobald die Bedingung je Tag oder je Wettkampf gilt - je Rahmen eine
+     * Zeile, damit auf dem Telefon steht, WOFÜR noch etwas fehlt. Leer bei einer Bedingung ohne
+     * Schalter: dort sagt [fulfilled] schon alles.
+     */
+    val scopes: List<MyEventRequirementScopeDto> = emptyList(),
     /**
      * Ab wann die Bedingung erledigt werden kann: erster künftiger Start der Person minus
      * `check_earliest_minutes_before`. null, wenn die Bedingung kein Fenster trägt oder kein
@@ -110,5 +121,23 @@ data class MyEventRequirementDto(
      */
     val checkFrom: LocalDateTime?,
     /** Bis wann, analog aus `check_latest_minutes_before`. */
+    val checkUntil: LocalDateTime?,
+)
+
+/**
+ * Ein Bezugsrahmen einer Bedingung aus Sicht der Person: der Wettkampf und/oder der Tag, für den
+ * sie erledigt sein muss.
+ *
+ * Die Zeitangaben rechnen gegen den ERSTEN Lauf dieses Rahmens - wer einmal für einen Wettkampf
+ * an einem Tag gewogen ist, ist es für alle Runden, und der Bezugspunkt darf deshalb nicht mit
+ * jeder Runde weiterwandern.
+ */
+data class MyEventRequirementScopeDto(
+    /** Anzeigename des Wettkampfs (Kennung + Kürzel); null, wenn die Bedingung nicht je Wettkampf gilt. */
+    val competitionName: String?,
+    /** Der Wettkampftag; null, wenn die Bedingung nicht je Tag gilt. */
+    val eventDayDate: java.time.LocalDate?,
+    val fulfilled: Boolean,
+    val checkFrom: LocalDateTime?,
     val checkUntil: LocalDateTime?,
 )

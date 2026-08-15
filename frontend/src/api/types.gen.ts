@@ -2707,12 +2707,24 @@ export type MyEventRequirementDto = {
     optional: boolean
     fulfilled: boolean
     /**
+     * Aufschluesselung, sobald die Bedingung je Tag oder je Wettkampf gilt - je Rahmen eine Zeile. Leer bei einer Bedingung ohne Schalter.
+     */
+    scopes?: Array<MyEventRequirementScopeDto>
+    /**
      * Earliest moment the requirement can be checked - first future start minus checkEarliestMinutesBefore; null without a window or a future start
      */
     checkFrom?: string | null
     /**
      * Latest moment, analogous from checkLatestMinutesBefore
      */
+    checkUntil?: string | null
+}
+
+export type MyEventRequirementScopeDto = {
+    competitionName?: string | null
+    eventDayDate?: string | null
+    fulfilled: boolean
+    checkFrom?: string | null
     checkUntil?: string | null
 }
 
