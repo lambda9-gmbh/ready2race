@@ -449,6 +449,12 @@ import type {
     AcceptEventRegistrationDocumentsData,
     AcceptEventRegistrationDocumentsError,
     AcceptEventRegistrationDocumentsResponse,
+    GetRegistrationMailRecipientsData,
+    GetRegistrationMailRecipientsError,
+    GetRegistrationMailRecipientsResponse,
+    SendRegistrationMailData,
+    SendRegistrationMailError,
+    SendRegistrationMailResponse,
     GetEventRegistrationTemplateData,
     GetEventRegistrationTemplateError,
     GetEventRegistrationTemplateResponse,
@@ -2915,6 +2921,37 @@ export const acceptEventRegistrationDocuments = <ThrowOnError extends boolean = 
     >({
         ...options,
         url: '/event/{eventId}/eventRegistration/acceptDocuments',
+    })
+}
+
+export const getRegistrationMailRecipients = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationMailRecipientsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationMailRecipientsResponse,
+        GetRegistrationMailRecipientsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/mailRecipients',
+    })
+}
+
+export const sendRegistrationMail = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SendRegistrationMailData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        SendRegistrationMailResponse,
+        SendRegistrationMailError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/eventRegistration/mail',
     })
 }
 

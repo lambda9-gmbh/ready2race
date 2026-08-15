@@ -4037,6 +4037,70 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/eventRegistration/mailRecipients:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getRegistrationMailRecipients
+      responses:
+        200:
+          description: The registrants of the event, as offered for selection in the bulk mail dialog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegistrationMailRecipientDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventRegistration/mail:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: sendRegistrationMail
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+              properties:
+                request:
+                  $ref: '#/components/schemas/RegistrationMailRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        200:
+          description: The mails have been enqueued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationMailResultDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/registrationTemplate:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -10929,6 +10993,59 @@ components:
           type: number
         eventDocumentsOfficiallyAccepted:
           type: boolean
+
+    RegistrationMailRecipientDto:
+      type: object
+      required:
+        - registrationId
+        - clubId
+        - clubName
+      properties:
+        registrationId:
+          type: string
+          format: uuid
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        # Fehlen name und email, ist der Nutzer geloescht, der die Meldung abgeschickt hat.
+        # Die Zeile bleibt in der Liste, laesst sich aber nicht anwaehlen.
+        name:
+          type: string
+        email:
+          type: string
+
+    RegistrationMailRequest:
+      type: object
+      required:
+        - subject
+        - body
+        - registrationIds
+        - additionalAddresses
+      properties:
+        # subject und body duerfen ##recipient##, ##club## und ##event## enthalten.
+        subject:
+          type: string
+        body:
+          type: string
+        registrationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        additionalAddresses:
+          type: array
+          items:
+            type: string
+
+    RegistrationMailResultDto:
+      type: object
+      required:
+        - enqueued
+      properties:
+        enqueued:
+          type: number
 
     CreateEventRequest:
       type: object

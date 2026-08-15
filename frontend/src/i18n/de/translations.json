@@ -1554,7 +1554,31 @@
       },
       "mostRecent": "Neuste Anmeldungen",
       "teams": "Teams",
-      "teamMembers": "Teammitglieder"
+      "teamMembers": "Teammitglieder",
+      "mail": {
+        "open": "Rundmail schreiben",
+        "title": "Rundmail an die Melder",
+        "recipients": "Empfänger",
+        "noUser": "kein Benutzer mehr – bekommt keine Mail",
+        "additionalAddresses": "Weitere Adressen",
+        "addressHint": "Adresse eingeben und Enter drücken",
+        "subject": "Betreff",
+        "body": "Text",
+        "placeholders": "Platzhalter: ##recipient##, ##club##, ##event## – werden je Empfänger ersetzt",
+        "attachments": "Anhänge",
+        "addAttachment": "Datei anhängen",
+        "attachmentWarning": "Die Anhänge sind zusammen {{size}} groß und werden für jeden Empfänger einzeln verschickt.",
+        "send": "Senden",
+        "success": "{{count}} E-Mails eingereiht",
+        "confirm": {
+          "title": "Rundmail senden?",
+          "text": "Die Mail geht an {{count}} Empfänger. Einmal abgeschickt lässt sie sich nicht mehr zurückholen."
+        },
+        "error": {
+          "invalidAddress": "Keine gültige Adresse: {{address}}",
+          "recipientGone": "Ein Melder hat inzwischen keinen Benutzer mehr. Bitte den Dialog neu öffnen."
+        }
+      }
     },
     "participants": "Teilnehmende",
     "tabs": {
