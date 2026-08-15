@@ -143,6 +143,17 @@ const TeamDialog = ({
                           delta: formatMinutes(r.timeCheck.deltaMinutes),
                       }),
             )
+            // Ohne diesen Zusatz liest sich die Abweichung als Aussage über DIESEN Lauf. Sie
+            // gehört aber zum ersten Lauf des Rahmens: Die Bedingung gilt je Tag und Wettkampf,
+            // wer einmal gewogen ist, ist es für alle Runden - der Vergleich muss deshalb auch
+            // einen festen Punkt haben und nicht bei jeder Runde weiterwandern.
+            if (r.timeCheck.referenceIsFrameStart && r.timeCheck.referenceStartTime) {
+                parts.push(
+                    t('event.liveDashboard.timeCheck.frameReference', {
+                        time: format(new Date(r.timeCheck.referenceStartTime), t('format.time')),
+                    }),
+                )
+            }
         }
         if (r.note) {
             parts.push(t('event.liveDashboard.requirement.note', {note: r.note}))

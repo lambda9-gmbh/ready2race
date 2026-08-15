@@ -1871,7 +1871,8 @@
         "LATE": "Spät erfüllt",
         "NOT_CHECKED": "Ausstehend",
         "beforeStart": "{{delta}} vor Start",
-        "afterStart": "{{delta}} nach Start"
+        "afterStart": "{{delta}} nach Start",
+        "frameReference": "bezogen auf den ersten Lauf des Wettkampfs an diesem Tag ({{time}})"
       },
       "checkSeverity": {
         "manage": "Prüfungen verwalten",

@@ -1871,7 +1871,8 @@
         "LATE": "Opfyldt sent",
         "NOT_CHECKED": "Afventer",
         "beforeStart": "{{delta}} før start",
-        "afterStart": "{{delta}} efter start"
+        "afterStart": "{{delta}} efter start",
+        "frameReference": "i forhold til det første løb i denne konkurrence på denne dag ({{time}})"
       },
       "checkSeverity": {
         "manage": "Administrer kontroller",
