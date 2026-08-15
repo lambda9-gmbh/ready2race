@@ -530,6 +530,9 @@ import type {
     GetParticipantRequirementsForParticipantData,
     GetParticipantRequirementsForParticipantError,
     GetParticipantRequirementsForParticipantResponse,
+    GetParticipantRequirementLogData,
+    GetParticipantRequirementLogError,
+    GetParticipantRequirementLogResponse,
     GetEventScanScopeData,
     GetEventScanScopeError,
     GetEventScanScopeResponse,
@@ -3274,6 +3277,19 @@ export const getParticipantRequirementsForParticipant = <ThrowOnError extends bo
     >({
         ...options,
         url: '/event/{eventId}/participantRequirement/participant/{participantId}',
+    })
+}
+
+export const getParticipantRequirementLog = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantRequirementLogData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantRequirementLogResponse,
+        GetParticipantRequirementLogError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/log',
     })
 }
 

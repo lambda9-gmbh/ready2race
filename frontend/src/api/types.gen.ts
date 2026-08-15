@@ -3097,6 +3097,28 @@ export type ParticipantRequirementForEventDto = {
     requirements?: Array<NamedParticipantRequirementForEventDto>
 }
 
+export type ParticipantRequirementLogAction = 'APPROVED' | 'REVOKED'
+
+export type ParticipantRequirementLogEntryDto = {
+    id: string
+    participantId: string
+    participantName: string
+    clubName?: string | null
+    requirementId: string
+    requirementName: string
+    action: ParticipantRequirementLogAction
+    source: ParticipantRequirementLogSource
+    competitionId?: string | null
+    competitionName?: string | null
+    eventDayId?: string | null
+    eventDayDate?: string | null
+    note?: string | null
+    createdAt: string
+    createdBy?: string | null
+}
+
+export type ParticipantRequirementLogSource = 'SCAN' | 'BULK' | 'IMPORT'
+
 export type ParticipantRequirementUpsertDto = {
     name: string
     description?: string
@@ -6713,6 +6735,26 @@ export type GetParticipantRequirementsForParticipantResponse =
     Array<ParticipantRequirementForEventDto>
 
 export type GetParticipantRequirementsForParticipantError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetParticipantRequirementLogData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        limit?: number
+        participantId?: string
+        requirementId?: string
+    }
+}
+
+export type GetParticipantRequirementLogResponse = {
+    data: Array<ParticipantRequirementLogEntryDto>
+}
+
+export type GetParticipantRequirementLogError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError

@@ -180,6 +180,50 @@ object ParticipantRequirementService {
             RequirementScopeLogic.MatchScope(eventDay = eventDay, competition = dto.competitionId),
         )
 
+        // Wer den Rahmen bis eben abgedeckt hat: die Grundlage der Spur. Muss VOR dem Löschen
+        // erhoben werden - danach ist nicht mehr feststellbar, wem etwas genommen wurde, und
+        // genau diese Frage stellte sich am Regattatag.
+        val coveredBefore = !ParticipantHasRequirementForEventRepo.getCoveringParticipantIds(
+            eventId = eventId,
+            participantRequirementId = dto.requirementId,
+            perEventDay = scope.perEventDay,
+            eventDayId = key.eventDay,
+            perCompetition = scope.perCompetition,
+            competitionId = key.competition,
+        ).orDie()
+        val approvedIds = dto.approvedParticipants.map { it.id }.toSet()
+        val now = LocalDateTime.now()
+
+        !ParticipantRequirementLogRepo.create(
+            coveredBefore.filterNot { it in approvedIds }.map { participantId ->
+                ParticipantRequirementLogRepo.entry(
+                    eventId = eventId,
+                    participantId = participantId,
+                    requirementId = dto.requirementId,
+                    action = ParticipantRequirementLogAction.REVOKED,
+                    source = ParticipantRequirementLogSource.BULK,
+                    eventDayId = key.eventDay,
+                    competitionId = key.competition,
+                    note = null,
+                    userId = userId,
+                    at = now,
+                )
+            } + dto.approvedParticipants.filterNot { it.id in coveredBefore }.map { approved ->
+                ParticipantRequirementLogRepo.entry(
+                    eventId = eventId,
+                    participantId = approved.id,
+                    requirementId = dto.requirementId,
+                    action = ParticipantRequirementLogAction.APPROVED,
+                    source = ParticipantRequirementLogSource.BULK,
+                    eventDayId = key.eventDay,
+                    competitionId = key.competition,
+                    note = approved.note,
+                    userId = userId,
+                    at = now,
+                )
+            }
+        ).orDie()
+
         !ParticipantHasRequirementForEventRepo.deleteCoveringWhereParticipantNotInList(
             eventId = eventId,
             participantRequirementId = dto.requirementId,
@@ -280,8 +324,30 @@ object ParticipantRequirementService {
         }
         val match = RequirementScopeLogic.MatchScope(eventDay = eventDay, competition = dto.competitionId)
 
+        val key = RequirementScopeLogic.keyFor(scope, match)
+
+        // Die Revisionsspur schreibt beide Richtungen mit (V202608152000). Sie ist der einzige Ort,
+        // an dem eine zurückgenommene Bestätigung überhaupt eine Spur hinterlässt: In der
+        // Erfüllungstabelle ist die Zeile danach weg, und beim Waage-Vorfall war das der Grund,
+        // warum sich nicht mehr sagen ließ, wer sie entfernt hat.
+        !ParticipantRequirementLogRepo.create(
+            listOf(
+                ParticipantRequirementLogRepo.entry(
+                    eventId = eventId,
+                    participantId = dto.participantId,
+                    requirementId = dto.requirementId,
+                    action = if (dto.approved) ParticipantRequirementLogAction.APPROVED
+                    else ParticipantRequirementLogAction.REVOKED,
+                    source = ParticipantRequirementLogSource.SCAN,
+                    eventDayId = key.eventDay,
+                    competitionId = key.competition,
+                    note = dto.note,
+                    userId = userId,
+                )
+            )
+        ).orDie()
+
         if (dto.approved) {
-            val key = RequirementScopeLogic.keyFor(scope, match)
             !ParticipantHasRequirementForEventRepo.upsertFulfillment(
                 ParticipantHasRequirementForEventRecord(
                     event = eventId,
@@ -338,6 +404,29 @@ object ParticipantRequirementService {
                 )
             )
         )
+    }
+
+    /**
+     * Die Revisionsspur einer Veranstaltung (V202608152000) - wer hat wann welche Bestätigung
+     * gesetzt oder zurückgenommen, und auf welchem Weg.
+     *
+     * [limit] ist gedeckelt, weil die Ansicht eine Liste zeigt und keine Auswertung: An einem
+     * Regattatag entstehen leicht Tausende Einträge, und die Frage, die hier beantwortet wird
+     * ("was ist mit dieser Bedingung passiert?"), braucht die jüngsten.
+     */
+    fun getLog(
+        eventId: UUID,
+        requirementId: UUID?,
+        participantId: UUID?,
+        limit: Int?,
+    ): App<Nothing, ApiResponse.ListDto<ParticipantRequirementLogEntryDto>> = KIO.comprehension {
+        val entries = !ParticipantRequirementLogRepo.getForEvent(
+            eventId = eventId,
+            requirementId = requirementId,
+            participantId = participantId,
+            limit = (limit ?: 200).coerceIn(1, 1000),
+        ).orDie()
+        KIO.ok(ApiResponse.ListDto(entries))
     }
 
     /**

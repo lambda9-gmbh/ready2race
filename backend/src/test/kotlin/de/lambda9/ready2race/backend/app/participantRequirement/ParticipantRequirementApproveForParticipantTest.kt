@@ -3,6 +3,9 @@ package de.lambda9.ready2race.backend.app.participantRequirement
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.ParticipantRequirementService
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantHasRequirementForEventRepo
+import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementLogRepo
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementLogAction
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementLogSource
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementApproveForParticipantDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
@@ -390,6 +393,64 @@ class ParticipantRequirementApproveForParticipantTest {
 
         val competitions = fulfillments(seed, seed.ilka).mapNotNull { it.competition }.toSet()
         assertEquals(setOf(seed.competitionA, seed.competitionB), competitions)
+    }
+
+    /**
+     * Die Revisionsspur (V202608152000). Sie ist die Antwort auf die Frage, die am Regattatag
+     * niemand beantworten konnte: Wer hat die Bestätigung entfernt? Die Rücknahme ist deshalb die
+     * wichtigere Richtung - in der Erfüllungstabelle ist die Zeile danach weg.
+     */
+    @Test
+    fun everyScanLeavesATrace() = testComprehension {
+        val seed = seed()
+
+        scan(seed, seed.ilka, note = "unter Vorbehalt")
+        scan(seed, seed.ilka, approved = false)
+
+        val log = !ParticipantRequirementLogRepo.getForEvent(seed.eventId, seed.requirementId, null, 100)
+        assertEquals(2, log.size, "Setzen und Zurücknehmen stehen beide in der Spur")
+        // Neueste zuerst.
+        assertEquals(ParticipantRequirementLogAction.REVOKED, log[0].action)
+        assertEquals(ParticipantRequirementLogAction.APPROVED, log[1].action)
+        assertEquals(ParticipantRequirementLogSource.SCAN, log[0].source)
+        assertEquals("unter Vorbehalt", log[1].note)
+    }
+
+    /**
+     * Der Abgleich schreibt beide Richtungen mit - und zwar die, die er wirklich ändert: Wer schon
+     * bestätigt war und es bleibt, erzeugt keine Zeile, wer herausfällt, sehr wohl.
+     */
+    @Test
+    fun bulkMaintenanceLogsWhatItTakesAway() = testComprehension {
+        val seed = seed()
+
+        val bulk = { approved: List<UUID> ->
+            ParticipantRequirementService.approveRequirementForEvent(
+                seed.eventId,
+                ParticipantRequirementCheckForEventUpsertDto(
+                    requirementId = seed.requirementId,
+                    approvedParticipants = approved.map { CheckedParticipantRequirement(id = it, note = null) },
+                ),
+                SYSTEM_USER,
+            )
+        }
+
+        !bulk(listOf(seed.ilka, seed.bo))
+        !bulk(listOf(seed.bo, seed.kim))
+
+        val log = !ParticipantRequirementLogRepo.getForEvent(seed.eventId, seed.requirementId, null, 100)
+        val ilka = log.filter { it.participantId == seed.ilka }
+        assertEquals(
+            listOf(ParticipantRequirementLogAction.REVOKED, ParticipantRequirementLogAction.APPROVED),
+            ilka.map { it.action },
+            "Ilka wurde bestätigt und im zweiten Abgleich entfernt",
+        )
+        assertEquals(
+            1,
+            log.count { it.participantId == seed.bo },
+            "Bo blieb unverändert bestätigt - das ist keine Änderung und gehört nicht in die Spur",
+        )
+        assertTrue(log.all { it.source == ParticipantRequirementLogSource.BULK })
     }
 
     /**

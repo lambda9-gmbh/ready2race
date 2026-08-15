@@ -25,6 +25,7 @@ import {
     VerifiedUser,
     WorkspacePremium,
 } from '@mui/icons-material'
+import ParticipantRequirementLogDialog from '@components/event/participantRequirement/ParticipantRequirementLogDialog.tsx'
 import SplitButton, {SplitButtonOption} from '@components/SplitButton.tsx'
 import {Fragment, useMemo, useRef, useState} from 'react'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
@@ -405,9 +406,16 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
         )
 
     const [openRequirementExportOpen, setOpenRequirementExportOpen] = useState(false)
+    // Die Revisionsspur der Bedingungen (V202608152000) - erreichbar über dasselbe Menü wie der
+    // Abgleich, weil sie dieselbe Frage von der anderen Seite beantwortet.
+    const [logDialog, setLogDialog] = useState<{id?: string; name?: string} | null>(null)
 
     const splitOptions: SplitButtonOption[] = useMemo(() => {
         const options: SplitButtonOption[] = [
+            {
+                label: t('event.participantRequirement.log.action'),
+                onClick: () => setLogDialog({}),
+            },
             {
                 icon: <Download />,
                 label: t('event.participantRequirement.openExportAction'),
@@ -426,6 +434,10 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
         requirementsData?.data
             .filter(r => !namedRequirementIds.has(r.id))
             .forEach(r => {
+                options.push({
+                    label: t('event.participantRequirement.log.actionFor', {name: r.name}),
+                    onClick: () => setLogDialog({id: r.id, name: r.name}),
+                })
                 options.push({
                     label: t('event.participantRequirement.checkManually', {name: r.name}),
                     onClick: () => {
@@ -630,6 +642,13 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 entity={editQrParticipant}
                 onOpen={handleEditQrOpen}
                 eventId={eventId}
+            />
+            <ParticipantRequirementLogDialog
+                open={logDialog !== null}
+                onClose={() => setLogDialog(null)}
+                eventId={eventId}
+                requirementId={logDialog?.id}
+                requirementName={logDialog?.name}
             />
             <ParticipantRequirementApproveManuallyForEventDialog
                 {...participantRequirementApproveManuallyForEventProps.dialog}
