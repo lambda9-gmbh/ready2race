@@ -222,6 +222,20 @@ fun Route.participantRequirementForEvent() {
                     ParticipantRequirementService.getForParticipant(eventId, participantId, onlyForApp)
                 }
             }
+
+            // Heutiger Wettkampftag und die Wettkämpfe dieser Person - was die Scan-App braucht,
+            // um eine Bedingung mit `perCompetition` dem richtigen Wettkampf zuzuordnen.
+            route("/scanScope") {
+                get {
+                    call.respondComprehension {
+                        !authenticateAny(Privilege.ReadEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
+                        val eventId = !pathParam("eventId", uuid)
+                        val participantId = !pathParam("participantId", uuid)
+
+                        ParticipantRequirementService.getScanScopeForParticipant(eventId, participantId)
+                    }
+                }
+            }
         }
     }
 }

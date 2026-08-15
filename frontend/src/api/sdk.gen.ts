@@ -527,6 +527,9 @@ import type {
     GetParticipantRequirementsForParticipantData,
     GetParticipantRequirementsForParticipantError,
     GetParticipantRequirementsForParticipantResponse,
+    GetParticipantScanScopeData,
+    GetParticipantScanScopeError,
+    GetParticipantScanScopeResponse,
     GetParticipantsForEventData,
     GetParticipantsForEventError,
     GetParticipantsForEventResponse,
@@ -3254,6 +3257,19 @@ export const getParticipantRequirementsForParticipant = <ThrowOnError extends bo
     >({
         ...options,
         url: '/event/{eventId}/participantRequirement/participant/{participantId}',
+    })
+}
+
+export const getParticipantScanScope = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantScanScopeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantScanScopeResponse,
+        GetParticipantScanScopeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/participant/{participantId}/scanScope',
     })
 }
 

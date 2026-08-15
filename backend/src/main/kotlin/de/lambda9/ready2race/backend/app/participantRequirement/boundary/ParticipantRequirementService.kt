@@ -258,6 +258,37 @@ object ParticipantRequirementService {
     }
 
     /**
+     * Der Bezugsrahmen für die Scan-App: heutiger Wettkampftag und die Wettkämpfe der Person.
+     *
+     * Der Tag wird hier bestimmt und nicht in der App, weil ihn dieselbe Regel liefern muss wie
+     * beim Speichern der Bestätigung ([approveRequirementForParticipant]) - eine falsch gestellte
+     * Uhr am Waage-Tablet oder eine abweichende Zeitzone würden sonst zu einem Häkchen führen,
+     * das die Anzeige für heute hält und die Prüfung für einen anderen Tag.
+     */
+    fun getScanScopeForParticipant(
+        eventId: UUID,
+        participantId: UUID,
+    ): App<Nothing, ApiResponse.Dto<ParticipantScanScopeDto>> = KIO.comprehension {
+
+        val today = !EventDayRepo.getByEvent(eventId).orDie().map { days ->
+            RequirementScopeLogic.eventDayOf(
+                LocalDateTime.now(),
+                days.map { RequirementScopeLogic.EventDayRef(it.id!!, it.date!!) },
+            )
+        }
+        val competitions = !ParticipantScanScopeRepo.getCompetitionsOfParticipant(eventId, participantId).orDie()
+
+        KIO.ok(
+            ApiResponse.Dto(
+                ParticipantScanScopeDto(
+                    todayEventDayId = today,
+                    competitions = competitions,
+                )
+            )
+        )
+    }
+
+    /**
      * Die Gemeldeten, denen noch Bedingungen fehlen, als xlsx - Grundlage dafür, die betroffenen
      * Vereine anzuschreiben.
      *
