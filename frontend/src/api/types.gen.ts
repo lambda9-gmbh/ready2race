@@ -710,6 +710,14 @@ export type ChallengeTeamInfoDto = {
 export type CheckedParticipantRequirement = {
     id: string
     note?: string
+    /**
+     * Wettkampftag, den diese Bestaetigung abdeckt - null heisst ohne Tagesbezug
+     */
+    eventDayId?: string | null
+    /**
+     * Wettkampf, den diese Bestaetigung abdeckt - null heisst ohne Wettkampfbezug
+     */
+    competitionId?: string | null
 }
 
 /**
@@ -2173,11 +2181,17 @@ export type InviteRequest = {
     callbackUrl: string
 }
 
+export type InvoiceContactDto = {
+    name: string
+    email: string
+}
+
 export type InvoiceDto = {
     id: string
     invoiceNumber: string
     billedToOrganization?: string
     billedToName?: string
+    billedToContacts: Array<InvoiceContactDto>
     totalAmount: string
     createdAt: string
     paidAt?: string
@@ -2693,12 +2707,24 @@ export type MyEventRequirementDto = {
     optional: boolean
     fulfilled: boolean
     /**
+     * Aufschluesselung, sobald die Bedingung je Tag oder je Wettkampf gilt - je Rahmen eine Zeile. Leer bei einer Bedingung ohne Schalter.
+     */
+    scopes?: Array<MyEventRequirementScopeDto>
+    /**
      * Earliest moment the requirement can be checked - first future start minus checkEarliestMinutesBefore; null without a window or a future start
      */
     checkFrom?: string | null
     /**
      * Latest moment, analogous from checkLatestMinutesBefore
      */
+    checkUntil?: string | null
+}
+
+export type MyEventRequirementScopeDto = {
+    competitionName?: string | null
+    eventDayDate?: string | null
+    fulfilled: boolean
+    checkFrom?: string | null
     checkUntil?: string | null
 }
 
@@ -2967,6 +2993,18 @@ export type ParticipantRegisterRequest = {
     registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
 }
 
+export type ParticipantRequirementApproveForParticipantDto = {
+    requirementId: string
+    participantId: string
+    approved: boolean
+    note?: string | null
+    namedParticipantId?: string | null
+    /**
+     * For requirements with perCompetition - the competition this approval is for. Without it the fulfillment is stored without competition reference, which deliberately covers no match while the switch is on.
+     */
+    competitionId?: string | null
+}
+
 export type ParticipantRequirementCheckForEventConfigDto = {
     requirementId: string
     separator?: string
@@ -2987,6 +3025,10 @@ export type ParticipantRequirementCheckForEventUpsertDto = {
     requirementId: string
     approvedParticipants: Array<CheckedParticipantRequirement>
     namedParticipantId?: string | null
+    /**
+     * Der Rahmen des Abgleichs. Pflicht, sobald die Bedingung je Wettkampf gilt - ohne ihn waere unklar, welchen Zustand die Liste ersetzt, und der Abgleich loeschte die Bestaetigungen aller anderen Wettkaempfe mit. Der Tag kommt nicht von hier: ihn bestimmt der Server aus dem Zeitpunkt des Abgleichs.
+     */
+    competitionId?: string | null
 }
 
 export type ParticipantRequirementDto = {
@@ -3038,8 +3080,38 @@ export type ParticipantRequirementForEventDto = {
      * Im oeffentlichen Dashboard Mein Event sichtbar
      */
     publiclyVisible: boolean
+    /**
+     * Muss je Wettkampftag erfuellt werden
+     */
+    perEventDay: boolean
+    /**
+     * Muss je Wettkampf erfuellt werden
+     */
+    perCompetition: boolean
     requirements?: Array<NamedParticipantRequirementForEventDto>
 }
+
+export type ParticipantRequirementLogAction = 'APPROVED' | 'REVOKED'
+
+export type ParticipantRequirementLogEntryDto = {
+    id: string
+    participantId: string
+    participantName: string
+    clubName?: string | null
+    requirementId: string
+    requirementName: string
+    action: ParticipantRequirementLogAction
+    source: ParticipantRequirementLogSource
+    competitionId?: string | null
+    competitionName?: string | null
+    eventDayId?: string | null
+    eventDayDate?: string | null
+    note?: string | null
+    createdAt: string
+    createdBy?: string | null
+}
+
+export type ParticipantRequirementLogSource = 'SCAN' | 'BULK' | 'IMPORT'
 
 export type ParticipantRequirementUpsertDto = {
     name: string
@@ -3073,6 +3145,21 @@ export type ParticipantRequirementUpsertDto = {
      * Check must exist at latest this many minutes before match start
      */
     checkLatestMinutesBefore?: number | null
+}
+
+export type ParticipantScanCompetitionDto = {
+    id: string
+    identifier?: string | null
+    name: string
+    shortName?: string | null
+}
+
+export type ParticipantScanScopeDto = {
+    /**
+     * Heutiger Wettkampftag - null, wenn heute keinem Wettkampftag zuzuordnen ist
+     */
+    todayEventDayId?: string | null
+    competitions: Array<ParticipantScanCompetitionDto>
 }
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
@@ -3760,6 +3847,14 @@ export type ThemeConfigDto = {
 export type TimeCheckDto = {
     deltaMinutes?: number | null
     status: TimeCheckStatus
+    /**
+     * Der Start, gegen den gerechnet wurde. Bei einer Bedingung je Tag und/oder je Wettkampf ist das der ERSTE Lauf dieses Rahmens, nicht der gerade gezeigte Lauf.
+     */
+    referenceStartTime?: string | null
+    /**
+     * true, wenn referenceStartTime ein anderer Lauf ist als der gezeigte - dann muss die Ansicht dazusagen, worauf sich die Abweichung bezieht.
+     */
+    referenceIsFrameStart?: boolean
 }
 
 export type TimeCheckStatus = 'OK' | 'TOO_EARLY' | 'LATE' | 'NOT_CHECKED'
@@ -6538,6 +6633,20 @@ export type ApproveParticipantRequirementsForEventError =
     | ApiError
     | UnprocessableEntityError
 
+export type ApproveParticipantRequirementForParticipantData = {
+    body: ParticipantRequirementApproveForParticipantDto
+    path: {
+        eventId: string
+    }
+}
+
+export type ApproveParticipantRequirementForParticipantResponse = void
+
+export type ApproveParticipantRequirementForParticipantError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
 export type GetActiveParticipantRequirementsForEventData = {
     path: {
         eventId: string
@@ -6656,6 +6765,47 @@ export type GetParticipantRequirementsForParticipantError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type GetParticipantRequirementLogData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        limit?: number
+        participantId?: string
+        requirementId?: string
+    }
+}
+
+export type GetParticipantRequirementLogResponse = {
+    data: Array<ParticipantRequirementLogEntryDto>
+}
+
+export type GetParticipantRequirementLogError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetEventScanScopeData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventScanScopeResponse = ParticipantScanScopeDto
+
+export type GetEventScanScopeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetParticipantScanScopeData = {
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type GetParticipantScanScopeResponse = ParticipantScanScopeDto
+
+export type GetParticipantScanScopeError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetParticipantsForEventData = {
     path: {

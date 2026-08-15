@@ -160,7 +160,19 @@ const CompetitionRegistrationTable = ({
                                             <TableCell
                                                 sx={{
                                                     width: '26%',
-                                                }}>{`${participant.firstname} ${participant.lastname}`}</TableCell>
+                                                }}>
+                                                {`${participant.firstname} ${participant.lastname}`}
+                                                {participant.year != null && (
+                                                    <Typography
+                                                        variant={'caption'}
+                                                        color={'text.secondary'}
+                                                        sx={{display: 'block'}}>
+                                                        {t('club.participant.yearShort', {
+                                                            year: participant.year,
+                                                        })}
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
                                             <TableCell sx={{width: '26%'}}>
                                                 {np.namedParticipantName}
                                             </TableCell>

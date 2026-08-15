@@ -72,6 +72,19 @@ object AppUserRepo {
         }
     }
 
+    // Alle Nutzer mehrerer Vereine in einer Abfrage - fuer Listen, die je Zeile den Verein
+    // wechseln (z.B. die Rechnungstabelle) und sonst pro Zeile nachladen muessten.
+    fun getByClubs(
+        clubIds: List<UUID>
+    ): JIO<List<AppUserRecord>> = Jooq.query {
+        with(APP_USER) {
+            selectFrom(this)
+                .where(CLUB.`in`(clubIds))
+                .orderBy(LASTNAME.asc(), FIRSTNAME.asc())
+                .fetch()
+        }
+    }
+
     // Used to notify all current club representatives by email (e.g. pending approvals, edited
     // registrations). Queried from the base table (not app_user_with_roles) because it needs
     // `language`, which the view does not expose.

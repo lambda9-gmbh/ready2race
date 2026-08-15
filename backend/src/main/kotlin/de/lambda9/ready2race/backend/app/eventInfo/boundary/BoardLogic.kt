@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import de.lambda9.ready2race.backend.app.awardCeremony.entity.AwardCeremonyKeyRequest
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
+import de.lambda9.ready2race.backend.app.matchStatus.entity.MatchState
 
 /**
  * Reine Logik der Boards: Timeline-Auflösung und Datenbedarf, ohne Datenbank- und
@@ -150,8 +151,10 @@ object BoardLogic {
         // Negative Offsets können parallel laufende Läufe treffen, bevor sie die
         // Ergebnisse erreichen — deshalb |min|+1 laufende Läufe abrufen, nie unter 1,
         // damit „läuft gerade nichts" von „nichts abgefragt" unterscheidbar bleibt.
+        // Positive ebenso: die an den Start gerufenen Läufe stehen im Running-Block und
+        // bilden den Anfang der Zukunftsseite (siehe [resolveOffset]).
         return BoardDataNeeds(
-            runningLimit = maxOf(1, maxNegative + 1, listLimits[BoardListMode.RUNNING] ?: 0),
+            runningLimit = maxOf(1, maxNegative + 1, maxPositive, listLimits[BoardListMode.RUNNING] ?: 0),
             upcomingLimit = maxOf(1, maxPositive, listLimits[BoardListMode.UPCOMING] ?: 0),
             resultsLimit = maxOf(1, maxNegative, listLimits[BoardListMode.RESULTS] ?: 0),
             offsets = allOffsets,
@@ -220,6 +223,25 @@ object BoardLogic {
     }
 
     /**
+     * Wo der Cursor im Block [running] steht — der Lauf, den Slot 0 zeigt.
+     *
+     * Der fahrende Lauf hat Vorrang vor dem nur an den Start gerufenen. Der Block führt beide
+     * (RUNNING und PREPARING) und ist nach geplantem Start sortiert; „der letzte" traf deshalb
+     * bei überlapptem Betrieb den vorbereiteten Lauf, während vor der Kamera noch der andere
+     * fuhr — auf dem Livestream sprang das Lower-Third auf das nächste Rennen, ehe das
+     * laufende im Ziel war (Regattatag 15.08.2026).
+     *
+     * Fährt keiner, bleibt es beim zuletzt gerufenen: dann ist der vorbereitete Lauf
+     * tatsächlich das Aktuellste, was die Arena zu zeigen hat.
+     */
+    fun cursorIndex(running: List<AthleteBoardMatch>): Int =
+        running.indexOfLast { it.state == MatchState.RUNNING }.takeIf { it >= 0 } ?: running.lastIndex
+
+    /** Der Lauf auf dem Cursor, siehe [cursorIndex]; null, wenn nichts läuft und nichts vorbereitet ist. */
+    fun currentMatch(running: List<AthleteBoardMatch>): AthleteBoardMatch? =
+        running.getOrNull(cursorIndex(running))
+
+    /**
      * Löst einen Offset gegen die drei Blöcke auf. [running] in Arena-Reihenfolge
      * (aufsteigend nach geplantem Start, so liefert `CompetitionMatchRepo.getRunningMatches`;
      * ein Lauf in Vorbereitung steht damit hinter dem fahrenden), [upcoming] aufsteigend
@@ -232,12 +254,28 @@ object BoardLogic {
         upcoming: List<AthleteBoardMatch>,
         results: List<AthleteBoardResult>,
     ): BoardMatchSlotDto = when {
-        offset > 0 -> BoardMatchSlotDto(offset, upcoming.getOrNull(offset - 1), null)
-        offset == 0 -> BoardMatchSlotDto(offset, running.lastOrNull(), null)
+        // Vorwärts vom Cursor: erst die schon an den Start gerufenen Läufe (sie stehen im
+        // Running-Block und fallen aus `upcoming` heraus, sobald sie aktiviert sind), dann
+        // das Programm. Ohne diesen Schritt verschwände der Lauf am Steg von der
+        // Athleten-Anzeige, sobald der Cursor beim fahrenden bleibt - und genau der ist der
+        // Lauf, auf den die Boote am Ufer warten.
+        offset > 0 -> {
+            val laterRunning = running.drop(cursorIndex(running) + 1)
+            val steps = offset
+            if (steps <= laterRunning.size) {
+                BoardMatchSlotDto(offset, laterRunning[steps - 1], null)
+            } else {
+                BoardMatchSlotDto(offset, upcoming.getOrNull(steps - laterRunning.size - 1), null)
+            }
+        }
+        offset == 0 -> BoardMatchSlotDto(offset, currentMatch(running), null)
         else -> {
             // Rückwärts vom Cursor: erst die früher gestarteten, noch laufenden Läufe,
-            // dann die Ergebnisse (neuestes zuerst).
-            val earlierRunning = if (running.isEmpty()) emptyList() else running.dropLast(1).reversed()
+            // dann die Ergebnisse (neuestes zuerst). Was hinter dem Cursor liegt (ein
+            // vorbereiteter Lauf, während noch gefahren wird), gehört nicht in die
+            // Vergangenheit und bleibt den negativen Slots fern.
+            val cursor = cursorIndex(running)
+            val earlierRunning = if (cursor <= 0) emptyList() else running.subList(0, cursor).reversed()
             val steps = -offset
             if (steps <= earlierRunning.size) {
                 BoardMatchSlotDto(offset, earlierRunning[steps - 1], null)

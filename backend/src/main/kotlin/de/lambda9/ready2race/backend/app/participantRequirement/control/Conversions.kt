@@ -74,6 +74,10 @@ fun ParticipantRequirementForEventRecord.toDto(): App<Nothing, ParticipantRequir
         active = active!!,
         checkInApp = checkInApp!!,
         publiclyVisible = publiclyVisible ?: false,
+        // Dieselbe Nullbarkeitsfalle wie bei checkInApp: in der Datenbank NOT NULL, von jOOQ
+        // trotzdem als Boolean? typisiert.
+        perEventDay = perEventDay ?: false,
+        perCompetition = perCompetition ?: false,
         requirements = requirements?.filterNotNull()?.map { it.toNamedParticipantRequirementDto() } ?: emptyList(),
     )
 )
@@ -117,5 +121,7 @@ fun CheckedParticipantRequirementRecord.toDto(): App<Nothing, CheckedParticipant
     CheckedParticipantRequirement(
         id = id!!,
         note = note,
+        eventDayId = eventDay,
+        competitionId = competition,
     )
 )

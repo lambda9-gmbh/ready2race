@@ -1,9 +1,10 @@
 import {Alert, Box, Button, Stack} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {
-    approveParticipantRequirementsForEvent,
+    approveParticipantRequirementForParticipant,
     deleteQrCode,
     getParticipantRequirementsForParticipant,
+    getParticipantScanScope,
     getParticipantsForEventInApp,
 } from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
@@ -21,7 +22,16 @@ import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog'
 import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut'
 import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist'
 import AppTopTitle from '@components/qrApp/AppTopTitle.tsx'
-import {CheckedParticipantRequirement} from "@api/types.gen.ts";
+import {CheckedParticipantRequirement, ParticipantScanCompetitionDto} from '@api/types.gen.ts'
+import {competitionLabel, preselectCompetition} from '@components/qrApp/requirementScope.ts'
+
+/**
+ * Der zuletzt an dieser Station gewählte Wettkampf. Er überlebt den einzelnen Scan bewusst:
+ * an der Waage kommt ein Block derselben Mannschaften nacheinander, und wer für jede Person
+ * neu auswählen müsste, wählt irgendwann falsch. Übernommen wird er nur, wenn die neue Person
+ * dort auch gemeldet ist - siehe `preselectCompetition`.
+ */
+const COMPETITION_STORAGE_KEY = 'appRequirementCompetition'
 
 const QrParticipantPage = () => {
     const {t} = useTranslation()
@@ -31,7 +41,17 @@ const QrParticipantPage = () => {
     const [participantRoles, setParticipantRoles] = useState<string[]>([])
     const [participantRequirementsPending, setParticipantRequirementsPending] = useState(false)
     const [submitting, setSubmitting] = useState(false)
+    const [competitions, setCompetitions] = useState<ParticipantScanCompetitionDto[]>([])
+    const [todayEventDayId, setTodayEventDayId] = useState<string | null>(null)
+    const [competitionId, setCompetitionId] = useState<string | null>(null)
     const feedback = useFeedback()
+
+    const selectCompetition = (id: string | null) => {
+        setCompetitionId(id)
+        if (id !== null) {
+            localStorage.setItem(COMPETITION_STORAGE_KEY, id)
+        }
+    }
 
     useEffect(() => {
         if (!qr.received) {
@@ -85,6 +105,43 @@ const QrParticipantPage = () => {
         },
     )
 
+    // Getrennt vom Bedingungs-Aufruf: dieser hier liefert den Rahmen (heutiger Wettkampftag,
+    // Wettkämpfe dieser Person), der nur für wettkampf- und tagesbezogene Bedingungen zählt.
+    useFetch(
+        signal =>
+            getParticipantScanScope({
+                signal,
+                path: {eventId, participantId: qr.response?.id ?? ''},
+            }),
+        {
+            onResponse: ({data, error}) => {
+                if (error || !data) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.competitions'),
+                        }),
+                    )
+                    setCompetitions([])
+                    setTodayEventDayId(null)
+                    setCompetitionId(null)
+                    return
+                }
+                setTodayEventDayId(data.todayEventDayId ?? null)
+                setCompetitions(data.competitions)
+                // Bewusst nicht über selectCompetition: eine Vorbelegung ist keine Wahl und
+                // darf den gemerkten Wettkampf der Station nicht überschreiben.
+                setCompetitionId(
+                    preselectCompetition(
+                        localStorage.getItem(COMPETITION_STORAGE_KEY),
+                        data.competitions,
+                    ),
+                )
+            },
+            preCondition: () => appFunction === 'APP_EVENT_REQUIREMENT' && qr.qrCodeId !== null,
+            deps: [eventId, qr],
+        },
+    )
+
     const handleRequirementChange = async (
         requirementId: string,
         checked: boolean | string,
@@ -92,14 +149,45 @@ const QrParticipantPage = () => {
     ) => {
         if (!qr.response?.id) return
         setSubmitting(true)
-        await approveParticipantRequirementsForEvent({
+        // Der Wettkampf gehört nur an eine Bedingung, die je Wettkampf gilt. Bei allen anderen
+        // bliebe er sonst als Einschränkung in der Zeile stehen, die niemand gewollt hat.
+        const requirement = (participantRequirementsData ?? []).find(r => r.id === requirementId)
+        const {error} = await approveParticipantRequirementForParticipant({
             path: {eventId},
+            // Bewusst der additive Einzel-Endpunkt: der Ersetzen-Endpunkt (approve) erwartet den
+            // kompletten Zustand und würde alle nicht mitgeschickten Bestätigungen löschen.
             body: {
                 requirementId,
-                approvedParticipants: checked !== false ? [{id: qr.response.id, note: typeof checked === 'string' ? checked : undefined}] : [],
+                participantId: qr.response.id,
+                approved: checked !== false,
+                note: typeof checked === 'string' ? checked : undefined,
                 namedParticipantId: namedParticipantId,
+                competitionId: requirement?.perCompetition ? (competitionId ?? undefined) : undefined,
             },
         })
+
+        // Die Antwort wurde bis hierher gar nicht ausgewertet: Ein abgelehnter Aufruf sah an der
+        // Waage genauso aus wie ein angenommener - der Knopf blieb einfach stehen. Die
+        // Rückmeldung nennt deshalb auch den Rahmen, für den gerade abgehakt wurde; an einer
+        // Bedingung je Wettkampf ist "gespeichert" allein zu wenig.
+        if (error) {
+            feedback.error(t('qrParticipant.status.error'))
+            setSubmitting(false)
+            return
+        }
+        const chosenCompetition = competitions.find(c => c.id === competitionId)
+        const scopeSuffix =
+            requirement?.perCompetition && chosenCompetition
+                ? competitionLabel(chosenCompetition)
+                : undefined
+        feedback.success(
+            checked === false
+                ? t('qrParticipant.status.revoked', {name: requirement?.name ?? ''})
+                : t('qrParticipant.status.approved', {
+                      name: requirement?.name ?? '',
+                      scope: scopeSuffix ? ` — ${scopeSuffix}` : '',
+                  }),
+        )
 
         // Nach Änderung neu laden
         const {data: partData} = await getParticipantsForEventInApp({path: {eventId}})
@@ -180,6 +268,10 @@ const QrParticipantPage = () => {
                     pending={participantRequirementsPending}
                     onRequirementChange={handleRequirementChange}
                     namedParticipantIds={participantRoles}
+                    competitions={competitions}
+                    competitionId={competitionId}
+                    onCompetitionChange={selectCompetition}
+                    todayEventDayId={todayEventDayId}
                 />
             )}
 

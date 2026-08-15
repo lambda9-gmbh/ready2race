@@ -179,8 +179,18 @@ object RaceClockerPollService {
             )
         }
 
-        if (watched.isEmpty()) {
-            eventStates[event.eventId] = EventState(now, RaceClockerPollLogic.modeFor(anyRunning = false))
+        // Die Pause gilt je Lauf und stoppt nur das SCHREIBEN dieses einen Laufs: Wer von Hand
+        // eingetragen hat, hat für DIESEN Lauf das letzte Wort. Für den Takt zählt ein pausierter,
+        // aktivierter Lauf weiter als laufend - er ist ja auf dem Wasser, und seine Nachbarläufe
+        // sollen im schnellen Takt weiterlaufen. Bis zum 15.08.2026 fielen Pausierte schon aus
+        // `getCandidates` heraus; eine Handeingabe in den einzigen aktivierten Lauf schaltete die
+        // ganze Veranstaltung auf den langsamen Takt, und am Regattatag sah das aus, als stoppe
+        // die Handeingabe den Abruf für die ganze Runde.
+        val (paused, pollable) = watched.partition { it.autoPausedAt != null }
+        var anyRunning = paused.any { it.activatedAt != null }
+
+        if (pollable.isEmpty()) {
+            eventStates[event.eventId] = EventState(now, RaceClockerPollLogic.modeFor(anyRunning))
             return
         }
 
@@ -193,7 +203,7 @@ object RaceClockerPollService {
         val skipped = mutableListOf<UUID>()
         // Und die, bei denen etwas unerwartet gescheitert ist - die gehören als Fehler sichtbar.
         val defective = mutableListOf<UUID>()
-        val resolved = watched.mapNotNull { candidate ->
+        val resolved = pollable.mapNotNull { candidate ->
             val setupRounds = setupRoundsByCompetition.getOrPut(candidate.competitionId) {
                 // Ein Fehler der Turnierstruktur heißt für den Job dasselbe wie "Lauf nicht
                 // gefunden": Er überspringt ihn still. `orDie` wäre hier falsch - ein einzelner
@@ -261,7 +271,6 @@ object RaceClockerPollService {
             }
         }
 
-        var anyRunning = false
         var anyWrote = false
         resolved.forEach { entry ->
             // Defekt-Vorgabe ist Failed, nicht NotInFeed: NotInFeed heißt „vor dem Start normal"

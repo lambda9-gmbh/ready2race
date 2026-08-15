@@ -4530,12 +4530,48 @@ paths:
       - $ref: '#/components/parameters/eventId'
     post:
       operationId: approveParticipantRequirementsForEvent
+      description: >-
+        Replaces the COMPLETE approval state of one requirement - participants missing from
+        the payload lose their approval. Meant for the bulk maintenance dialog that sends the
+        full state; single approvals (QR scan app) must use /approve/participant instead.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ParticipantRequirementCheckForEventUpsertDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/approve/participant:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: approveParticipantRequirementForParticipant
+      description: >-
+        Approves or revokes one requirement for exactly ONE participant - strictly additive
+        and idempotent on record level, other participants, competitions and event days stay
+        untouched. Used by the QR scan app. Dimensions follow the requirement's switches:
+        with perEventDay the current event day is recorded, with perCompetition the optional
+        competitionId decides which competition the approval is for.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequirementApproveForParticipantDto'
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -4756,6 +4792,103 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ParticipantRequirementForEventDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/log:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getParticipantRequirementLog
+      parameters:
+        - name: requirementId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: participantId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Requirement log successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantRequirementLogEntryDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/scanScope:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventScanScope
+      responses:
+        200:
+          description: Scan scope of the event successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantScanScopeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/participant/{participantId}/scanScope:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: participantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getParticipantScanScope
+      responses:
+        200:
+          description: Scan scope successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantScanScopeDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -12163,6 +12296,114 @@ components:
           format: uuid
         note:
           type: string
+        eventDayId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Wettkampftag, den diese Bestaetigung abdeckt - null heisst ohne Tagesbezug"
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Wettkampf, den diese Bestaetigung abdeckt - null heisst ohne Wettkampfbezug"
+
+    ParticipantRequirementLogAction:
+      type: string
+      enum: [APPROVED, REVOKED]
+
+    ParticipantRequirementLogSource:
+      type: string
+      enum: [SCAN, BULK, IMPORT]
+
+    ParticipantRequirementLogEntryDto:
+      type: object
+      required:
+        - id
+        - participantId
+        - participantName
+        - requirementId
+        - requirementName
+        - action
+        - source
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+        participantName:
+          type: string
+        clubName:
+          type: string
+          nullable: true
+        requirementId:
+          type: string
+          format: uuid
+        requirementName:
+          type: string
+        action:
+          $ref: '#/components/schemas/ParticipantRequirementLogAction'
+        source:
+          $ref: '#/components/schemas/ParticipantRequirementLogSource'
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionName:
+          type: string
+          nullable: true
+        eventDayId:
+          type: string
+          format: uuid
+          nullable: true
+        eventDayDate:
+          type: string
+          format: date
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          nullable: true
+
+    ParticipantScanCompetitionDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+          nullable: true
+        name:
+          type: string
+        shortName:
+          type: string
+          nullable: true
+
+    ParticipantScanScopeDto:
+      type: object
+      required:
+        - competitions
+      properties:
+        todayEventDayId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Heutiger Wettkampftag - null, wenn heute keinem Wettkampftag zuzuordnen ist"
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantScanCompetitionDto'
 
     ParticipantRequirementForEventDto:
       type: object
@@ -12173,6 +12414,8 @@ components:
         - optional
         - active
         - checkInApp
+        - perEventDay
+        - perCompetition
       properties:
         id:
           type: string
@@ -12191,6 +12434,12 @@ components:
         publiclyVisible:
           type: boolean
           description: "Im oeffentlichen Dashboard Mein Event sichtbar"
+        perEventDay:
+          type: boolean
+          description: "Muss je Wettkampftag erfuellt werden"
+        perCompetition:
+          type: boolean
+          description: "Muss je Wettkampf erfuellt werden"
         requirements:
           type: array
           items:
@@ -12300,6 +12549,46 @@ components:
           type: string
           format: uuid
           nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >-
+            Der Rahmen des Abgleichs. Pflicht, sobald die Bedingung je Wettkampf gilt - ohne ihn
+            waere unklar, welchen Zustand die Liste ersetzt, und der Abgleich loeschte die
+            Bestaetigungen aller anderen Wettkaempfe mit. Der Tag kommt nicht von hier: ihn
+            bestimmt der Server aus dem Zeitpunkt des Abgleichs.
+
+    ParticipantRequirementApproveForParticipantDto:
+      type: object
+      required:
+        - requirementId
+        - participantId
+        - approved
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+        approved:
+          type: boolean
+        note:
+          type: string
+          nullable: true
+        namedParticipantId:
+          type: string
+          format: uuid
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >-
+            For requirements with perCompetition - the competition this approval is for.
+            Without it the fulfillment is stored without competition reference, which
+            deliberately covers no match while the switch is on.
 
     # captcha
 
@@ -14446,11 +14735,23 @@ components:
         reason:
           type: string
 
+    InvoiceContactDto:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+
     InvoiceDto:
       type: object
       required:
         - id
         - invoiceNumber
+        - billedToContacts
         - totalAmount
         - createdAt
       properties:
@@ -14463,6 +14764,10 @@ components:
           type: string
         billedToName:
           type: string
+        billedToContacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceContactDto'
         totalAmount:
           type: string
           format: decimal
@@ -16057,6 +16362,29 @@ components:
           type: string
           nullable: true
 
+    MyEventRequirementScopeDto:
+      type: object
+      required:
+        - fulfilled
+      properties:
+        competitionName:
+          type: string
+          nullable: true
+        eventDayDate:
+          type: string
+          format: date
+          nullable: true
+        fulfilled:
+          type: boolean
+        checkFrom:
+          type: string
+          format: date-time
+          nullable: true
+        checkUntil:
+          type: string
+          format: date-time
+          nullable: true
+
     MyEventRequirementDto:
       type: object
       required:
@@ -16078,6 +16406,13 @@ components:
           type: boolean
         fulfilled:
           type: boolean
+        scopes:
+          type: array
+          description: >-
+            Aufschluesselung, sobald die Bedingung je Tag oder je Wettkampf gilt - je Rahmen eine
+            Zeile. Leer bei einer Bedingung ohne Schalter.
+          items:
+            $ref: '#/components/schemas/MyEventRequirementScopeDto'
         checkFrom:
           type: string
           format: date-time
@@ -16337,6 +16672,18 @@ components:
           nullable: true
         status:
           $ref: '#/components/schemas/TimeCheckStatus'
+        referenceStartTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: >-
+            Der Start, gegen den gerechnet wurde. Bei einer Bedingung je Tag und/oder je Wettkampf
+            ist das der ERSTE Lauf dieses Rahmens, nicht der gerade gezeigte Lauf.
+        referenceIsFrameStart:
+          type: boolean
+          description: >-
+            true, wenn referenceStartTime ein anderer Lauf ist als der gezeigte - dann muss die
+            Ansicht dazusagen, worauf sich die Abweichung bezieht.
 
     LiveDashboardRequirementStatusDto:
       type: object

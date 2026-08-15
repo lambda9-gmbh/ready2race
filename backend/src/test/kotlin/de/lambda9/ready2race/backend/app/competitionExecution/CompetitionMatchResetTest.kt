@@ -126,13 +126,15 @@ class CompetitionMatchResetTest {
     }
 
     /**
-     * Die Pause selbst, gegen den echten Kandidaten-Filter: Ein pollbarer Lauf (RaceClocker als
+     * Die Pause selbst, gegen die echte Kandidaten-Abfrage: Ein pollbarer Lauf (RaceClocker als
      * Zeitnahmesystem, angewähltes Rennen, weder beendet noch pausiert) ist VOR dem Reset
-     * Kandidat des Abruf-Jobs - danach nicht mehr. Ohne die Pause importierte der nächste Takt
-     * die soeben gelöschten Ergebnisse sofort wieder aus dem Feed, solange RaceClocker den alten
-     * Stand noch führt: Der Reset höbe sich selbst auf (Nutzer-Beobachtung 12.08.2026).
-     * Fortgesetzt wird bewusst über [CompetitionExecutionService.resumeRaceClockerAutoPull],
-     * nachdem der Lauf in RaceClocker aufgeräumt ist.
+     * unmarkierter Kandidat des Abruf-Jobs - danach trägt er die Pause-Markierung, an der der Job
+     * sein Schreiben überspringt (er bleibt Kandidat, damit sein Zustand weiter für den Takt der
+     * Veranstaltung zählt). Ohne die Pause importierte der nächste Takt die soeben gelöschten
+     * Ergebnisse sofort wieder aus dem Feed, solange RaceClocker den alten Stand noch führt: Der
+     * Reset höbe sich selbst auf (Nutzer-Beobachtung 12.08.2026). Fortgesetzt wird bewusst über
+     * [CompetitionExecutionService.resumeRaceClockerAutoPull], nachdem der Lauf in RaceClocker
+     * aufgeräumt ist.
      */
     @Test
     fun resetPausiertDenAutomatischenAbruf() = testComprehension {
@@ -164,8 +166,8 @@ class CompetitionMatchResetTest {
 
         val before = !RaceClockerPollRepo.getCandidates(seeded.eventId)
         assertTrue(
-            before.any { it.matchId == seeded.matchId },
-            "Gegenprobe schlägt fehl: Der Lauf müsste vor dem Reset Abruf-Kandidat sein",
+            before.any { it.matchId == seeded.matchId && it.autoPausedAt == null },
+            "Gegenprobe schlägt fehl: Der Lauf müsste vor dem Reset unpausierter Abruf-Kandidat sein",
         )
 
         !CompetitionExecutionService.resetMatch(
@@ -181,8 +183,8 @@ class CompetitionMatchResetTest {
         )
         val after = !RaceClockerPollRepo.getCandidates(seeded.eventId)
         assertTrue(
-            after.none { it.matchId == seeded.matchId },
-            "Der zurückgesetzte Lauf ist noch Abruf-Kandidat - der nächste Takt spielte die gelöschten Ergebnisse wieder ein",
+            after.any { it.matchId == seeded.matchId && it.autoPausedAt != null },
+            "Der zurückgesetzte Lauf trägt keine Pause-Markierung - der nächste Takt spielte die gelöschten Ergebnisse wieder ein",
         )
     }
 

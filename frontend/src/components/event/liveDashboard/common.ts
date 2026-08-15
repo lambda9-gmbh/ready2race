@@ -456,6 +456,49 @@ export const pendingSlotLabel = (slot: PendingSlotDto, mode: 'full' | 'short' = 
     slot.name ??
     [competitionLabel(slot, mode), slot.roundName, slot.matchName].filter(Boolean).join(' · ')
 
+/**
+ * Die Kartenüberschrift eines Laufs — über alle Zustände dieselbe Form (Rückmeldung vom
+ * Regattatag 14.08.2026). Vorher stand dort `matchName ?? roundName ?? competitionLabel`: welche
+ * Angabe die Überschrift trug, hing daran, welche Felder die Daten zufällig füllten. Ein Lauf mit
+ * benanntem Setup zeigte nur „AF1", einer ohne Namen den Wettkampf, und ein noch nicht gesetzter
+ * Slot daneben die volle Kette — am Steg las sich das, als wechselte die Überschrift mit dem
+ * Zustand.
+ *
+ * Jetzt führt immer der Wettkampf (Kürzel bzw. ausgeschriebener Name, je nach [mode]), dahinter
+ * der Laufname, ersatzweise die Runde zur Unterscheidung — dieselbe Leserichtung wie
+ * [pendingSlotLabel], damit ein Slot beim Setzen seiner Runde die Form seiner Überschrift nicht
+ * wechselt. Die Runde steht nur ersatzweise hier: trägt der Laufname die Unterscheidung schon,
+ * gehört sie in die Zweitzeile ([matchCardSubtitle]), sonst würde die Überschrift unnötig lang.
+ */
+export const matchCardTitle = (
+    match: {
+        competitionName?: string | null
+        competitionIdentifier?: string | null
+        competitionShortName?: string | null
+        roundName?: string | null
+        matchName?: string | null
+    },
+    mode: 'full' | 'short' = 'full',
+): string =>
+    [competitionLabel(match, mode), match.matchName ?? match.roundName]
+        .filter(Boolean)
+        .join(' · ')
+
+/**
+ * Die Zweitzeile unter der Kartenüberschrift: Kategorie und Runde. Der Wettkampf steht seit der
+ * Vereinheitlichung immer in der Überschrift und hier deshalb nicht mehr — sonst stünde dieselbe
+ * Angabe zweimal untereinander. Die Runde entfällt ebenfalls, wenn sie mangels Laufname bereits
+ * die Überschrift unterscheidet (siehe [matchCardTitle]).
+ */
+export const matchCardSubtitle = (match: {
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+}): string =>
+    [match.categoryName, match.matchName != null ? match.roundName : null]
+        .filter(Boolean)
+        .join(' · ')
+
 // === Geräte-lokale Anpassungen des Boards (12.08.2026) ==========================================
 // Die Logik der acht Einstellungen aus dem Einstellungs-Popover — als reine Funktionen hier statt
 // im JSX, damit sie ohne Rendering prüfbar bleibt (siehe common.test.ts). Die Persistenz liegt in
