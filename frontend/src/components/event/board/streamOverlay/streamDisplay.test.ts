@@ -3,6 +3,7 @@ import {
     byNullsLast,
     competitionLabel,
     crewLines,
+    enumerationUnits,
     formatCountdownClock,
     roundMatchLabel,
     solidOr,
@@ -62,6 +63,49 @@ describe('crewLines', () => {
 
     it('useShortNames=false nimmt die Langform', () => {
         expect(crewLines(team, 'CLUBS_FIRST', false).primary).toBe('Rudergemeinschaft')
+    })
+})
+
+/**
+ * Grundlage des zweizeiligen Umbruchs in StreamBoatRow: gebrochen wird nur zwischen ganzen
+ * Einheiten (Verein/Athlet/Teamname), das Trennzeichen klebt per NBSP an der vorangehenden.
+ */
+describe('enumerationUnits', () => {
+    it('zerlegt eine Vereinskette samt Teamname an " / " und " | "', () => {
+        expect(enumerationUnits('RC Flensburg / Kieler RG | Boot 2')).toEqual([
+            'RC Flensburg\u00A0/\u00A0',
+            'Kieler RG\u00A0|\u00A0',
+            'Boot 2',
+        ])
+    })
+
+    it('zerlegt eine Besatzungskette an " · "', () => {
+        expect(enumerationUnits('Anna Muster · Bea Beispiel')).toEqual([
+            'Anna Muster\u00A0·\u00A0',
+            'Bea Beispiel',
+        ])
+    })
+
+    it('lässt Text ohne Trennzeichen als eine Einheit stehen', () => {
+        expect(enumerationUnits('Rudergemeinschaft Musterstadt')).toEqual([
+            'Rudergemeinschaft Musterstadt',
+        ])
+    })
+
+    it('leerer Text ergibt keine Einheiten', () => {
+        expect(enumerationUnits('')).toEqual([])
+    })
+
+    it('bricht nicht an bloßen Zeichen ohne umgebende Leerzeichen (z. B. "SG Kiel/Eckernförde")', () => {
+        expect(enumerationUnits('SG Kiel/Eckernförde · Ole Otto')).toEqual([
+            'SG Kiel/Eckernförde\u00A0·\u00A0',
+            'Ole Otto',
+        ])
+    })
+
+    it('bleibt verlustfrei: NBSP zurückgetauscht ergibt wieder den Eingabetext', () => {
+        const text = 'RC A / RC B / RC C | Boot 1'
+        expect(enumerationUnits(text).join('').replace(/\u00A0/g, ' ')).toBe(text)
     })
 })
 
