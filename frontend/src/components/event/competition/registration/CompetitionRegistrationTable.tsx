@@ -330,7 +330,10 @@ const CompetitionRegistrationTable = ({
                 deleteRequest={deleteRequest}
                 onDeleteError={onDeleteError}
                 entityName={t('event.registration.registration')}
-                creatable={props.registrationInitialized && (props.documentsAccepted ?? false)}
+                creatable={
+                    user.checkPrivilege(updateRegistrationGlobal) ||
+                    (props.registrationInitialized && (props.documentsAccepted ?? false))
+                }
                 deletableIf={writable}
                 editableIf={writable}
                 customEntityActions={customEntityActions}
