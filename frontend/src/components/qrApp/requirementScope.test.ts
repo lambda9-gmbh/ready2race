@@ -4,6 +4,7 @@ import {
     coveringFulfillment,
     covers,
     preselectCompetition,
+    requirementStatus,
 } from './requirementScope.ts'
 
 const wholeEvent = {perEventDay: false, perCompetition: false}
@@ -133,5 +134,71 @@ describe('competitionLabel', () => {
     test('ohne Kürzel der volle Name, ohne Kennung nur der Name', () => {
         expect(competitionLabel({id: 'x', identifier: '12', name: 'Junioren'})).toBe('12 Junioren')
         expect(competitionLabel({id: 'x', name: 'Junioren'})).toBe('Junioren')
+    })
+})
+
+describe('requirementStatus', () => {
+    const wettkaempfe = [
+        {id: wettkampfA, name: 'Vierer', identifier: '8', shortName: 'CMix4x+'},
+        {id: wettkampfB, name: 'Zweier', identifier: '12', shortName: 'CM2x'},
+    ]
+
+    test('je Wettkampf eine Zeile - erledigt und offen nebeneinander', () => {
+        // Der Fall an der Waage: Die Person startet zweimal, gewogen ist erst einer der beiden.
+        const checked = [{id: 'waage', eventDayId: heute, competitionId: wettkampfA}]
+        const status = requirementStatus(
+            'waage',
+            {perEventDay: true, perCompetition: true},
+            checked,
+            wettkaempfe,
+            heute,
+        )
+        expect(status.map(s => [s.competitionLabel, s.fulfilled])).toEqual([
+            ['8 CMix4x+', true],
+            ['12 CM2x', false],
+        ])
+    })
+
+    test('gestern gewogen zählt heute nicht', () => {
+        const checked = [{id: 'waage', eventDayId: gestern, competitionId: wettkampfA}]
+        const status = requirementStatus(
+            'waage',
+            {perEventDay: true, perCompetition: true},
+            checked,
+            wettkaempfe,
+            heute,
+        )
+        expect(status.every(s => !s.fulfilled)).toBe(true)
+    })
+
+    test('ohne Wettkampfbezug genau eine Zeile, ohne Wettkampfnamen', () => {
+        const status = requirementStatus(
+            'pass',
+            {perEventDay: false, perCompetition: false},
+            [{id: 'pass', note: 'gesehen'}],
+            wettkaempfe,
+            heute,
+        )
+        expect(status).toEqual([
+            {competitionId: null, competitionLabel: null, fulfilled: true, note: 'gesehen'},
+        ])
+    })
+
+    test('nur tagesbezogen: eine Zeile, die auf heute schaut', () => {
+        const scope = {perEventDay: true, perCompetition: false}
+        expect(
+            requirementStatus('waage', scope, [{id: 'waage', eventDayId: heute}], wettkaempfe, heute)[0]
+                .fulfilled,
+        ).toBe(true)
+        expect(
+            requirementStatus('waage', scope, [{id: 'waage', eventDayId: gestern}], wettkaempfe, heute)[0]
+                .fulfilled,
+        ).toBe(false)
+    })
+
+    test('ohne Meldung gibt es bei einer wettkampfbezogenen Bedingung nichts zu zeigen', () => {
+        expect(
+            requirementStatus('waage', {perEventDay: false, perCompetition: true}, [], [], heute),
+        ).toEqual([])
     })
 })

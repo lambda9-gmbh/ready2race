@@ -127,7 +127,13 @@ fun ParticipantForEventRecord.toDto(
         participantRequirementsChecked = participantRequirementsChecked!!.map{ reqChecked ->
             CheckedParticipantRequirement(
                 id = reqChecked!!.id!!,
-                note = reqChecked.note
+                note = reqChecked.note,
+                // Die beiden Dimensionen müssen mit (V202608141900): Die Scan-App fragt nicht
+                // "gibt es einen Haken?", sondern "deckt er DIESEN Wettkampf an DIESEM Tag ab?".
+                // Ohne sie kam die Antwort für eine Bedingung mit Schaltern immer "nein" - die
+                // Bestätigung an der Waage war geschrieben, das Häkchen erschien trotzdem nie.
+                eventDayId = reqChecked.eventDay,
+                competitionId = reqChecked.competition,
             )
         },
         namedParticipantIds = overwriteNamedParticipantIds ?: namedParticipantIds!!.filterNotNull(),

@@ -2805,6 +2805,13 @@
       "perCompetition": "pr. konkurrence",
       "perEventDay": "pr. stævnedag",
       "perCompetitionAndDay": "pr. konkurrence og dag"
+    },
+    "status": {
+      "done": "vejet",
+      "open": "mangler",
+      "approved": "{{name}} bekræftet{{scope}}",
+      "revoked": "{{name}} trukket tilbage",
+      "error": "Bekræftelsen kunne ikke gemmes."
     }
   },
   "qrScanner": {

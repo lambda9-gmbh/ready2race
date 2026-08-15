@@ -2818,6 +2818,13 @@
       "perCompetition": "je Wettkampf",
       "perEventDay": "je Wettkampftag",
       "perCompetitionAndDay": "je Wettkampf und Tag"
+    },
+    "status": {
+      "done": "gewogen",
+      "open": "offen",
+      "approved": "{{name}} bestätigt{{scope}}",
+      "revoked": "{{name}} zurückgenommen",
+      "error": "Die Bestätigung konnte nicht gespeichert werden."
     }
   },
   "qrScanner": {
