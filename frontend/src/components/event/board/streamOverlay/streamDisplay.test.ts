@@ -118,6 +118,7 @@ describe('teamTrailingLabel', () => {
         timeString: null,
         failed: false,
         failedReason: null,
+        bye: false,
         deregistered: false,
         deregisteredReason: null,
         ...over,
@@ -137,6 +138,29 @@ describe('teamTrailingLabel', () => {
 
     it('ohne jedes Teilergebnis (Aufstellung) null', () => {
         expect(teamTrailingLabel(outcome(), 'DNF')).toBeNull()
+    })
+
+    it('das Freilos steht vor Platz, Zeit und Abmeldung', () => {
+        // Ein Boot mit vergebenem Freilos hat weder Platz noch Zeit - ohne diese Beschriftung
+        // stünde seine Zeile leer da und wäre von "Ergebnis fehlt noch" nicht zu unterscheiden.
+        expect(teamTrailingLabel(outcome({bye: true}), 'DNF', 'Abgemeldet', 'Freilos')).toBe(
+            'Freilos',
+        )
+        expect(
+            teamTrailingLabel(
+                outcome({bye: true, deregistered: true, place: 1}),
+                'DNF',
+                'Abgemeldet',
+                'Freilos',
+            ),
+        ).toBe('Freilos')
+    })
+
+    it('ohne Beschriftung bleibt das Freilos beim bisherigen Verhalten', () => {
+        // Aufrufer, die die Angabe nicht führen (ältere Panels), sollen sich nicht ändern.
+        expect(teamTrailingLabel(outcome({bye: true, place: 2, timeString: '3:50.0'}), 'DNF')).toBe(
+            '2nd 3:50.0',
+        )
     })
 
     /**

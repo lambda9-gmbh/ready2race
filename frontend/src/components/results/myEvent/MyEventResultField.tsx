@@ -71,7 +71,9 @@ const FieldRow = ({team}: {team: FieldTeam}) => {
                     variant="body2"
                     sx={{fontWeight: team.own ? 700 : 400, textAlign: 'right'}}
                     color={team.failed || team.deregistered ? 'text.secondary' : 'text.primary'}>
-                    {team.deregistered
+                    {team.bye
+                        ? t('event.competition.execution.teamBye.label')
+                        : team.deregistered
                         ? [t('event.info.athleteBoard.deregistered'), team.deregisteredReason]
                               .filter(Boolean)
                               .join(' · ')

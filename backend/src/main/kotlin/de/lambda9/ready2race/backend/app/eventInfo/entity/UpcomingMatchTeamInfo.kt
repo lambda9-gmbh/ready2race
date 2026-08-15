@@ -28,5 +28,10 @@ data class UpcomingMatchTeamInfo(
      */
     val deregistered: Boolean = false,
     val deregistrationReason: String? = null,
+    /**
+     * Vergebenes Freilos (V202608151900): Das Boot steht in der Aufstellung, fährt aber nicht -
+     * dieselbe Begründung wie bei [deregistered], deshalb auch hier im anstehenden Lauf.
+     */
+    val bye: Boolean = false,
     val participants: List<UpcomingMatchParticipantInfo>
 )

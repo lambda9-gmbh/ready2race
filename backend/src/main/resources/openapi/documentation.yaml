@@ -4771,6 +4771,28 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/scanScope:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventScanScope
+      responses:
+        200:
+          description: Scan scope of the event successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantScanScopeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement/participant/{participantId}/scanScope:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -12331,6 +12353,15 @@ components:
           type: string
           format: uuid
           nullable: true
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >-
+            Der Rahmen des Abgleichs. Pflicht, sobald die Bedingung je Wettkampf gilt - ohne ihn
+            waere unklar, welchen Zustand die Liste ersetzt, und der Abgleich loeschte die
+            Bestaetigungen aller anderen Wettkaempfe mit. Der Tag kommt nicht von hier: ihn
+            bestimmt der Server aus dem Zeitpunkt des Abgleichs.
 
     ParticipantRequirementApproveForParticipantDto:
       type: object
@@ -15459,6 +15490,11 @@ components:
           type: string
         failed:
           type: boolean
+        bye:
+          type: boolean
+          description: >-
+            Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder
+            Platz noch Zeit.
         failedReason:
           type: string
         penaltySeconds:
@@ -15564,6 +15600,11 @@ components:
           nullable: true
         failed:
           type: boolean
+        bye:
+          type: boolean
+          description: >-
+            Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder
+            Platz noch Zeit.
         failedReason:
           type: string
           nullable: true
@@ -15709,6 +15750,11 @@ components:
           nullable: true
         failed:
           type: boolean
+        bye:
+          type: boolean
+          description: >-
+            Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder
+            Platz noch Zeit.
         failedReason:
           type: string
           nullable: true
@@ -16105,6 +16151,11 @@ components:
           nullable: true
         failed:
           type: boolean
+        bye:
+          type: boolean
+          description: >-
+            Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder
+            Platz noch Zeit.
         failedReason:
           type: string
           nullable: true
@@ -16578,6 +16629,11 @@ components:
           description: "The measured start of this boat from the timing tooling - answers 'who is already under way?' in individual-start time trials while no finish time exists yet"
         failed:
           type: boolean
+        bye:
+          type: boolean
+          description: >-
+            Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder
+            Platz noch Zeit.
         failedReason:
           type: string
           nullable: true

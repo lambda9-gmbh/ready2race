@@ -21,6 +21,20 @@ class MatchStatusLogicTest {
     private fun placed(place: Int) = MatchStatusTeam(place = place, failed = false, deregistered = false)
     private fun failed() = MatchStatusTeam(place = null, failed = true, deregistered = false)
     private fun deregistered() = MatchStatusTeam(place = null, failed = false, deregistered = true)
+    private fun bye() = MatchStatusTeam(place = null, failed = false, deregistered = false, bye = true)
+
+    /**
+     * Ein Boot mit vergebenem Freilos (V202608151900) hat weder Platz noch DNF noch Abmeldung.
+     * Ohne die Sonderstellung erreichte sein Lauf nie "alle gewertet" - die Aktivierungskette
+     * bliebe an ihm hängen, und die Karte zeigte auf ewig ein offenes Boot. Gefahren ist es
+     * trotzdem nicht: es war nicht auf dem Wasser.
+     */
+    @Test
+    fun aByeCountsAsSettledButNotAsRaced() {
+        val teams = listOf(placed(1), bye())
+        assertEquals(2, MatchStatusLogic.scoredCount(teams))
+        assertEquals(1, MatchStatusLogic.racedCount(teams))
+    }
 
     // --- scoredCount ---
 

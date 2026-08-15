@@ -203,14 +203,14 @@ export const matchControls = (
  * `LiveDashboardLogic.teamIsSettled` im Backend.
  */
 export const teamIsSettled = (team: LiveDashboardTeamDto): boolean =>
-    team.deregistered || team.failed || team.place != null || team.time != null
+    team.deregistered || team.bye || team.failed || team.place != null || team.time != null
 
 /**
  * **Gefahren: liegt ein sportliches Ergebnis vor?** Eine Abmeldung zählt hier nicht — das Boot war
  * nicht auf dem Wasser. Nur diese Zahl trägt die Ablesung „Teilweise gewertet".
  */
 export const teamHasRaced = (team: LiveDashboardTeamDto): boolean =>
-    !team.deregistered && (team.failed || team.place != null || team.time != null)
+    !team.deregistered && !team.bye && (team.failed || team.place != null || team.time != null)
 
 /**
  * Der Zustand eines Dashboard-Laufs als [MatchStatusDto] — dieselbe Form, die Durchführung und
@@ -246,7 +246,9 @@ export const matchHasResults = (teams: LiveDashboardTeamDto[]): boolean =>
  * während bei DSQ/DNF nichts mehr zu entscheiden ist.
  */
 const teamOrderGroup = (team: LiveDashboardTeamDto): number =>
-    team.place != null ? 0 : team.deregistered ? 3 : team.failed ? 2 : 1
+    // Das Freilos steht bei den erledigten, aber hinter den gefahrenen: es hat kein Ergebnis,
+    // wartet aber auch auf keines.
+    team.place != null ? 0 : team.deregistered ? 3 : team.failed ? 2 : team.bye ? 2 : 1
 
 /**
  * Die Boote eines Laufs in Anzeigereihenfolge: nach Startnummer, solange nichts gewertet ist — und

@@ -1444,6 +1444,11 @@
         "allRequirements": "All active requirements",
         "submit": "Export",
         "error": "The export could not be created."
+      },
+      "scope": {
+        "competitionHelp": "This reconciliation applies to the chosen competition only - approvals for other competitions stay untouched.",
+        "chooseCompetition": "This requirement is checked per competition. Please choose the competition first.",
+        "todayOnly": "This requirement is checked per event day. The reconciliation writes and clears today only."
       }
     },
     "action": {

@@ -112,6 +112,17 @@ fun Route.participantRequirementForEvent() {
             }
         }
 
+        // Bezugsrahmen des Abgleichs: heutiger Wettkampftag und alle Wettkämpfe.
+        route("/scanScope") {
+            get {
+                call.respondComprehension {
+                    !authenticateAny(Privilege.ReadEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    ParticipantRequirementService.getScanScopeForEvent(eventId)
+                }
+            }
+        }
+
         route("/approve") {
             // Ersetzt den kompletten Zustand einer Bedingung (Massen-Pflege im
             // Verwaltungs-UI). Für einzelne Bestätigungen ist /approve/participant da -

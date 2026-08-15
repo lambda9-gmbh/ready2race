@@ -147,34 +147,86 @@ object ParticipantRequirementService {
             return@comprehension KIO.fail(ParticipantRequirementError.NotFound)
         }
 
-        !ParticipantHasRequirementForEventRepo.deleteWhereParticipantNotInList(
-            eventId,
-            dto.requirementId,
-            dto.approvedParticipants.map { it.id }
+        // Der Rahmen des Abgleichs. Bis zur Migration V202608141900 gab es keinen - eine
+        // Bedingung war je Person und Veranstaltung genau einmal abgehakt, und der Abgleich
+        // durfte pauschal löschen und schreiben. Seither muss er sagen, WOFÜR er gilt; sonst
+        // räumt der Abgleich für Wettkampf B die Waage-Bestätigungen aus Wettkampf A weg und
+        // schreibt Häkchen ohne Bezug, die vor dem Start bewusst nicht zählen.
+        val requirement = !ParticipantRequirementRepo.get(dto.requirementId).orDie()
+            .onNullFail { ParticipantRequirementError.NotFound }
+        val scope = RequirementScopeLogic.Scope(
+            perEventDay = requirement.perEventDay == true,
+            perCompetition = requirement.perCompetition == true,
+        )
+
+        if (scope.perCompetition && dto.competitionId == null) {
+            return@comprehension KIO.fail(ParticipantRequirementError.CompetitionRequired)
+        }
+
+        // Wie beim Scan an der Waage: den Tag bestimmt der Server aus dem Zeitpunkt des
+        // Abgleichs, nicht der Aufrufer.
+        val eventDay = if (scope.perEventDay) {
+            !EventDayRepo.getByEvent(eventId).orDie().map { days ->
+                RequirementScopeLogic.eventDayOf(
+                    LocalDateTime.now(),
+                    days.map { RequirementScopeLogic.EventDayRef(it.id!!, it.date!!) },
+                )
+            }
+        } else {
+            null
+        }
+        val key = RequirementScopeLogic.keyFor(
+            scope,
+            RequirementScopeLogic.MatchScope(eventDay = eventDay, competition = dto.competitionId),
+        )
+
+        !ParticipantHasRequirementForEventRepo.deleteCoveringWhereParticipantNotInList(
+            eventId = eventId,
+            participantRequirementId = dto.requirementId,
+            approvedParticipants = dto.approvedParticipants.map { it.id },
+            perEventDay = scope.perEventDay,
+            eventDayId = key.eventDay,
+            perCompetition = scope.perCompetition,
+            competitionId = key.competition,
         ).orDie()
 
-        val alreadyApproved =
-            !ParticipantHasRequirementForEventRepo.getApprovedParticipantIds(eventId, dto.requirementId)
-                .map { it.toSet() }.orDie()
+        // Ein Upsert je Person statt der früheren Trennung "kennt die Datenbank schon / noch
+        // nicht": Die alte Trennung fragte nur, ob IRGENDEINE Zeile existiert, und zog bei einem
+        // Treffer bloß die Notiz nach - die Bestätigung für den zweiten Wettkampf entstand dann
+        // nie. Der Upsert schreibt die fehlende Dimensionszeile und ist bei einer vorhandenen
+        // folgenlos.
+        !dto.approvedParticipants.traverse<Any?, ParticipantRequirementError, CheckedParticipantRequirement, Unit> { approved ->
+            KIO.comprehension {
+                !ParticipantHasRequirementForEventRepo.upsertFulfillment(
+                    ParticipantHasRequirementForEventRecord(
+                        event = eventId,
+                        participant = approved.id,
+                        participantRequirement = dto.requirementId,
+                        eventDay = key.eventDay,
+                        competition = key.competition,
+                        note = approved.note,
+                        createdBy = userId,
+                        createdAt = LocalDateTime.now(),
+                    )
+                ).orDie()
 
-        val (forUpdate, forCreate) = dto.approvedParticipants.partition { it.id in alreadyApproved }
+                // Die Notiz gehört dem Abgleich: Anders als beim Doppel-Scan an der Waage ist
+                // eine geleerte Notiz hier eine Ansage und keine fehlende Angabe - deshalb wird
+                // sie ausdrücklich gesetzt, aber nur im Rahmen dieses Abgleichs.
+                !ParticipantHasRequirementForEventRepo.updateNoteCovering(
+                    eventId = eventId,
+                    participantRequirementId = dto.requirementId,
+                    participantId = approved.id,
+                    note = approved.note,
+                    perEventDay = scope.perEventDay,
+                    eventDayId = key.eventDay,
+                    perCompetition = scope.perCompetition,
+                    competitionId = key.competition,
+                ).orDie()
 
-        !forCreate.traverse {
-            ParticipantHasRequirementForEventRepo.create(
-                ParticipantHasRequirementForEventRecord(
-                    event = eventId,
-                    participant = it.id,
-                    participantRequirement = dto.requirementId,
-                    note = it.note,
-                    createdBy = userId,
-                    createdAt = LocalDateTime.now(),
-                )
-            )
-        }.orDie()
-
-        !forUpdate.traverse {
-            ParticipantHasRequirementForEventRepo.updateNote(it.id, eventId, dto.requirementId, it.note)
-        }.orDie()
+                KIO.ok(Unit)
+            }
+        }
 
         noData
     }
@@ -287,6 +339,24 @@ object ParticipantRequirementService {
             )
         )
     }
+
+    /**
+     * Derselbe Bezugsrahmen für den Abgleich im Verwaltungs-UI: heutiger Wettkampftag und ALLE
+     * Wettkämpfe der Veranstaltung. Der Abgleich geht von der Bedingung aus, nicht von einer
+     * Person - deshalb die vollständige Liste statt der Meldungen einer Person.
+     */
+    fun getScanScopeForEvent(eventId: UUID): App<Nothing, ApiResponse.Dto<ParticipantScanScopeDto>> =
+        KIO.comprehension {
+            val today = !EventDayRepo.getByEvent(eventId).orDie().map { days ->
+                RequirementScopeLogic.eventDayOf(
+                    LocalDateTime.now(),
+                    days.map { RequirementScopeLogic.EventDayRef(it.id!!, it.date!!) },
+                )
+            }
+            val competitions = !ParticipantScanScopeRepo.getCompetitionsOfEvent(eventId).orDie()
+
+            KIO.ok(ApiResponse.Dto(ParticipantScanScopeDto(todayEventDayId = today, competitions = competitions)))
+        }
 
     /**
      * Die Gemeldeten, denen noch Bedingungen fehlen, als xlsx - Grundlage dafür, die betroffenen

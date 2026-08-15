@@ -45,6 +45,7 @@ export type StreamTeam = Pick<
     | 'penaltyNote'
     | 'failed'
     | 'failedReason'
+    | 'bye'
     | 'deregistered'
     | 'deregisteredReason'
     | 'laps'
@@ -170,11 +171,25 @@ export const enumerationUnits = (
 export const teamTrailingLabel = (
     team: Pick<
         StreamTeam,
-        'place' | 'timeString' | 'failed' | 'failedReason' | 'deregistered' | 'deregisteredReason'
+        | 'place'
+        | 'timeString'
+        | 'failed'
+        | 'failedReason'
+        | 'bye'
+        | 'deregistered'
+        | 'deregisteredReason'
     >,
     failedFallback: string,
     deregisteredFallback?: string,
+    byeFallback?: string,
 ): string | null => {
+    // Das Freilos steht vor allem anderen und ist wie die Abmeldung kein Ergebnis: Es sagt, dass
+    // dieses Boot nicht gefahren ist und trotzdem weiterkommt. Ohne diese Zeile stünde es auf
+    // jeder Anzeige leer da - nicht falsch, aber stumm, und von "Ergebnis fehlt noch" nicht zu
+    // unterscheiden.
+    if (team.bye && byeFallback) {
+        return byeFallback
+    }
     if (team.deregistered && deregisteredFallback) {
         return team.deregisteredReason
             ? `${deregisteredFallback} — ${team.deregisteredReason}`

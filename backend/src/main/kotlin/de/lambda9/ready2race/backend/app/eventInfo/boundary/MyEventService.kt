@@ -319,6 +319,7 @@ object MyEventService {
             penaltyNote = first[COMPETITION_MATCH_TEAM.PENALTY_NOTE],
             failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
             failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
+            bye = first[COMPETITION_MATCH_TEAM.BYE] == true,
             deregistered = first.get("deregistered", Boolean::class.java) == true,
             deregisteredReason = first.get("deregistration_reason", String::class.java),
         )

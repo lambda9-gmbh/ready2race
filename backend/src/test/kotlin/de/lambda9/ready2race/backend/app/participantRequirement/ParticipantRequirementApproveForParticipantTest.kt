@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.participantRequirement.control.Particip
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementApproveForParticipantDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementError
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
@@ -320,5 +321,95 @@ class ParticipantRequirementApproveForParticipantTest {
         assertTrue(fulfillments(seed, seed.ilka).isEmpty(), "Ilka steht nicht mehr in der Liste")
         assertEquals(1, fulfillments(seed, seed.bo).size)
         assertEquals(1, fulfillments(seed, seed.kim).size)
+    }
+
+    /**
+     * Der Abgleich im Verwaltungs-UI räumt nur innerhalb SEINES Wettkampfs auf.
+     *
+     * Ohne diese Grenze war der Weg aus dem Büro genauso gefährlich wie der Scan-Vorfall, der
+     * diese Testklasse veranlasst hat: Wer an der Waage für Wettkampf A bestätigt war und im
+     * Abgleich für Wettkampf B nicht angehakt ist, verlor seine Bestätigung - ohne dass es
+     * jemand sah, weil beide Häkchen in der Verwaltung gleich aussehen.
+     */
+    @Test
+    fun bulkMaintenanceOnlyClearsItsOwnCompetition() = testComprehension {
+        val seed = seed(perCompetition = true)
+
+        // Wettkampf A: Ilka ist bestätigt (der Stand, den die Waage erzeugt hat).
+        !ParticipantRequirementService.approveRequirementForEvent(
+            seed.eventId,
+            ParticipantRequirementCheckForEventUpsertDto(
+                requirementId = seed.requirementId,
+                approvedParticipants = listOf(CheckedParticipantRequirement(id = seed.ilka, note = null)),
+                competitionId = seed.competitionA,
+            ),
+            SYSTEM_USER,
+        )
+
+        // Wettkampf B: nur Bo - Ilka steht hier bewusst nicht in der Liste.
+        !ParticipantRequirementService.approveRequirementForEvent(
+            seed.eventId,
+            ParticipantRequirementCheckForEventUpsertDto(
+                requirementId = seed.requirementId,
+                approvedParticipants = listOf(CheckedParticipantRequirement(id = seed.bo, note = null)),
+                competitionId = seed.competitionB,
+            ),
+            SYSTEM_USER,
+        )
+
+        val ilka = fulfillments(seed, seed.ilka)
+        assertEquals(1, ilka.size, "Ilkas Bestätigung für Wettkampf A muss stehen bleiben")
+        assertEquals(seed.competitionA, ilka.single().competition)
+        assertEquals(seed.competitionB, fulfillments(seed, seed.bo).single().competition)
+    }
+
+    /**
+     * Und er schreibt in seinen Wettkampf, auch wenn die Person für einen anderen schon bestätigt
+     * ist. Die frühere Trennung "kennt die Datenbank schon / noch nicht" fragte nur, ob
+     * IRGENDEINE Zeile existiert, und zog dann bloß die Notiz nach - die Bestätigung für den
+     * zweiten Wettkampf entstand nie, das Häkchen im Büro war folgenlos.
+     */
+    @Test
+    fun bulkMaintenanceAddsTheMissingCompetitionRow() = testComprehension {
+        val seed = seed(perCompetition = true)
+
+        val bulk = { competitionId: UUID ->
+            ParticipantRequirementService.approveRequirementForEvent(
+                seed.eventId,
+                ParticipantRequirementCheckForEventUpsertDto(
+                    requirementId = seed.requirementId,
+                    approvedParticipants = listOf(CheckedParticipantRequirement(id = seed.ilka, note = null)),
+                    competitionId = competitionId,
+                ),
+                SYSTEM_USER,
+            )
+        }
+
+        !bulk(seed.competitionA)
+        !bulk(seed.competitionB)
+
+        val competitions = fulfillments(seed, seed.ilka).mapNotNull { it.competition }.toSet()
+        assertEquals(setOf(seed.competitionA, seed.competitionB), competitions)
+    }
+
+    /**
+     * Ohne Wettkampf gibt es bei einer wettkampfbezogenen Bedingung keinen Abgleich: Der Aufruf
+     * ersetzt den vollständigen Zustand, und ohne Rahmen wäre unklar, welchen. Lieber eine
+     * Fehlermeldung als ein Löschen über alle Wettkämpfe hinweg.
+     */
+    @Test
+    fun bulkMaintenanceRefusesWithoutACompetition() = testComprehension {
+        val seed = seed(perCompetition = true)
+
+        assertKIOFails(ParticipantRequirementError.CompetitionRequired) {
+            ParticipantRequirementService.approveRequirementForEvent(
+                seed.eventId,
+                ParticipantRequirementCheckForEventUpsertDto(
+                    requirementId = seed.requirementId,
+                    approvedParticipants = listOf(CheckedParticipantRequirement(id = seed.ilka, note = null)),
+                ),
+                SYSTEM_USER,
+            )
+        }
     }
 }

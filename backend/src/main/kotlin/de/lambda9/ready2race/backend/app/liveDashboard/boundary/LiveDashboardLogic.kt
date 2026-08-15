@@ -129,8 +129,12 @@ object LiveDashboardLogic {
      * eine Wertung, die es nicht gab. Wer eine der beiden Stellen anfasst, muss sich entscheiden,
      * welche der beiden Fragen sie stellt.
      */
-    fun teamIsSettled(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
-        deregistered || place != null || failed
+    fun teamIsSettled(
+        place: Int?,
+        failed: Boolean,
+        deregistered: Boolean,
+        bye: Boolean = false,
+    ): Boolean = deregistered || bye || place != null || failed
 
     /**
      * **Gefahren: liegt ein sportliches Ergebnis vor?**
@@ -145,8 +149,12 @@ object LiveDashboardLogic {
      * nachgetragener Sonderfall —, gilt hier bewusst als nicht gefahren: die Abmeldung ist die
      * jüngere und ausdrückliche Aussage.
      */
-    fun teamHasRaced(place: Int?, failed: Boolean, deregistered: Boolean): Boolean =
-        !deregistered && (place != null || failed)
+    fun teamHasRaced(
+        place: Int?,
+        failed: Boolean,
+        deregistered: Boolean,
+        bye: Boolean = false,
+    ): Boolean = !deregistered && !bye && (place != null || failed)
 
     /**
      * Die Rolle, wie sie in der Crew-Zeile der breiten Karte hinter dem Namen steht. Fünf Personen

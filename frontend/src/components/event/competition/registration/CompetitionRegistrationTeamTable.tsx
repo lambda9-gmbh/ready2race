@@ -302,7 +302,13 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                                     'event.participantRequirement.approved',
                                                                 )}
                                                                 {!isMobile &&
-                                                                    ` (${participant.participantRequirementsChecked.length} / ${row.globalParticipantRequirements.length + np.participantRequirements.length})`}
+                                                                    /* Bedingungen zählen, nicht
+                                                                       Erfüllungs-Zeilen: dieselbe
+                                                                       Bedingung kann seit
+                                                                       V202608141900 je Tag und je
+                                                                       Wettkampf mehrfach
+                                                                       bestätigt sein. */
+                                                                    ` (${new Set(participant.participantRequirementsChecked.map(r => r.id)).size} / ${row.globalParticipantRequirements.length + np.participantRequirements.length})`}
                                                             </Typography>
                                                             <Stack spacing={0.5} sx={{pl: 1}}>
                                                                 {[

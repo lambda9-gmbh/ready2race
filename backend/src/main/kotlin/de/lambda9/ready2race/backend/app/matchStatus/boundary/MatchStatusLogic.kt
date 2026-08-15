@@ -30,7 +30,7 @@ object MatchStatusLogic {
      * "alle gewertet" und die Kette bliebe an ihm hängen.
      */
     fun scoredCount(teams: List<MatchStatusTeam>): Int =
-        teams.count { LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered) }
+        teams.count { LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered, it.bye) }
 
     /**
      * Wie viele Mannschaften tatsächlich gefahren sind ([LiveDashboardLogic.teamHasRaced]) -
@@ -38,7 +38,7 @@ object MatchStatusLogic {
      * Ablesung "Teilweise gewertet", siehe `MatchStatusDto.teamsRaced`.
      */
     fun racedCount(teams: List<MatchStatusTeam>): Int =
-        teams.count { LiveDashboardLogic.teamHasRaced(it.place, it.failed, it.deregistered) }
+        teams.count { LiveDashboardLogic.teamHasRaced(it.place, it.failed, it.deregistered, it.bye) }
 
     /** Wie viele Mannschaften des Laufs für diese Runde abgemeldet sind. */
     fun deregisteredCount(teams: List<MatchStatusTeam>): Int = teams.count { it.deregistered }
@@ -69,7 +69,7 @@ object MatchStatusLogic {
                 // ob auf sie noch jemand wartet. Ein Lauf ohne Mannschaften bleibt damit
                 // ausdrücklich nicht AWAITING_FINISH - deriveMatchState prüft auf isNotEmpty().
                 teamResults = teams.map {
-                    LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered)
+                    LiveDashboardLogic.teamIsSettled(it.place, it.failed, it.deregistered, it.bye)
                 },
                 skipped = skipped,
             ),

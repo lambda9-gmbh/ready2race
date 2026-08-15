@@ -279,6 +279,10 @@ export type AthleteBoardResultTeam = {
     penaltySeconds?: number | null
     penaltyNote?: string | null
     failed: boolean
+    /**
+     * Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder Platz noch Zeit.
+     */
+    bye?: boolean
     failedReason?: string | null
     /**
      * withdrawn for this round - listed but marked, since such a team has neither place nor time
@@ -338,6 +342,10 @@ export type AthleteBoardTeam = {
     penaltySeconds?: number | null
     penaltyNote?: string | null
     failed: boolean
+    /**
+     * Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder Platz noch Zeit.
+     */
+    bye?: boolean
     failedReason?: string | null
     /**
      * withdrawn from this round. Until 2026-08-14 only the results block carried this; in the upcoming and running blocks a withdrawn boat stood in the line-up like any other. The boat deliberately stays in the list (a crew at the pontoon cannot tell a vanished boat from a display error) and is marked as withdrawn instead
@@ -2372,6 +2380,10 @@ export type LiveDashboardTeamDto = {
      */
     startedAt?: string | null
     failed: boolean
+    /**
+     * Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder Platz noch Zeit.
+     */
+    bye?: boolean
     failedReason?: string | null
     penaltySeconds?: number | null
     penaltyNote?: string | null
@@ -2553,6 +2565,10 @@ export type MatchResultTeamInfo = {
     categoryPlace?: number | null
     timeString?: string
     failed: boolean
+    /**
+     * Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder Platz noch Zeit.
+     */
+    bye?: boolean
     failedReason?: string
     /**
      * Time penalty in seconds; the result time already includes it
@@ -2731,6 +2747,10 @@ export type MyEventResultDto = {
     penaltySeconds?: number | null
     penaltyNote?: string | null
     failed: boolean
+    /**
+     * Vergebenes Freilos: das Boot kommt ohne Start in die Folgerunde und hat deshalb weder Platz noch Zeit.
+     */
+    bye?: boolean
     failedReason?: string | null
     deregistered: boolean
     deregisteredReason?: string | null
@@ -3011,6 +3031,10 @@ export type ParticipantRequirementCheckForEventUpsertDto = {
     requirementId: string
     approvedParticipants: Array<CheckedParticipantRequirement>
     namedParticipantId?: string | null
+    /**
+     * Der Rahmen des Abgleichs. Pflicht, sobald die Bedingung je Wettkampf gilt - ohne ihn waere unklar, welchen Zustand die Liste ersetzt, und der Abgleich loeschte die Bestaetigungen aller anderen Wettkaempfe mit. Der Tag kommt nicht von hier: ihn bestimmt der Server aus dem Zeitpunkt des Abgleichs.
+     */
+    competitionId?: string | null
 }
 
 export type ParticipantRequirementDto = {
@@ -6692,6 +6716,16 @@ export type GetParticipantRequirementsForParticipantError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type GetEventScanScopeData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventScanScopeResponse = ParticipantScanScopeDto
+
+export type GetEventScanScopeError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetParticipantScanScopeData = {
     path: {

@@ -85,6 +85,13 @@ data class MatchStatusTeam(
     val place: Int?,
     val failed: Boolean,
     val deregistered: Boolean,
+    /**
+     * Vergebenes Freilos (V202608151900). Zählt wie eine Abmeldung als erledigt - auf dieses Boot
+     * wartet kein Ergebnis mehr -, aber ausdrücklich NICHT als gefahren: Es war nicht auf dem
+     * Wasser. Ohne den ersten Teil erreichte ein Lauf mit Freilos nie "alle gewertet", und die
+     * Aktivierungskette bliebe an ihm hängen.
+     */
+    val bye: Boolean = false,
 )
 
 /**

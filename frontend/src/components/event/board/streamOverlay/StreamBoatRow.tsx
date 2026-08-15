@@ -40,6 +40,8 @@ interface StreamBoatRowProps {
     failedFallback: string
     /** Beschriftung einer Abmeldung ("Abgemeldet") - fehlt sie, bleibt die Zeile beim Ergebnis. */
     deregisteredFallback?: string
+    /** Beschriftung eines vergebenen Freiloses - ohne sie bliebe die Zeile stumm. */
+    byeFallback?: string
     /** 'compact' im Lower-Third, 'large' in den zentrierten Panels — dieselbe Zeile,
      *  nur mit der größeren TV-Grafik-Typografie statt der schmaleren Lower-Third-Schrift. */
     size: 'compact' | 'large'
@@ -69,6 +71,7 @@ const StreamBoatRow = ({
     useShortClubNames,
     failedFallback,
     deregisteredFallback,
+    byeFallback,
     size,
     showLaps = true,
     showSecondary = true,
@@ -76,7 +79,7 @@ const StreamBoatRow = ({
     const theme = useTheme()
     const large = size === 'large'
     const {primary, secondary} = crewLines(team, crewMode, useShortClubNames)
-    const trailing = teamTrailingLabel(team, failedFallback, deregisteredFallback)
+    const trailing = teamTrailingLabel(team, failedFallback, deregisteredFallback, byeFallback)
 
     return (
         <Stack direction="row" alignItems="baseline" gap={2} sx={{width: 1}}>

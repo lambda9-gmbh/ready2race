@@ -125,13 +125,68 @@ object ParticipantHasRequirementForEventRepo {
         }
     }
 
-    fun deleteWhereParticipantNotInList(
+    /**
+     * Räumt beim Abgleich einer Bedingung auf: Wer nicht mehr in der Liste steht, verliert seine
+     * Bestätigung - aber nur innerhalb des übergebenen Rahmens.
+     *
+     * Der Rahmen ist der Punkt. Bis zur Migration V202608141900 gab es je Person und Bedingung
+     * genau eine Zeile, ein pauschales Löschen war deshalb richtig. Seither kann dieselbe Person
+     * je Tag und je Wettkampf eine eigene Bestätigung haben - ein pauschales Löschen nähme dem
+     * Abgleich für Wettkampf B die Waage-Bestätigung aus Wettkampf A mit, ohne dass es jemand
+     * sähe. Verglichen wird deshalb wie in `RequirementScopeLogic.covers`: nur die Dimension,
+     * die der jeweilige Schalter verlangt, und die exakt - bei veranstaltungsweiten Bedingungen
+     * fällt so weiterhin alles, auch die tags-gestempelten Zeilen der Bestandsmigration.
+     */
+    fun deleteCoveringWhereParticipantNotInList(
         eventId: UUID,
         participantRequirementId: UUID,
-        approvedParticipants: List<UUID>
+        approvedParticipants: List<UUID>,
+        perEventDay: Boolean,
+        eventDayId: UUID?,
+        perCompetition: Boolean,
+        competitionId: UUID?,
     ) = PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.delete {
-        EVENT.eq(eventId).and(PARTICIPANT_REQUIREMENT.eq(participantRequirementId))
-            .and(PARTICIPANT.notIn(approvedParticipants))
+        DSL.and(
+            EVENT.eq(eventId),
+            PARTICIPANT_REQUIREMENT.eq(participantRequirementId),
+            PARTICIPANT.notIn(approvedParticipants),
+            if (perEventDay) EVENT_DAY.isNotDistinctFrom(eventDayId) else DSL.trueCondition(),
+            if (perCompetition) COMPETITION.isNotDistinctFrom(competitionId) else DSL.trueCondition(),
+        )
+    }
+
+    /**
+     * Setzt die Notiz genau der Zeilen, die den übergebenen Rahmen abdecken - das Gegenstück zu
+     * [updateNote], das bewusst alle Dimensionszeilen einer Person trifft.
+     *
+     * Beide werden gebraucht: Der Abgleich im Verwaltungs-UI pflegt einen bestimmten Wettkampf
+     * und darf die Notiz des anderen nicht überschreiben; die veranstaltungsweite Pflege trifft
+     * weiterhin alles, sonst verfehlte sie die Bestandszeilen.
+     */
+    fun updateNoteCovering(
+        eventId: UUID,
+        participantRequirementId: UUID,
+        participantId: UUID,
+        note: String?,
+        perEventDay: Boolean,
+        eventDayId: UUID?,
+        perCompetition: Boolean,
+        competitionId: UUID?,
+    ) = Jooq.query {
+        with(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT) {
+            update(this)
+                .set(NOTE, note)
+                .where(
+                    DSL.and(
+                        EVENT.eq(eventId),
+                        PARTICIPANT_REQUIREMENT.eq(participantRequirementId),
+                        PARTICIPANT.eq(participantId),
+                        if (perEventDay) EVENT_DAY.isNotDistinctFrom(eventDayId) else DSL.trueCondition(),
+                        if (perCompetition) COMPETITION.isNotDistinctFrom(competitionId) else DSL.trueCondition(),
+                    )
+                )
+                .execute()
+        }
     }
 
     /**
