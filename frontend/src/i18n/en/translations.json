@@ -549,6 +549,7 @@
       "gender": "Gender",
       "role": "Role",
       "year": "Year of birth",
+      "yearShort": "b. {{year}}",
       "external": "External",
       "externalClub": "External club",
       "externalHint": "Select this option if you want to register a member of another club.",
