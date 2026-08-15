@@ -1343,6 +1343,19 @@
           "startTimeManagedBySchedule": "Die Startzeit dieses Laufs wird über den Zeitplan gepflegt und lässt sich hier nicht ändern. Bitte den Slot im Zeitplan-Tab anpassen.",
           "resetBlockedByNextRound": "Der Lauf lässt sich nicht mehr zurücksetzen: Aus den Ergebnissen wurde bereits die nächste Runde erstellt. Zuerst die neuere Runde löschen, dann den Lauf zurücksetzen.",
           "teamsNotMatching": "Die übertragenen Boote passen nicht zu den Booten dieses Laufs — vermutlich hat sich die Aufstellung zwischenzeitlich geändert (Ummeldung oder Abmeldung). Bitte die Ansicht neu laden und erneut speichern."
+        },
+        "teamBye": {
+          "label": "Freilos",
+          "grant": "Freilos geben",
+          "revoke": "Freilos zurücknehmen",
+          "granted": "Freilos vergeben.",
+          "revoked": "Freilos zurückgenommen.",
+          "error": "Das Freilos konnte nicht geändert werden.",
+          "confirmation": {
+            "title": "Freilos",
+            "grant": "{{team}} kommt ohne Start in die nächste Runde. Im Lauf bleibt das Boot ohne Platz und ohne Zeit, die übrigen Boote behalten ihre Plätze.",
+            "revoke": "Das Freilos für {{team}} zurücknehmen? Das Boot kommt dann nur über einen Platz weiter."
+          }
         }
       },
       "timing": {

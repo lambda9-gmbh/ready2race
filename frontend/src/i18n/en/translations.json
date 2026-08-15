@@ -1343,6 +1343,19 @@
           "startTimeManagedBySchedule": "The start time of this run is managed by the event schedule and cannot be changed here. Please adjust the slot in the schedule tab.",
           "resetBlockedByNextRound": "This race can no longer be reset: the next round has already been created from its results. Delete the newer round first, then reset the race.",
           "teamsNotMatching": "The submitted boats do not match the boats of this run — the line-up has probably changed in the meantime (substitution or deregistration). Please reload the view and save again."
+        },
+        "teamBye": {
+          "label": "Bye",
+          "grant": "Grant bye",
+          "revoke": "Revoke bye",
+          "granted": "Bye granted.",
+          "revoked": "Bye revoked.",
+          "error": "The bye could not be changed.",
+          "confirmation": {
+            "title": "Bye",
+            "grant": "{{team}} advances to the next round without racing. In this match the boat keeps no place and no time; the other boats keep theirs.",
+            "revoke": "Revoke the bye for {{team}}? The boat then only advances through a place."
+          }
         }
       },
       "timing": {

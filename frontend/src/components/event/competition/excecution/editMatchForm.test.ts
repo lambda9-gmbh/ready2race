@@ -11,6 +11,7 @@ const team = (startNumber: number): CompetitionMatchTeamDto => ({
     startNumber,
     deregistered: false,
     failed: false,
+    bye: false,
 })
 
 const match = (overrides: Partial<CompetitionMatchDto>): CompetitionMatchDto => ({
