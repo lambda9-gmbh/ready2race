@@ -4738,6 +4738,34 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/participant/{participantId}/scanScope:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: participantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getParticipantScanScope
+      responses:
+        200:
+          description: Scan scope successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantScanScopeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/participant:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -12082,6 +12110,49 @@ components:
           format: uuid
         note:
           type: string
+        eventDayId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Wettkampftag, den diese Bestaetigung abdeckt - null heisst ohne Tagesbezug"
+        competitionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Wettkampf, den diese Bestaetigung abdeckt - null heisst ohne Wettkampfbezug"
+
+    ParticipantScanCompetitionDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+          nullable: true
+        name:
+          type: string
+        shortName:
+          type: string
+          nullable: true
+
+    ParticipantScanScopeDto:
+      type: object
+      required:
+        - competitions
+      properties:
+        todayEventDayId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "Heutiger Wettkampftag - null, wenn heute keinem Wettkampftag zuzuordnen ist"
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantScanCompetitionDto'
 
     ParticipantRequirementForEventDto:
       type: object
@@ -12092,6 +12163,8 @@ components:
         - optional
         - active
         - checkInApp
+        - perEventDay
+        - perCompetition
       properties:
         id:
           type: string
@@ -12110,6 +12183,12 @@ components:
         publiclyVisible:
           type: boolean
           description: "Im oeffentlichen Dashboard Mein Event sichtbar"
+        perEventDay:
+          type: boolean
+          description: "Muss je Wettkampftag erfuellt werden"
+        perCompetition:
+          type: boolean
+          description: "Muss je Wettkampf erfuellt werden"
         requirements:
           type: array
           items:

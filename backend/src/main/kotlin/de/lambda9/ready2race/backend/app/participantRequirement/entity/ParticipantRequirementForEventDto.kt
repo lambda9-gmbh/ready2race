@@ -10,5 +10,11 @@ data class ParticipantRequirementForEventDto(
     val active: Boolean,
     val checkInApp: Boolean,
     val publiclyVisible: Boolean,
+    // Die beiden Schalter aus V202608141900 gehören hier mit hinein, weil die Scan-App an der
+    // Waage sonst nicht unterscheiden kann, wofür sie gerade abhakt: eine Bedingung mit
+    // `perCompetition` braucht den Wettkampf, sonst landet die Bestätigung ohne Bezug und deckt
+    // bewusst keinen Lauf ab (siehe RequirementScopeLogic.covers).
+    val perEventDay: Boolean,
+    val perCompetition: Boolean,
     val requirements: List<NamedParticipantRequirementForEventDto>
 )
