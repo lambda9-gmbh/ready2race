@@ -16,6 +16,58 @@ object ParticipantHasRequirementForEventRepo {
     fun create(record: ParticipantHasRequirementForEventRecord) = PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.insert(record)
 
     /**
+     * Schreibt genau EINE Erfüllung, ohne fremde Zeilen anzufassen - der Weg der Scan-App.
+     *
+     * Trifft die Zeile auf eine bereits vorhandene mit denselben Dimensionen (der eindeutige
+     * Index aus V202608141900, `nulls not distinct`), wird nicht gescheitert, sondern nur die
+     * Notiz nachgezogen: ein Doppel-Scan derselben Person ist Alltag an der Waage und darf
+     * weder einen Fehler werfen noch etwas löschen. `coalesce` hält dabei eine bestehende
+     * Notiz fest, wenn der neue Scan keine mitbringt - sonst radierte der zweite Scan die
+     * Anmerkung des ersten aus. `created_at`/`created_by` bleiben beim Überschreiben stehen,
+     * wie beim Upsert in `ClubShortNameRepo`: es zählt, wer zuerst bestätigt hat.
+     */
+    fun upsertFulfillment(record: ParticipantHasRequirementForEventRecord) = Jooq.query {
+        with(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT) {
+            insertInto(this)
+                .set(record)
+                .onConflict(PARTICIPANT, EVENT, PARTICIPANT_REQUIREMENT, EVENT_DAY, COMPETITION)
+                .doUpdate()
+                .set(NOTE, DSL.coalesce(DSL.excluded(NOTE), NOTE))
+                .execute()
+        }
+    }
+
+    /**
+     * Nimmt die Bestätigung EINER Person zurück - das Gegenstück zu [upsertFulfillment] und
+     * ebenfalls nur für diese eine Person.
+     *
+     * Gelöscht wird nicht die exakte Dimensionszeile, sondern alles, was den übergebenen
+     * Bezugsrahmen im Sinne von `RequirementScopeLogic.covers` abdeckt: Verglichen wird nur,
+     * was der jeweilige Schalter verlangt. Bei einer veranstaltungsweiten Bedingung fallen so
+     * auch die Zeilen aus der Bestandsmigration (Tag = erster Wettkampftag) mit - eine exakte
+     * null/null-Löschung verfehlte sie, und die Bestätigung bliebe unwiderruflich stehen. Bei
+     * `perEventDay` verschwindet nur der übergebene Tag: die gestrige Waage war gestern
+     * gültig und bleibt es.
+     */
+    fun deleteCovering(
+        eventId: UUID,
+        participantRequirementId: UUID,
+        participantId: UUID,
+        perEventDay: Boolean,
+        eventDayId: UUID?,
+        perCompetition: Boolean,
+        competitionId: UUID?,
+    ) = PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.delete {
+        DSL.and(
+            EVENT.eq(eventId),
+            PARTICIPANT_REQUIREMENT.eq(participantRequirementId),
+            PARTICIPANT.eq(participantId),
+            if (perEventDay) EVENT_DAY.isNotDistinctFrom(eventDayId) else DSL.trueCondition(),
+            if (perCompetition) COMPETITION.isNotDistinctFrom(competitionId) else DSL.trueCondition(),
+        )
+    }
+
+    /**
      * Zieht die Freitext-Notiz einer bestehenden Erfüllung nach.
      *
      * Zwei Dinge sind hier seit der Migration V202608141900 anders, beide mit Absicht:

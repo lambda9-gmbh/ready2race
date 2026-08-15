@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantImportRequest
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.AssignRequirementToNamedParticipantDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementApproveForParticipantDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventConfigDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventSort
@@ -112,12 +113,27 @@ fun Route.participantRequirementForEvent() {
         }
 
         route("/approve") {
+            // Ersetzt den kompletten Zustand einer Bedingung (Massen-Pflege im
+            // Verwaltungs-UI). Für einzelne Bestätigungen ist /approve/participant da -
+            // dieser Weg hier löscht alle nicht mitgeschickten Bestätigungen.
             post {
                 call.respondComprehension {
                     val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val body = !receiveKIO(ParticipantRequirementCheckForEventUpsertDto.example)
                     ParticipantRequirementService.approveRequirementForEvent(eventId, body, user.id!!)
+                }
+            }
+
+            // Genau eine Person, rein additiv - der Weg der Scan-App.
+            route("/participant") {
+                post {
+                    call.respondComprehension {
+                        val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
+                        val eventId = !pathParam("eventId", uuid)
+                        val body = !receiveKIO(ParticipantRequirementApproveForParticipantDto.example)
+                        ParticipantRequirementService.approveRequirementForParticipant(eventId, body, user.id!!)
+                    }
                 }
             }
         }
