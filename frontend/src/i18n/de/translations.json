@@ -1076,7 +1076,7 @@
             "title": "Lauf zurücksetzen?",
             "warning": "Achtung: Dieser Lauf wird auf „nie gefahren“ zurückgesetzt. Unwiderruflich verloren gehen: der Ist-Start, alle Ziel- und Zwischenzeiten, alle Plätze, Ausscheidungen und Zeitstrafen dieses Laufs.",
             "keeps": "Erhalten bleiben: Aufstellung, Bahnen und die Kennungen der Boote — die RaceClocker-Zuordnung bleibt gültig, der Lauf kann direkt neu gefahren werden.",
-          "autoPull": "Der automatische RaceClocker-Abruf wird für diesen Lauf pausiert — sonst spielte der nächste Abruf die gelöschten Ergebnisse sofort wieder ein. Nach dem Aufräumen in RaceClocker über „Automatik wieder aufnehmen“ bewusst fortsetzen.",
+            "autoPull": "Der automatische RaceClocker-Abruf wird für diesen Lauf pausiert — sonst spielte der nächste Abruf die gelöschten Ergebnisse sofort wieder ein. Nach dem Aufräumen in RaceClocker über „Automatik wieder aufnehmen“ bewusst fortsetzen.",
             "question": "Lauf wirklich zurücksetzen?"
           },
           "error": "Beim Zurücksetzen des Laufs ist ein Fehler aufgetreten",
@@ -1126,9 +1126,9 @@
             "activate": "Lauf aktivieren",
             "deactivate": "Lauf deaktivieren",
             "markStarted": "Läuft",
-          "finish": "Lauf beenden",
-          "finishConfirm": "Diesen Lauf jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
-          "finishSuccess": "Lauf beendet",
+            "finish": "Lauf beenden",
+            "finishConfirm": "Diesen Lauf jetzt beenden? Wenn die Veranstaltung automatisch weiterschaltet, werden dabei die nächsten Läufe aktiviert.",
+            "finishSuccess": "Lauf beendet",
             "reopen": "Beenden zurücknehmen"
           }
         },
@@ -2077,9 +2077,9 @@
       },
       "indicator": {
         "now": "Jetzt",
-          "planned": "Geplant {{time}}",
-          "started": "Gestartet {{time}}",
-          "expected": "Erwartet ~{{time}}",
+        "planned": "Geplant {{time}}",
+        "started": "Gestartet {{time}}",
+        "expected": "Erwartet ~{{time}}",
         "state": {
           "finished": "Beendet",
           "preparing": "In Vorbereitung",
@@ -2749,7 +2749,17 @@
     "show": "QR-Code anzeigen",
     "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?",
     "noQrCodeAssigned": "Kein QR-Code zugewiesen",
-    "cameraError": "Kamera kann nicht gestartet werden"
+    "cameraError": "Kamera kann nicht gestartet werden",
+    "unlinked": {
+      "title": "Dieses Band ist noch nicht verknüpft",
+      "intro": "Komm einfach kurz in der Meldestelle vorbei und lass es mit deinem Namen verknüpfen — dann hast du hier dein ganzes Event in der Tasche:",
+      "benefitMatches": "Deine Läufe mit Startzeiten auf einen Blick",
+      "benefitCountdown": "Countdown bis zu deinem nächsten Start",
+      "benefitResults": "Deine Zeiten und Platzierungen direkt nach dem Zieleinlauf",
+      "benefitSubstitute": "Auch Läufe, in denen du als Ersatz eingesetzt bist",
+      "benefitLive": "Alles aktualisiert sich von selbst — kein Neuladen nötig",
+      "rescan": "Danach einfach das Band noch einmal scannen."
+    }
   },
   "qrAppuser": {
     "title": "QR-Appuser",
@@ -2772,10 +2782,23 @@
     "removeAssignmentTitle": "Zuordnung entfernen",
     "removeAssignmentConfirm": "Möchten Sie die Zuordnung wirklich entfernen?",
     "deleteError": "Fehler beim Löschen des QR-Codes.",
-    "assignmentInfo": "Zuordnungsinformationen"
+    "assignmentInfo": "Zuordnungsinformationen",
+    "competitionLabel": "Wettkampf",
+    "competitionHelp": "Gilt für alle Bestätigungen, bis ein anderer gewählt wird.",
+    "noCompetitions": "Diese Person ist in keinem Wettkampf gemeldet - wettkampfbezogene Bedingungen lassen sich nicht bestätigen.",
+    "noEventDayToday": "Heute lässt sich keinem Wettkampftag zuordnen - tagesbezogene Bedingungen greifen nicht.",
+    "chooseCompetitionFirst": "Zuerst Wettkampf wählen",
+    "scope": {
+      "perCompetition": "je Wettkampf",
+      "perEventDay": "je Wettkampftag",
+      "perCompetitionAndDay": "je Wettkampf und Tag"
+    }
   },
   "qrScanner": {
-    "title": "Scanner"
+    "title": "Scanner",
+    "cameraError": "Kamera konnte nicht geöffnet werden",
+    "cameraErrorHint": "Möglicherweise wird die Kamera gerade von einer anderen App verwendet oder der Zugriff wurde verweigert.",
+    "cameraRetry": "Kamera erneut starten"
   },
   "qrEvents": {
     "title": "Events",

@@ -1076,7 +1076,7 @@
             "title": "Reset race?",
             "warning": "Warning: This race will be reset to “never raced”. Irrevocably lost: the actual start, all finish and split times, all places, disqualifications and time penalties of this race.",
             "keeps": "Kept: line-up, lanes and the boats' identifiers — the RaceClocker mapping stays valid and the race can be raced again right away.",
-          "autoPull": "The automatic RaceClocker pull is paused for this race — otherwise the next pull would immediately re-import the deleted results. After cleaning up in RaceClocker, resume deliberately via “Resume automatic pull”.",
+            "autoPull": "The automatic RaceClocker pull is paused for this race — otherwise the next pull would immediately re-import the deleted results. After cleaning up in RaceClocker, resume deliberately via “Resume automatic pull”.",
             "question": "Really reset this race?"
           },
           "error": "An error has occurred when resetting the race",
@@ -1126,9 +1126,9 @@
             "activate": "Activate race",
             "deactivate": "Deactivate race",
             "markStarted": "Running",
-          "finish": "Finish race",
-          "finishConfirm": "Finish this race now? If the event advances automatically, this activates the next races.",
-          "finishSuccess": "Race finished",
+            "finish": "Finish race",
+            "finishConfirm": "Finish this race now? If the event advances automatically, this activates the next races.",
+            "finishSuccess": "Race finished",
             "reopen": "Undo finish"
           }
         },
@@ -2077,9 +2077,9 @@
       },
       "indicator": {
         "now": "Now",
-          "planned": "Planned {{time}}",
-          "started": "Started {{time}}",
-          "expected": "Expected ~{{time}}",
+        "planned": "Planned {{time}}",
+        "started": "Started {{time}}",
+        "expected": "Expected ~{{time}}",
         "state": {
           "finished": "Finished",
           "preparing": "Preparing",
@@ -2749,7 +2749,17 @@
     "show": "Show QR Code",
     "deleteConfirm": "Do you really want to delete the QR code?",
     "noQrCodeAssigned": "No QR code assigned",
-    "cameraError": "Error accessing camera"
+    "cameraError": "Error accessing camera",
+    "unlinked": {
+      "title": "This wristband isn't linked yet",
+      "intro": "Just drop by the registration desk and have it linked to your name — then your whole event lives right here:",
+      "benefitMatches": "Your races with start times at a glance",
+      "benefitCountdown": "A countdown to your next start",
+      "benefitResults": "Your times and places right after the finish",
+      "benefitSubstitute": "Races where you step in as a substitute, too",
+      "benefitLive": "Everything updates by itself — no reloading needed",
+      "rescan": "Then simply scan the band again."
+    }
   },
   "qrAppuser": {
     "title": "QR Appuser",
@@ -2772,10 +2782,23 @@
     "removeAssignmentTitle": "Remove assignment",
     "removeAssignmentConfirm": "Do you really want to remove the assignment?",
     "deleteError": "Error while deleting the QR code.",
-    "assignmentInfo": "Assignment information"
+    "assignmentInfo": "Assignment information",
+    "competitionLabel": "Competition",
+    "competitionHelp": "Applies to all approvals until another one is chosen.",
+    "noCompetitions": "This person is not registered for any competition - competition-based requirements cannot be approved.",
+    "noEventDayToday": "Today cannot be matched to an event day - day-based requirements do not apply.",
+    "chooseCompetitionFirst": "Choose a competition first",
+    "scope": {
+      "perCompetition": "per competition",
+      "perEventDay": "per event day",
+      "perCompetitionAndDay": "per competition and day"
+    }
   },
   "qrScanner": {
-    "title": "Scanner"
+    "title": "Scanner",
+    "cameraError": "Camera could not be opened",
+    "cameraErrorHint": "The camera may be in use by another app or access was denied.",
+    "cameraRetry": "Restart camera"
   },
   "qrEvents": {
     "title": "Events",

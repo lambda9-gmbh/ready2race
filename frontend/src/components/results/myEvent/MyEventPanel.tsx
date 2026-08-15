@@ -14,6 +14,7 @@ import {
 } from '@utils/myEventStorage.ts'
 import {usePolledEndpoint} from '@utils/usePolledEndpoint.ts'
 import {blockOrder, MyEventBlock, nothingToShow} from './myEventOrder.ts'
+import {showDayHeadings} from './myEventDays.ts'
 import {MyEventMatchList, MyEventResultList, MyEventUnscheduledList} from './MyEventMatchList.tsx'
 import {MyEventPersonSwitcher} from './MyEventPersonSwitcher.tsx'
 import {MyEventRequirements} from './MyEventRequirements.tsx'
@@ -97,6 +98,10 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
     // Läuft der eigene Lauf bereits, ist er das, was oben stehen muss — sonst der nächste.
     const highlighted = data.running.length > 0 ? data.running : data.upcoming
     const highlightTitle = data.running.length > 0 ? t('myEvent.running') : t('myEvent.next')
+    // Einmal für die ganze Seite entschieden: Berühren die eigenen Einträge mehrere Tage,
+    // bekommen Läufe wie Ergebnisse Datums-Zwischenüberschriften; an einer eintägigen
+    // Veranstaltung bleibt alles unverändert schlank.
+    const showDays = showDayHeadings(data)
 
     const renderBlock = (block: MyEventBlock) => {
         switch (block) {
@@ -124,6 +129,7 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
                             serverTime={data.serverTime}
                             variant="list"
                             highlightedMatchId={highlighted[0]?.matchId}
+                            showDays={showDays}
                         />
                     </Box>
                 )
@@ -131,7 +137,11 @@ const MyEventContent = ({eventId, qrCode, onDisplayName, onForget}: MyEventConte
                 return data.results.length > 0 ? (
                     <Box>
                         <BlockHeading title={t('myEvent.results')} />
-                        <MyEventResultList results={data.results} eventId={eventId} />
+                        <MyEventResultList
+                            results={data.results}
+                            eventId={eventId}
+                            showDays={showDays}
+                        />
                     </Box>
                 ) : null
             case 'unscheduled':

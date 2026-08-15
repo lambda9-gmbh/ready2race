@@ -1,6 +1,20 @@
-import {Stack, Typography, Button, DialogContent, DialogActions} from '@mui/material'
+import {
+    Alert,
+    Button,
+    DialogActions,
+    DialogContent,
+    MenuItem,
+    Stack,
+    TextField,
+    Typography,
+} from '@mui/material'
 import {Trans, useTranslation} from 'react-i18next'
-import {CheckedParticipantRequirement, ParticipantRequirementForEventDto} from '@api/types.gen.ts'
+import {
+    CheckedParticipantRequirement,
+    ParticipantRequirementForEventDto,
+    ParticipantScanCompetitionDto,
+} from '@api/types.gen.ts'
+import {competitionLabel, coveringFulfillment} from './requirementScope.ts'
 import {Block, Check, EditNote} from '@mui/icons-material'
 import {useEffect, useState} from 'react'
 import BaseDialog from '@components/BaseDialog.tsx'
@@ -19,6 +33,13 @@ interface RequirementsChecklistProps {
         namedParticipantId?: string,
     ) => void
     namedParticipantIds: string[]
+    /** Die Wettkämpfe, in denen die gescannte Person gemeldet ist. */
+    competitions: ParticipantScanCompetitionDto[]
+    /** Der Wettkampf, für den gerade abgehakt wird - null heißt "noch keiner gewählt". */
+    competitionId: string | null
+    onCompetitionChange: (competitionId: string | null) => void
+    /** Der heutige Wettkampftag laut Server; null, wenn heute keinem Tag zuzuordnen ist. */
+    todayEventDayId: string | null
 }
 
 type NoteForm = {
@@ -35,16 +56,23 @@ export const RequirementsChecklist = ({
     pending,
     onRequirementChange,
     namedParticipantIds,
+    competitions,
+    competitionId,
+    onCompetitionChange,
+    todayEventDayId,
 }: RequirementsChecklistProps) => {
     const {t} = useTranslation()
     const {confirmAction} = useConfirmation()
+
+    const scanContext = {todayEventDayId, competitionId}
+    // Die Auswahl erscheint nur, wenn sie etwas ändert: ohne wettkampfbezogene Bedingung ist
+    // sie an der Waage nur ein weiterer Knopf, der falsch bedient werden kann.
+    const needsCompetition = requirements.some(req => req.perCompetition)
 
     const [reqForNoteDialog, setReqForNoteDialog] =
         useState<ParticipantRequirementForEventDto | null>(null)
     const showNoteDialog = reqForNoteDialog !== null
     const closeNoteDialog = () => setReqForNoteDialog(null)
-
-    const checkedIds = checkedRequirements.map(r => r.id)
 
     const openNoteDialog = (req: ParticipantRequirementForEventDto) => {
         setReqForNoteDialog(req)
@@ -70,10 +98,48 @@ export const RequirementsChecklist = ({
                 <Typography>{t('qrParticipant.noRequirements') as string}</Typography>
             )}
 
+            {needsCompetition && competitions.length > 0 && (
+                <TextField
+                    select
+                    fullWidth
+                    size="medium"
+                    label={t('qrParticipant.competitionLabel')}
+                    helperText={t('qrParticipant.competitionHelp')}
+                    value={competitionId ?? ''}
+                    onChange={e => onCompetitionChange(e.target.value || null)}>
+                    {competitions.map(competition => (
+                        <MenuItem key={competition.id} value={competition.id}>
+                            {competitionLabel(competition)}
+                        </MenuItem>
+                    ))}
+                </TextField>
+            )}
+
+            {needsCompetition && competitions.length === 0 && !pending && (
+                <Alert severity="warning">{t('qrParticipant.noCompetitions')}</Alert>
+            )}
+
+            {requirements.some(req => req.perEventDay) && todayEventDayId === null && !pending && (
+                <Alert severity="warning">{t('qrParticipant.noEventDayToday')}</Alert>
+            )}
+
             {requirements.map(req => {
-                const checked = checkedIds.includes(req.id)
+                const fulfillment = coveringFulfillment(
+                    req.id,
+                    {perEventDay: req.perEventDay, perCompetition: req.perCompetition},
+                    checkedRequirements,
+                    scanContext,
+                )
+                const checked = fulfillment !== undefined
+                // Ohne gewählten Wettkampf landete die Bestätigung ohne Bezug und deckte damit
+                // keinen Lauf ab - das sieht an der Waage aus wie erledigt und ist es nicht.
+                const blocked = req.perCompetition && competitionId === null
                 return (
-                    <Stack direction={'row'} alignItems={'center'} spacing={3}>
+                    <Stack
+                        key={req.id}
+                        direction={'row'}
+                        alignItems={'center'}
+                        spacing={3}>
                         <Stack direction={'row'} spacing={2}>
                             {checked ? (
                                 <>
@@ -116,13 +182,14 @@ export const RequirementsChecklist = ({
                                 <>
                                     <Button
                                         variant={'outlined'}
+                                        disabled={blocked}
                                         onClick={() => openNoteDialog(req)}>
                                         <EditNote />
                                     </Button>
                                     <Button
                                         variant={'outlined'}
                                         sx={{color: 'green'}}
-                                        disabled={pending}
+                                        disabled={pending || blocked}
                                         onClick={() =>
                                             onRequirementChange(
                                                 req.id,
@@ -137,8 +204,30 @@ export const RequirementsChecklist = ({
                                 </>
                             )}
                         </Stack>
-                        <Stack direction={'row'}>
+                        <Stack>
                             <Typography>{req.name}</Typography>
+                            {/* Wofür das Häkchen gilt, steht an der Zeile selbst: an der Waage
+                                wird eine Person nacheinander für mehrere Wettkämpfe gewogen,
+                                und "abgehakt" allein sagt dann zu wenig. */}
+                            {(req.perCompetition || req.perEventDay) && (
+                                <Typography variant={'caption'} color={'text.secondary'}>
+                                    {req.perCompetition && req.perEventDay
+                                        ? t('qrParticipant.scope.perCompetitionAndDay')
+                                        : req.perCompetition
+                                          ? t('qrParticipant.scope.perCompetition')
+                                          : t('qrParticipant.scope.perEventDay')}
+                                </Typography>
+                            )}
+                            {blocked && (
+                                <Typography variant={'caption'} color={'warning.main'}>
+                                    {t('qrParticipant.chooseCompetitionFirst')}
+                                </Typography>
+                            )}
+                            {checked && fulfillment?.note != null && fulfillment.note !== '' && (
+                                <Typography variant={'caption'} color={'text.secondary'}>
+                                    {fulfillment.note}
+                                </Typography>
+                            )}
                         </Stack>
                     </Stack>
                 )

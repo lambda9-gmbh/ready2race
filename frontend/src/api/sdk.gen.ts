@@ -500,6 +500,9 @@ import type {
     ApproveParticipantRequirementsForEventData,
     ApproveParticipantRequirementsForEventError,
     ApproveParticipantRequirementsForEventResponse,
+    ApproveParticipantRequirementForParticipantData,
+    ApproveParticipantRequirementForParticipantError,
+    ApproveParticipantRequirementForParticipantResponse,
     GetActiveParticipantRequirementsForEventData,
     GetActiveParticipantRequirementsForEventError,
     GetActiveParticipantRequirementsForEventResponse,
@@ -524,6 +527,9 @@ import type {
     GetParticipantRequirementsForParticipantData,
     GetParticipantRequirementsForParticipantError,
     GetParticipantRequirementsForParticipantResponse,
+    GetParticipantScanScopeData,
+    GetParticipantScanScopeError,
+    GetParticipantScanScopeResponse,
     GetParticipantsForEventData,
     GetParticipantsForEventError,
     GetParticipantsForEventResponse,
@@ -3115,6 +3121,9 @@ export const checkParticipantRequirementsForEvent = <ThrowOnError extends boolea
     })
 }
 
+/**
+ * Replaces the COMPLETE approval state of one requirement - participants missing from the payload lose their approval. Meant for the bulk maintenance dialog that sends the full state; single approvals (QR scan app) must use /approve/participant instead.
+ */
 export const approveParticipantRequirementsForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<ApproveParticipantRequirementsForEventData, ThrowOnError>,
 ) => {
@@ -3125,6 +3134,22 @@ export const approveParticipantRequirementsForEvent = <ThrowOnError extends bool
     >({
         ...options,
         url: '/event/{eventId}/participantRequirement/approve',
+    })
+}
+
+/**
+ * Approves or revokes one requirement for exactly ONE participant - strictly additive and idempotent on record level, other participants, competitions and event days stay untouched. Used by the QR scan app. Dimensions follow the requirement's switches: with perEventDay the current event day is recorded, with perCompetition the optional competitionId decides which competition the approval is for.
+ */
+export const approveParticipantRequirementForParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ApproveParticipantRequirementForParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ApproveParticipantRequirementForParticipantResponse,
+        ApproveParticipantRequirementForParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/approve/participant',
     })
 }
 
@@ -3232,6 +3257,19 @@ export const getParticipantRequirementsForParticipant = <ThrowOnError extends bo
     >({
         ...options,
         url: '/event/{eventId}/participantRequirement/participant/{participantId}',
+    })
+}
+
+export const getParticipantScanScope = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantScanScopeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantScanScopeResponse,
+        GetParticipantScanScopeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/participant/{participantId}/scanScope',
     })
 }
 

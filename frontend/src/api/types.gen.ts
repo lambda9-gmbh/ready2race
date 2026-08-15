@@ -710,6 +710,14 @@ export type ChallengeTeamInfoDto = {
 export type CheckedParticipantRequirement = {
     id: string
     note?: string
+    /**
+     * Wettkampftag, den diese Bestaetigung abdeckt - null heisst ohne Tagesbezug
+     */
+    eventDayId?: string | null
+    /**
+     * Wettkampf, den diese Bestaetigung abdeckt - null heisst ohne Wettkampfbezug
+     */
+    competitionId?: string | null
 }
 
 /**
@@ -2967,6 +2975,18 @@ export type ParticipantRegisterRequest = {
     registerToSingleCompetitions: Array<ParticipantRegisterCompetitionRequest>
 }
 
+export type ParticipantRequirementApproveForParticipantDto = {
+    requirementId: string
+    participantId: string
+    approved: boolean
+    note?: string | null
+    namedParticipantId?: string | null
+    /**
+     * For requirements with perCompetition - the competition this approval is for. Without it the fulfillment is stored without competition reference, which deliberately covers no match while the switch is on.
+     */
+    competitionId?: string | null
+}
+
 export type ParticipantRequirementCheckForEventConfigDto = {
     requirementId: string
     separator?: string
@@ -3038,6 +3058,14 @@ export type ParticipantRequirementForEventDto = {
      * Im oeffentlichen Dashboard Mein Event sichtbar
      */
     publiclyVisible: boolean
+    /**
+     * Muss je Wettkampftag erfuellt werden
+     */
+    perEventDay: boolean
+    /**
+     * Muss je Wettkampf erfuellt werden
+     */
+    perCompetition: boolean
     requirements?: Array<NamedParticipantRequirementForEventDto>
 }
 
@@ -3073,6 +3101,21 @@ export type ParticipantRequirementUpsertDto = {
      * Check must exist at latest this many minutes before match start
      */
     checkLatestMinutesBefore?: number | null
+}
+
+export type ParticipantScanCompetitionDto = {
+    id: string
+    identifier?: string | null
+    name: string
+    shortName?: string | null
+}
+
+export type ParticipantScanScopeDto = {
+    /**
+     * Heutiger Wettkampftag - null, wenn heute keinem Wettkampftag zuzuordnen ist
+     */
+    todayEventDayId?: string | null
+    competitions: Array<ParticipantScanCompetitionDto>
 }
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
@@ -6495,6 +6538,20 @@ export type ApproveParticipantRequirementsForEventError =
     | ApiError
     | UnprocessableEntityError
 
+export type ApproveParticipantRequirementForParticipantData = {
+    body: ParticipantRequirementApproveForParticipantDto
+    path: {
+        eventId: string
+    }
+}
+
+export type ApproveParticipantRequirementForParticipantResponse = void
+
+export type ApproveParticipantRequirementForParticipantError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
 export type GetActiveParticipantRequirementsForEventData = {
     path: {
         eventId: string
@@ -6613,6 +6670,17 @@ export type GetParticipantRequirementsForParticipantError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type GetParticipantScanScopeData = {
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type GetParticipantScanScopeResponse = ParticipantScanScopeDto
+
+export type GetParticipantScanScopeError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetParticipantsForEventData = {
     path: {

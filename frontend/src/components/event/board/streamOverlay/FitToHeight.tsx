@@ -14,9 +14,13 @@ interface FitToHeightProps {
  * Gemessen wird ausschließlich in Layoutwerten (`clientHeight`/`offsetHeight`) — ein
  * `transform` verändert die nicht, deshalb kann sich der Maßstab nicht selbst aufschaukeln.
  * Die innere Fläche bekommt die Gegenbreite `100 / Maßstab`, damit die Zeilen nach dem
- * Verkleinern wieder exakt die Panelbreite füllen statt rechts eine Lücke zu lassen; alle
- * Zeilen der Panels sind `noWrap`, ihre Höhe hängt also nicht an der Breite und die
- * Messung bleibt stabil.
+ * Verkleinern wieder exakt die Panelbreite füllen statt rechts eine Lücke zu lassen.
+ *
+ * Gemessen wird dabei immer bei Originalbreite (100 %): Seit die Crew-Zeilen zweizeilig
+ * umbrechen dürfen, hängt die natürliche Höhe an der Breite — eine Messung mit Gegenbreite
+ * ließe die Umbrüche wieder verschwinden, die Messung spränge zurück und der Maßstab
+ * pendelte endlos zwischen zwei Werten. Bei der breiteren Anzeige kann der Inhalt nur
+ * niedriger ausfallen als gemessen, nie höher — er passt also garantiert.
  *
  * Chroma-Regel bleibt gewahrt: skaliert wird per `transform`, es entsteht keine
  * Halbtransparenz, die sich mit der Key-Farbe mischen könnte.
@@ -32,7 +36,13 @@ const FitToHeight = ({children}: FitToHeightProps) => {
         if (!outer || !inner) return
 
         const measure = () => {
-            const next = fitScale(outer.clientHeight, inner.offsetHeight)
+            // Für die Messung kurz zurück auf 100 % Breite (siehe KDoc) — innerhalb des
+            // Frames zurückgesetzt, der ResizeObserver sieht die Zwischengröße nicht.
+            const styledWidth = inner.style.width
+            inner.style.width = '100%'
+            const natural = inner.offsetHeight
+            inner.style.width = styledWidth
+            const next = fitScale(outer.clientHeight, natural)
             setScale(previous => steadyScale(previous, next))
         }
 
