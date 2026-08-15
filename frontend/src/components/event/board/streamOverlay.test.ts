@@ -48,6 +48,21 @@ describe('streamOverlayContent', () => {
         expect(streamOverlayContent(view([slot(0), slot(-1)]), 'AUTO')).toBeNull()
     })
 
+    it('ein Lauf in Vorbereitung in Slot 0 bleibt als Lower-Third sichtbar', () => {
+        // Der Running-Block des Servers führt auch die an den Start gerufenen Läufe
+        // (PREPARING) — der Inhalt bleibt bewusst stehen, nur das Badge unterscheidet
+        // (siehe runningBadge in streamDisplay.ts). Ein Verstecken hier würde das
+        // Lower-Third am Regattatag ständig flackern lassen.
+        const preparing = {matchName: 'VF1', state: 'PREPARING', teams: []} as unknown as AthleteBoardMatch
+        expect(streamOverlayContent(view([slot(0, preparing)]), 'RUNNING')).toMatchObject({
+            kind: 'running',
+            match: {state: 'PREPARING'},
+        })
+        expect(streamOverlayContent(view([slot(0, preparing)]), 'AUTO')).toMatchObject({
+            kind: 'running',
+        })
+    })
+
     it('RUNNING zeigt kein Ergebnis als Rückfall', () => {
         expect(
             streamOverlayContent(view([slot(0), slot(-1, undefined, result('ZF'))]), 'RUNNING'),

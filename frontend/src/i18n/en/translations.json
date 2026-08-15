@@ -2247,6 +2247,7 @@
       "showHeader": "Header with name and clock",
       "stream": {
         "running": "Running",
+        "preparing": "Preparing",
         "result": "Result",
         "upcoming": "Up next",
         "mode": {
@@ -2748,7 +2749,17 @@
     "show": "Show QR Code",
     "deleteConfirm": "Do you really want to delete the QR code?",
     "noQrCodeAssigned": "No QR code assigned",
-    "cameraError": "Error accessing camera"
+    "cameraError": "Error accessing camera",
+    "unlinked": {
+      "title": "This wristband isn't linked yet",
+      "intro": "Just drop by the registration desk and have it linked to your name — then your whole event lives right here:",
+      "benefitMatches": "Your races with start times at a glance",
+      "benefitCountdown": "A countdown to your next start",
+      "benefitResults": "Your times and places right after the finish",
+      "benefitSubstitute": "Races where you step in as a substitute, too",
+      "benefitLive": "Everything updates by itself — no reloading needed",
+      "rescan": "Then simply scan the band again."
+    }
   },
   "qrAppuser": {
     "title": "QR Appuser",
@@ -2774,7 +2785,10 @@
     "assignmentInfo": "Assignment information"
   },
   "qrScanner": {
-    "title": "Scanner"
+    "title": "Scanner",
+    "cameraError": "Camera could not be opened",
+    "cameraErrorHint": "The camera may be in use by another app or access was denied.",
+    "cameraRetry": "Restart camera"
   },
   "qrEvents": {
     "title": "Events",

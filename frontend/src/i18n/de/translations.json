@@ -2247,6 +2247,7 @@
       "showHeader": "Kopfzeile mit Name und Uhr",
       "stream": {
         "running": "Läuft",
+        "preparing": "In Vorbereitung",
         "result": "Ergebnis",
         "upcoming": "Als Nächstes",
         "mode": {
@@ -2748,7 +2749,17 @@
     "show": "QR-Code anzeigen",
     "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?",
     "noQrCodeAssigned": "Kein QR-Code zugewiesen",
-    "cameraError": "Kamera kann nicht gestartet werden"
+    "cameraError": "Kamera kann nicht gestartet werden",
+    "unlinked": {
+      "title": "Dieses Band ist noch nicht verknüpft",
+      "intro": "Komm einfach kurz in der Meldestelle vorbei und lass es mit deinem Namen verknüpfen — dann hast du hier dein ganzes Event in der Tasche:",
+      "benefitMatches": "Deine Läufe mit Startzeiten auf einen Blick",
+      "benefitCountdown": "Countdown bis zu deinem nächsten Start",
+      "benefitResults": "Deine Zeiten und Platzierungen direkt nach dem Zieleinlauf",
+      "benefitSubstitute": "Auch Läufe, in denen du als Ersatz eingesetzt bist",
+      "benefitLive": "Alles aktualisiert sich von selbst — kein Neuladen nötig",
+      "rescan": "Danach einfach das Band noch einmal scannen."
+    }
   },
   "qrAppuser": {
     "title": "QR-Appuser",
@@ -2774,7 +2785,10 @@
     "assignmentInfo": "Zuordnungsinformationen"
   },
   "qrScanner": {
-    "title": "Scanner"
+    "title": "Scanner",
+    "cameraError": "Kamera konnte nicht geöffnet werden",
+    "cameraErrorHint": "Möglicherweise wird die Kamera gerade von einer anderen App verwendet oder der Zugriff wurde verweigert.",
+    "cameraRetry": "Kamera erneut starten"
   },
   "qrEvents": {
     "title": "Events",

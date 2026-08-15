@@ -1,4 +1,9 @@
-import {AthleteBoardParticipant, AthleteBoardResultTeam, AthleteBoardTeam} from '@api/types.gen.ts'
+import {
+    AthleteBoardParticipant,
+    AthleteBoardResultTeam,
+    AthleteBoardTeam,
+    LiveDashboardMatchState,
+} from '@api/types.gen.ts'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import {formatPlaceOrdinal} from '@utils/placeOrdinal.ts'
 
@@ -118,6 +123,42 @@ export const crewLines = (
 }
 
 /**
+ * Alle Trennzeichen, die in den beiden Crew-Zeilen vorkommen können: Vereinskette
+ * (`ClubComposition.SEPARATOR` im Backend), Teamname-Anhang (`clubLabel`) und
+ * Besatzungskette (`participantsLabel`). Eine gemeinsame Liste reicht — welcher Text in
+ * welcher Zeile steht, entscheidet `streamCrew`, die Trennzeichen bleiben dieselben.
+ */
+export const CREW_UNIT_SEPARATORS = [' / ', ' | ', ' · '] as const
+
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * Zerlegt eine bereits zusammengefügte Aufzählung in Einheiten, zwischen denen umgebrochen
+ * werden darf — nie mitten in einem Vereins- oder Athletennamen. Jede Einheit nimmt ihr
+ * nachfolgendes Trennzeichen mit, damit keine Zeile mit einem einsamen „/" beginnt; die
+ * Leerzeichen des angeklebten Trennzeichens werden geschützt (NBSP), weil ein normales
+ * Leerzeichen am Ende eines `inline-block` beim Zeilenumbruch kollabiert und das „/" sonst
+ * ohne Abstand am Namen klebte.
+ */
+export const enumerationUnits = (
+    text: string,
+    separators: readonly string[] = CREW_UNIT_SEPARATORS,
+): string[] => {
+    if (!text) return []
+    const usable = separators.filter(separator => separator.length > 0)
+    if (usable.length === 0) return [text]
+    // split mit fangender Gruppe liefert [Stück, Trenner, Stück, Trenner, …, Stück].
+    const parts = text.split(new RegExp(`(${usable.map(escapeRegExp).join('|')})`))
+    const units: string[] = []
+    for (let i = 0; i < parts.length; i += 2) {
+        const separator = parts[i + 1]
+        const unit = parts[i] + (separator ? separator.replace(/ /g, '\u00A0') : '')
+        if (unit) units.push(unit)
+    }
+    return units
+}
+
+/**
  * Platz/Zeit, DNF/DNS/DSQ oder „Abgemeldet" einer Bootszeile — null ohne jedes Teilergebnis
  * (Aufstellung).
  *
@@ -170,6 +211,21 @@ export const roundMatchLabel = (
     const showMatchName = matchName != null && matchName !== roundName
     return [roundName, showMatchName ? matchName : null].filter(Boolean).join(' · ') || null
 }
+
+/**
+ * Badge des laufenden Lower-Thirds nach Laufzustand. Der Slot 0 trägt nicht nur fahrende
+ * Läufe: der Running-Block des Servers führt auch die an den Start gerufenen (PREPARING —
+ * aktiviert, Boote noch am Steg; andere Zustände liefert er nicht). Das Lower-Third zeigt
+ * so einen Lauf bewusst weiter — die Info ist für den Stream nützlich —, aber „LÄUFT" darf
+ * erst der belegte Start behaupten, und der Indikator-Punkt heißt „on air": beides erst
+ * ab RUNNING.
+ */
+export const runningBadge = (
+    state: LiveDashboardMatchState,
+): {labelKey: 'preparing' | 'running'; indicator: boolean} =>
+    state === 'PREPARING'
+        ? {labelKey: 'preparing', indicator: false}
+        : {labelKey: 'running', indicator: true}
 
 /** Wettkampfname in Kurz- oder Langform je nach `useShortNames` — ohne Kürzel bleibt der volle Name. */
 export const competitionLabel = (

@@ -1,5 +1,36 @@
 import {Box, Stack, Typography, useTheme} from '@mui/material'
-import {crewLines, solidOr, StreamCrewMode, StreamTeam, teamTrailingLabel} from './streamDisplay.ts'
+import {
+    crewLines,
+    enumerationUnits,
+    solidOr,
+    StreamCrewMode,
+    StreamTeam,
+    teamTrailingLabel,
+} from './streamDisplay.ts'
+
+/**
+ * Höchstens zwei Zeilen statt hartem Abschneiden: Bei vollen Feldern (Vereinskette,
+ * 4x+-Besatzung) verlor die einzeilige Ellipse ganze Namen. Zwei Zeilen sind die Grenze —
+ * darüber hinaus ellipsiert der Clamp weiter, damit das Panel nicht wächst, bis es das
+ * Lower-Third sprengt.
+ */
+const twoLineClamp = {
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: 2,
+    overflow: 'hidden',
+} as const
+
+/**
+ * Die Aufzählung als nicht umbrechbare Einheiten (ganzer Verein/Athlet samt angeklebtem
+ * Trennzeichen) — der Zeilenumbruch fällt so immer zwischen ganze Namen, nie mitten hinein.
+ */
+const unitSpans = (text: string) =>
+    enumerationUnits(text).map((unit, index) => (
+        <Box key={index} component="span" sx={{display: 'inline-block', whiteSpace: 'nowrap'}}>
+            {unit}
+        </Box>
+    ))
 
 interface StreamBoatRowProps {
     team: StreamTeam
@@ -60,14 +91,14 @@ const StreamBoatRow = ({
                 {team.startNumber}
             </Typography>
             <Box sx={{minWidth: 0, flex: 1}}>
-                <Typography variant={large ? 'h4' : 'h5'} noWrap sx={{fontWeight: 700}}>
-                    {primary}
+                <Typography variant={large ? 'h4' : 'h5'} sx={{fontWeight: 700, ...twoLineClamp}}>
+                    {unitSpans(primary)}
                 </Typography>
                 {/* Zweite Zeile nach `streamCrew`: Besatzung ODER Verein, je nachdem was
                     NICHT schon prominent oben steht (CLUBS_ONLY hat gar keine). */}
                 {showSecondary && secondary && (
-                    <Typography variant={large ? 'body1' : 'body2'} noWrap>
-                        {secondary}
+                    <Typography variant={large ? 'body1' : 'body2'} sx={twoLineClamp}>
+                        {unitSpans(secondary)}
                     </Typography>
                 )}
                 {/* Rundenzeiten: eigene Zeile, tabularNums, kleiner. */}

@@ -14,11 +14,12 @@ import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategoryS
 import {
     CLUB_CHAIN_NARROW_CHARS,
     CLUB_CHAIN_NARROW_RESULT_CHARS,
-    competitionLabel,
     crewMemberLabel,
     dashboardMatchStatus,
     latestTeamNote,
     LiveDashboardDetailSettings,
+    matchCardSubtitle,
+    matchCardTitle,
     matchControls,
     teamNoteCount,
     matchHasResults,
@@ -175,14 +176,19 @@ const LiveDashboardMatchCard = ({
                         columnGap: 1.5,
                         alignItems: 'baseline',
                     }}>
+                    {/*
+                        Überschrift und Zweitzeile kommen aus einer gemeinsamen Ableitung in
+                        common.ts (matchCardTitle/matchCardSubtitle): der Wettkampf führt immer,
+                        egal welche Namensfelder der Lauf trägt — vorher wechselte die Form der
+                        Überschrift mit der Datenlage und las sich am Steg wie ein Wechsel je
+                        Zustand (Rückmeldung vom Regattatag 14.08.2026).
+                    */}
                     <Typography
                         variant="subtitle1"
                         fontWeight={700}
                         noWrap
                         sx={{textDecoration: skipped ? 'line-through' : 'none'}}>
-                        {match.matchName ??
-                            match.roundName ??
-                            competitionLabel(match, shortLabels ? 'short' : 'full')}
+                        {matchCardTitle(match, shortLabels ? 'short' : 'full')}
                     </Typography>
                     <Box sx={{justifySelf: 'end', textAlign: 'right'}}>
                         <Typography
@@ -215,13 +221,7 @@ const LiveDashboardMatchCard = ({
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                         }}>
-                        {[
-                            competitionLabel(match, shortLabels ? 'short' : 'full'),
-                            match.categoryName,
-                            match.roundName,
-                        ]
-                            .filter(Boolean)
-                            .join(' · ')}
+                        {matchCardSubtitle(match)}
                     </Typography>
                     <Box
                         sx={{
