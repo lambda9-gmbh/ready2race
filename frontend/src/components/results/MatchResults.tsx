@@ -8,6 +8,7 @@ import {CompetitionChoiceDto, EventNoticeDto, LatestMatchResultInfo} from '@api/
 import ResultsMatchDialog from '@components/results/ResultsMatchDialog.tsx'
 import ResultsMatchCard from '@components/results/ResultsMatchCard.tsx'
 import EventNoticeBanner from '@components/eventNotice/EventNoticeBanner.tsx'
+import TimingProviderAttribution from '@components/results/TimingProviderAttribution.tsx'
 
 type Props = {
     eventId: string
@@ -241,6 +242,7 @@ const MatchResults = ({
                                     key={match.matchId}
                                 />
                             ))}
+                        <TimingProviderAttribution matches={matchResultsData ?? []} />
                     </>
                 )}
             </Stack>

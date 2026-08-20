@@ -2617,6 +2617,11 @@
         },
         "error": {
           "noPlaceOrTime": "Please specify at least the place or time column."
+        },
+        "attribution": {
+          "name": "Timing provider (attribution)",
+          "url": "Timing provider website",
+          "hint": "Shown as a reference with link on the public results whenever results were imported with this configuration."
         }
       }
     },
@@ -2958,6 +2963,9 @@
     },
     "individualRanking": {
       "error": "Error loading individual rankings"
+    },
+    "timing": {
+      "attribution": "Timing by"
     },
     "noResults": "No results",
     "challengeTabs": {

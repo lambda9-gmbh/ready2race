@@ -20,6 +20,9 @@ data class LatestMatchResultInfo(
     val startTime: LocalDateTime?,
     /** Tatsächlicher Start aus `competition_match.started_at`, falls gestempelt. */
     val startedAt: LocalDateTime?,
+    /** Nennung der externen Zeitnahme, falls die Ergebnisse von dort kamen. */
+    val timingProviderName: String?,
+    val timingProviderUrl: String?,
     val teams: List<MatchResultTeamInfo>
 )
 

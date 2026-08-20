@@ -15,6 +15,8 @@ type Form = {
     colTeamRegistrationId: string
     colTeamPlace?: string
     colTeamTime?: string
+    attributionName: string
+    attributionUrl: string
 }
 
 const defaultValues: Form = {
@@ -23,6 +25,8 @@ const defaultValues: Form = {
     colTeamRegistrationId: '',
     colTeamPlace: '',
     colTeamTime: '',
+    attributionName: '',
+    attributionUrl: '',
 }
 
 const addAction = (formData: Form) =>
@@ -90,6 +94,15 @@ const MatchResultImportConfigDialog = (
                         },
                     }}
                 />
+                <FormInputText
+                    name={'attributionName'}
+                    label={t('configuration.import.matchResult.attribution.name')}
+                    helperText={t('configuration.import.matchResult.attribution.hint')}
+                />
+                <FormInputText
+                    name={'attributionUrl'}
+                    label={t('configuration.import.matchResult.attribution.url')}
+                />
             </Stack>
         </EntityDialog>
     )
@@ -101,6 +114,8 @@ const mapFormToRequest = (formData: Form): MatchResultImportConfigRequest => ({
     colTeamRegistrationId: formData.colTeamRegistrationId,
     colTeamPlace: formData.colTeamPlace,
     colTeamTime: formData.colTeamTime,
+    attributionName: takeIfNotEmpty(formData.attributionName),
+    attributionUrl: takeIfNotEmpty(formData.attributionUrl),
 })
 
 const mapDtoToForm = (dto: MatchResultImportConfigDto): Form => ({
@@ -109,6 +124,8 @@ const mapDtoToForm = (dto: MatchResultImportConfigDto): Form => ({
     colTeamRegistrationId: dto.colTeamRegistrationId ?? '',
     colTeamPlace: dto.colTeamPlace,
     colTeamTime: dto.colTeamTime,
+    attributionName: dto.attributionName ?? '',
+    attributionUrl: dto.attributionUrl ?? '',
 })
 
 export default MatchResultImportConfigDialog

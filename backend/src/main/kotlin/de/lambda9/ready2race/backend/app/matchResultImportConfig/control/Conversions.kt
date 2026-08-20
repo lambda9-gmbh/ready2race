@@ -20,6 +20,8 @@ fun MatchResultImportConfigRequest.toRecord(userId: UUID): App<Nothing, MatchRes
             colTeamRegistrationId = colTeamRegistrationId,
             colTeamPlace = colTeamPlace,
             colTeamTime = colTeamTime,
+            attributionName = attributionName,
+            attributionUrl = attributionUrl,
             createdAt = now,
             createdBy = userId,
             updatedAt = now,
@@ -36,5 +38,7 @@ fun MatchResultImportConfigRecord.toDto(): App<Nothing, MatchResultImportConfigD
         colTeamRegistrationId = colTeamRegistrationId,
         colTeamPlace = colTeamPlace,
         colTeamTime = colTeamTime,
+        attributionName = attributionName,
+        attributionUrl = attributionUrl,
     )
 )

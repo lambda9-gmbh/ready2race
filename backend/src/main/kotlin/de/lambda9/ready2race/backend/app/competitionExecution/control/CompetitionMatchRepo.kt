@@ -245,6 +245,9 @@ object CompetitionMatchRepo {
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
             COMPETITION_VIEW.SHORT_NAME,
+            // Nennung der Zeitnahme, wie sie beim Schreiben der Ergebnisse am Lauf abgelegt wurde.
+            COMPETITION_MATCH.TIMING_PROVIDER_NAME,
+            COMPETITION_MATCH.TIMING_PROVIDER_URL,
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)

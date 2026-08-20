@@ -15651,6 +15651,12 @@ components:
           format: date-time
           nullable: true
           description: "real start, if stamped"
+        timingProviderName:
+          type: string
+          nullable: true
+        timingProviderUrl:
+          type: string
+          nullable: true
         teams:
           type: array
           items:
@@ -17877,6 +17883,12 @@ components:
           type: string
         colTeamTime:
           type: string
+        attributionName:
+          type: string
+          description: Display name of the external timing provider, shown with a reference link on public result views (e.g. "RaceClocker").
+        attributionUrl:
+          type: string
+          description: Website of the external timing provider the public attribution links to.
 
     MatchResultImportConfigDto:
       type: object
@@ -17897,6 +17909,10 @@ components:
         colTeamPlace:
           type: string
         colTeamTime:
+          type: string
+        attributionName:
+          type: string
+        attributionUrl:
           type: string
 
     EventInvoicesInfoDto:
