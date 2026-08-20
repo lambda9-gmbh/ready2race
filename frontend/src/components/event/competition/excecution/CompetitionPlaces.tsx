@@ -163,10 +163,21 @@ const CompetitionPlaces = () => {
                                             }}>
                                             {/* Der Platz innerhalb der Wertungskategorie; team.place
                                         bleibt der wettkampfweite und traegt weiterhin die Urkunde. */}
-                                            <Typography
-                                                variant={team.categoryPlace ? 'h5' : 'body1'}>
-                                                {team.categoryPlace ?? '-'}
-                                            </Typography>
+                                            <Box>
+                                                <Typography
+                                                    variant={team.categoryPlace ? 'h5' : 'body1'}>
+                                                    {team.categoryPlace ?? '-'}
+                                                </Typography>
+                                                {/* Bei Wertung je Partie gehoert die Partie zum Platz:
+                                        ohne sie stuenden mehrere Erste ohne Herkunft nebeneinander. */}
+                                                {team.matchName && (
+                                                    <Typography
+                                                        color={'textSecondary'}
+                                                        variant={'body2'}>
+                                                        {team.matchName}
+                                                    </Typography>
+                                                )}
+                                            </Box>
                                             <Box>
                                                 <Typography textAlign={'right'}>
                                                     {team.actualClubName ?? team.clubName}

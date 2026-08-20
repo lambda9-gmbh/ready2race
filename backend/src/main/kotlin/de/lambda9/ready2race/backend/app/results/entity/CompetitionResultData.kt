@@ -36,6 +36,8 @@ data class EventResultData(
          * ohne Platz.
          */
         val place: Int?,
+        /** Die Partie, in der der Platz gefahren wurde - nur bei Wertung je Partie gesetzt. */
+        val matchName: String?,
         val clubName: String,
         val teamName: String?,
         val participatingClubName: String?,

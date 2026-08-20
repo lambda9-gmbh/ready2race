@@ -1,5 +1,5 @@
 package de.lambda9.ready2race.backend.app.competitionSetup.entity
 
 enum class CompetitionSetupPlacesOption {
-    EQUAL, ASCENDING, CUSTOM;
+    EQUAL, ASCENDING, CUSTOM, PER_MATCH;
 }

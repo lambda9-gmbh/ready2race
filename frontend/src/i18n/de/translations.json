@@ -993,7 +993,8 @@
           "placesOption": {
             "equal": "Gleichgestellt (Platz = {{place}})",
             "ascending": "Aufsteigend (Platz = Setzung)",
-            "custom": "Benutzerdefiniert"
+            "custom": "Benutzerdefiniert",
+            "perMatch": "Pro Partie (Platz = Platz in der Partie)"
           }
         },
         "tournamentTree": {

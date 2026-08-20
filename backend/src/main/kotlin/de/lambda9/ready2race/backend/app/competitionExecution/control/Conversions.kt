@@ -278,7 +278,11 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
 )
 
 
-fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int, categoryPlace: Int?) = KIO.ok(
+fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(
+    place: Int,
+    categoryPlace: Int?,
+    matchName: String? = null,
+) = KIO.ok(
     CompetitionTeamPlaceDto(
         ratingCategory = ratingCategory,
         categoryPlace = categoryPlace,
@@ -289,6 +293,7 @@ fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int, c
         clubName = clubName,
         namedParticipants = participants.toNamedParticipantsDto(),
         place = place,
+        matchName = matchName,
         deregistered = deregistered,
         deregistrationReason = deregistrationReason,
         excluded = deregistered || out || failed,

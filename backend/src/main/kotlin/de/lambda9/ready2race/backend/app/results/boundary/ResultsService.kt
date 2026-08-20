@@ -355,6 +355,7 @@ object ResultsService {
 
                                 EventResultData.TeamResultData(
                                     place = entry.item.categoryPlace,
+                                    matchName = entry.item.matchName,
                                     clubName = team.clubName,
                                     teamName = team.registrationName,
                                     participatingClubName = actualClubName,
@@ -576,6 +577,12 @@ object ResultsService {
                                         // Die Mannschaft bleibt in der Liste, damit niemand sie
                                         // für vergessen hält.
                                         team.place?.toString() ?: "-"
+                                    }
+                                    team.matchName?.let {
+                                        text(
+                                            fontSize = 9f,
+                                            centered = true,
+                                        ) { it }
                                     }
                                 }
 

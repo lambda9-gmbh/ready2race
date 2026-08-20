@@ -993,7 +993,8 @@
           "placesOption": {
             "equal": "Equal (Place = {{place}})",
             "ascending": "Ascending (Place = Seeding)",
-            "custom": "Custom"
+            "custom": "Custom",
+            "perMatch": "Per match (Place = Place within the match)"
           }
         },
         "tournamentTree": {
