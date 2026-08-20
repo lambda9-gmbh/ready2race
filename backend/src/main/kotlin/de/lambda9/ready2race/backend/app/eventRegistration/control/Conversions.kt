@@ -44,5 +44,7 @@ fun EventRegistrationsViewRecord.toDto(): App<Nothing, EventRegistrationViewDto>
             competitionRegistrationCount = competitionRegistrationCount!!,
             participantCount = participantCount!!,
             eventDocumentsOfficiallyAccepted = eventDocumentsOfficiallyAcceptedAt != null,
+            regularFees = regularFees!!,
+            lateFees = lateFees!!,
         )
     )

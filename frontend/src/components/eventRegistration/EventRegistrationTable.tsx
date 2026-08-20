@@ -7,7 +7,7 @@ import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {deleteEventRegistration, getRegistrationsForEvent} from '@api/sdk.gen.ts'
 import {format} from 'date-fns'
 import {MouseEvent, useState} from 'react'
-import {IconButton} from '@mui/material'
+import {IconButton, Stack, Typography} from '@mui/material'
 import {Message} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {EventRegistrationMessageDialog} from '@components/dashboard/EventRegistrationMessageDialog.tsx'
@@ -18,6 +18,8 @@ const initialPagination: GridPaginationModel = {
 }
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'createdAt', sort: 'asc'}]
+
+const formatFee = (amount: number) => `${amount.toFixed(2)} €`
 
 const deleteRequest = (dto: EventRegistrationViewDto) =>
     deleteEventRegistration({path: {eventId: dto.eventId, eventRegistrationId: dto.id}})
@@ -56,6 +58,35 @@ const EventRegistrationTable = ({
             field: 'clubName',
             headerName: t('club.club'),
             flex: 2,
+        },
+        {
+            field: 'totalFees',
+            headerName: t('event.registration.fees.total'),
+            minWidth: 150,
+            flex: 0,
+            align: 'right',
+            headerAlign: 'right',
+            // Der Betrag entsteht erst aus zwei Rechnungen - eine ueber die regulaeren Meldungen,
+            // eine ueber die Nachmeldungen. Die Aufteilung steht deshalb unter der Summe, sobald
+            // Nachmeldegebuehren anfallen.
+            valueGetter: (_, row) => Number(row.regularFees) + Number(row.lateFees),
+            renderCell: ({value, row}) => {
+                const late = Number(row.lateFees)
+                return (
+                    <Stack sx={{py: 0.5}} alignItems={'end'}>
+                        {/* Ohne hinterlegte Gebuehren bleibt die Spalte leer statt "0,00 €" zu wiederholen. */}
+                        <Typography>{value > 0 ? formatFee(value) : '-'}</Typography>
+                        {late > 0 && (
+                            <Typography variant={'caption'} color={'text.secondary'}>
+                                {t('event.registration.fees.split', {
+                                    regular: formatFee(Number(row.regularFees)),
+                                    late: formatFee(late),
+                                })}
+                            </Typography>
+                        )}
+                    </Stack>
+                )
+            },
         },
         {
             field: 'message',

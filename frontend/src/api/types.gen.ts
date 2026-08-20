@@ -1839,6 +1839,8 @@ export type EventRegistrationViewDto = {
     competitionRegistrationCount: number
     participantCount: number
     eventDocumentsOfficiallyAccepted: boolean
+    regularFees: string
+    lateFees: string
 }
 
 export type EventScheduleDto = {

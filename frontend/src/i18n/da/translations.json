@@ -1557,6 +1557,10 @@
       "summary": "Opsummering",
       "schedule": "Program",
       "message": "Besked",
+      "fees": {
+        "total": "Tilmeldingsgebyrer",
+        "split": "{{regular}} regulær + {{late}} eftertilmeldt"
+      },
       "optionalFee": "Valgfrit",
       "totalFees": "Tilmeldingsgebyr",
       "lateTotalFees": "Eftertilmeldingsgebyr",

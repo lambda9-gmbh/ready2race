@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.entity
 
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
 
@@ -15,4 +16,6 @@ data class EventRegistrationViewDto(
     val competitionRegistrationCount: Long,
     val participantCount: Long,
     val eventDocumentsOfficiallyAccepted: Boolean,
+    val regularFees: BigDecimal,
+    val lateFees: BigDecimal,
 )

@@ -41,7 +41,6 @@ drop view if exists work_shift_with_assigned_users;
 drop view if exists task_with_responsible_users;
 drop view if exists event_registration_for_invoice;
 drop view if exists competition_registration_with_fees;
-drop view if exists applied_fee;
 drop view if exists document_template_assignment;
 drop view if exists event_registration_result_view;
 drop view if exists event_competition_registration;
@@ -50,6 +49,7 @@ drop view if exists registered_competition_team;
 drop view if exists registered_competition_team_participant;
 drop view if exists event_registration_report_download;
 drop view if exists event_registrations_view;
+drop view if exists applied_fee;
 drop view if exists event_view;
 drop view if exists event_public_view;
 drop view if exists participant_for_event;
@@ -600,6 +600,27 @@ from event e
 group by e.id, e.name, e.description, e.location, e.registration_available_from, e.registration_available_to,
          e.created_at, err.event;
 
+-- Die gewaehlten Optionalgebuehren werden per exists geprueft, nicht per join: ein Join auf
+-- competition_registration_optional_fee kreuzt sich mit den Gebuehren der Ausschreibung, wodurch
+-- jede Pflichtgebuehr pro gewaehlter Optionalgebuehr einmal zusaetzlich auftauchte. Ab zwei
+-- gewaehlten Optionalgebuehren zaehlte die Rechnung (quantity je Position) dadurch zu hoch.
+create view applied_fee as
+select cphf.id,
+       cr.id as competition_registration,
+       f.name,
+       cphf.amount,
+       cphf.late_amount
+from competition_registration cr
+         join competition_properties cp on cr.competition = cp.competition
+         join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
+         join fee f on cphf.fee = f.id
+where cphf.required is true
+   or exists (select 1
+              from competition_registration_optional_fee crof
+              where crof.competition_registration = cr.id
+                and crof.fee = cphf.fee)
+;
+
 create view event_registrations_view as
 select er.id,
        er.created_at,
@@ -611,7 +632,21 @@ select er.id,
        c.name                           as club_name,
        count(distinct cr.id)            as competition_registration_count,
        count(distinct crnp.participant) as participant_count,
-       er.event_documents_officially_accepted_at
+       er.event_documents_officially_accepted_at,
+       -- Die Gebuehrensummen sind das, was die Rechnung ausweisen wuerde: eine Rechnung ueber die
+       -- regulaeren Meldungen, eine ueber die Nachmeldungen (dort gilt der Nachmeldebetrag, sofern
+       -- die Gebuehr einen hat). Als korrelierte Unterabfragen, weil eine weitere Join-Ebene die
+       -- count(distinct ...) oben nicht stoert, aber die Summen vervielfachen wuerde.
+       (select coalesce(round(sum(af.amount), 2), 0)
+        from competition_registration crf
+                 join applied_fee af on crf.id = af.competition_registration
+        where crf.event_registration = er.id
+          and crf.is_late is false)     as regular_fees,
+       (select coalesce(round(sum(coalesce(af.late_amount, af.amount)), 2), 0)
+        from competition_registration crf
+                 join applied_fee af on crf.id = af.competition_registration
+        where crf.event_registration = er.id
+          and crf.is_late is true)      as late_fees
 from event_registration er
          left join event e on er.event = e.id
          left join club c on er.club = c.id
@@ -706,27 +741,6 @@ from document_template dt
                       dtu.template,
                       null
                from document_template_usage dtu) usage on dt.id = usage.template
-;
-
--- Die gewaehlten Optionalgebuehren werden per exists geprueft, nicht per join: ein Join auf
--- competition_registration_optional_fee kreuzt sich mit den Gebuehren der Ausschreibung, wodurch
--- jede Pflichtgebuehr pro gewaehlter Optionalgebuehr einmal zusaetzlich auftauchte. Ab zwei
--- gewaehlten Optionalgebuehren zaehlte die Rechnung (quantity je Position) dadurch zu hoch.
-create view applied_fee as
-select cphf.id,
-       cr.id as competition_registration,
-       f.name,
-       cphf.amount,
-       cphf.late_amount
-from competition_registration cr
-         join competition_properties cp on cr.competition = cp.competition
-         join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
-         join fee f on cphf.fee = f.id
-where cphf.required is true
-   or exists (select 1
-              from competition_registration_optional_fee crof
-              where crof.competition_registration = cr.id
-                and crof.fee = cphf.fee)
 ;
 
 create view competition_registration_with_fees as

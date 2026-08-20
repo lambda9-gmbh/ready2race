@@ -1557,6 +1557,10 @@
       "summary": "Zusammenfassung",
       "schedule": "Programm",
       "message": "Nachricht",
+      "fees": {
+        "total": "Meldegelder",
+        "split": "{{regular}} regulär + {{late}} nachgemeldet"
+      },
       "optionalFee": "Optional",
       "totalFees": "Meldegebühr",
       "lateTotalFees": "Nachmeldegebühr",

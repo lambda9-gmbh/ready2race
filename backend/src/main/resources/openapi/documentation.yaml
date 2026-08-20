@@ -11098,6 +11098,8 @@ components:
         - competitionRegistrationCount
         - participantCount
         - eventDocumentsOfficiallyAccepted
+        - regularFees
+        - lateFees
       properties:
         id:
           type: string
@@ -11126,6 +11128,12 @@ components:
           type: number
         eventDocumentsOfficiallyAccepted:
           type: boolean
+        regularFees:
+          type: string
+          format: decimal
+        lateFees:
+          type: string
+          format: decimal
 
     RegistrationMailRecipientDto:
       type: object

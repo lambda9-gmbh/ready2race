@@ -1557,6 +1557,10 @@
       "summary": "Summary",
       "schedule": "Schedule",
       "message": "Message",
+      "fees": {
+        "total": "Registration fees",
+        "split": "{{regular}} regular + {{late}} late"
+      },
       "optionalFee": "Optional",
       "totalFees": "Registration Fee",
       "lateTotalFees": "Late Registration Fee",
