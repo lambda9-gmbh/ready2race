@@ -708,6 +708,10 @@ from document_template dt
                from document_template_usage dtu) usage on dt.id = usage.template
 ;
 
+-- Die gewaehlten Optionalgebuehren werden per exists geprueft, nicht per join: ein Join auf
+-- competition_registration_optional_fee kreuzt sich mit den Gebuehren der Ausschreibung, wodurch
+-- jede Pflichtgebuehr pro gewaehlter Optionalgebuehr einmal zusaetzlich auftauchte. Ab zwei
+-- gewaehlten Optionalgebuehren zaehlte die Rechnung (quantity je Position) dadurch zu hoch.
 create view applied_fee as
 select cphf.id,
        cr.id as competition_registration,
@@ -716,11 +720,13 @@ select cphf.id,
        cphf.late_amount
 from competition_registration cr
          join competition_properties cp on cr.competition = cp.competition
-         left join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
-         left join competition_registration_optional_fee crof on cr.id = crof.competition_registration
-         left join fee f on cphf.fee = f.id
+         join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
+         join fee f on cphf.fee = f.id
 where cphf.required is true
-   or crof.fee = f.id
+   or exists (select 1
+              from competition_registration_optional_fee crof
+              where crof.competition_registration = cr.id
+                and crof.fee = cphf.fee)
 ;
 
 create view competition_registration_with_fees as
