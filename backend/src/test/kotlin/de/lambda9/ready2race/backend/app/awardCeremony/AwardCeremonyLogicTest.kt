@@ -62,6 +62,8 @@ class AwardCeremonyLogicTest {
         penaltyNote: String? = null,
         roundName: String? = "Finale",
         matchName: String? = "Finale A",
+        placementMatchName: String? = null,
+        placementMatchWeighting: Int? = null,
         participants: List<AwardCeremonyCandidateParticipant> = listOf(rower()),
     ) = AwardCeremonyCandidate(
         competitionPlace = place,
@@ -75,8 +77,40 @@ class AwardCeremonyLogicTest {
         roundName = roundName,
         matchName = matchName,
         matchTime = null,
+        placementMatchName = placementMatchName,
+        placementMatchWeighting = placementMatchWeighting,
         participants = participants,
     )
+
+    /**
+     * Wertung je Partie (`CompetitionSetupPlacesOption.PER_MATCH`): Finale A und B haben je einen
+     * Ersten. Auf dem Bogen sind das getrennte Blöcke in Partie-Reihenfolge - kein geteilter
+     * Rang -, und der Podiumsschnitt gilt je Partie: beide Sieger werden geehrt.
+     */
+    @Test
+    fun wertungJePartieEhrtJedePartieFuerSich() {
+        val entries = RatingCategoryRanking.groupAndRank(
+            items = listOf(
+                candidate(1, startNumber = 1, matchName = "Finale A", placementMatchName = "Finale A", placementMatchWeighting = 1),
+                candidate(2, startNumber = 2, matchName = "Finale A", placementMatchName = "Finale A", placementMatchWeighting = 1),
+                candidate(1, startNumber = 3, matchName = "Finale B", placementMatchName = "Finale B", placementMatchWeighting = 2),
+                candidate(2, startNumber = 4, matchName = "Finale B", placementMatchName = "Finale B", placementMatchWeighting = 2),
+            ),
+            category = { it.ratingCategory },
+            place = { it.competitionPlace },
+            tieBreak = { it.startNumber },
+            subgroup = { it.placementMatchWeighting },
+        ).single().entries
+
+        val ranks = AwardCeremonyLogic.ranks(entries)
+
+        assertEquals(listOf(1, 2, 1, 2), ranks.map { it.rank })
+        assertEquals(listOf(false, false, false, false), ranks.map { it.shared })
+        assertEquals(
+            listOf("Finale A", "Finale A", "Finale B", "Finale B"),
+            ranks.map { it.team.raceLine?.substringBefore(" ·") },
+        )
+    }
 
     @Test
     fun categoriesBecomeSeparateSectionsInTheConfiguredOrder() {

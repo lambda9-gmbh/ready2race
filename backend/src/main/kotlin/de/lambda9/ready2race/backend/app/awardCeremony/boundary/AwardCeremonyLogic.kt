@@ -44,10 +44,14 @@ object AwardCeremonyLogic {
         .mapNotNull { entry -> entry.categoryPlace?.let { it to entry.item } }
         .filter { (place, _) -> maxRank == null || place <= maxRank }
         // groupBy hält die Reihenfolge der zuerst gesehenen Schlüssel, und die Einträge kommen
-        // bereits nach Platz und Startnummer sortiert an - die Blockfolge bleibt damit die des Blatts.
-        .groupBy { (place, _) -> place }
-        .flatMap { (place, tied) ->
-            tied.mapIndexed { position, (_, candidate) ->
+        // bereits nach Partie, Platz und Startnummer sortiert an - die Blockfolge bleibt damit die
+        // des Blatts. Die Partie steht mit im Schlüssel: bei Wertung je Partie zählt jede ihre
+        // Ränge für sich, der Schnitt bei [maxRank] gilt also je Partie, und die Ersten zweier
+        // Finals sind KEIN geteilter Rang - welche Partie ein Block meint, sagt die Rennzeile
+        // seiner Boote. Ohne diese Wertung ist die Partie überall null und nichts ändert sich.
+        .groupBy { (place, candidate) -> candidate.placementMatchName to place }
+        .flatMap { (_, tied) ->
+            tied.mapIndexed { position, (place, candidate) ->
                 AwardCeremonyRank(
                     rank = place,
                     shared = tied.size > 1,

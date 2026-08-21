@@ -172,6 +172,7 @@ object AwardCeremonyService {
                     category = { if (options.byRatingCategory) it.ratingCategory else null },
                     place = { it.competitionPlace },
                     tieBreak = { it.startNumber },
+                    subgroup = { it.placementMatchWeighting },
                 )
                 sections.map { section ->
                     AwardCeremonyLogic.sheet(
@@ -301,11 +302,13 @@ object AwardCeremonyService {
             KIO.ok(
                 places
                     .filterNot { (team, _) -> team.deregistered || team.out || team.failed }
-                    .map { (team, place) ->
+                    .map { (team, place, partieName, partieWeighting) ->
                         val (roundName, matchName, matchTime) = raceOf(rounds, team.competitionRegistration)
 
                         AwardCeremonyCandidate(
                             competitionPlace = place,
+                            placementMatchName = partieName,
+                            placementMatchWeighting = partieWeighting,
                             startNumber = team.startNumber,
                             ratingCategory = team.ratingCategory,
                             registeringClubName = team.clubName,
@@ -346,6 +349,7 @@ object AwardCeremonyService {
                 category = { it.ratingCategory },
                 place = { it.competitionPlace },
                 tieBreak = { it.startNumber },
+                subgroup = { it.placementMatchWeighting },
             )
 
             KIO.ok(

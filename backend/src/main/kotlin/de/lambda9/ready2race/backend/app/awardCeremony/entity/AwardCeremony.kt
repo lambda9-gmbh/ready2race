@@ -30,6 +30,14 @@ data class AwardCeremonyCandidate(
     val roundName: String?,
     val matchName: String?,
     val matchTime: LocalDateTime?,
+    /**
+     * Die Partie, in der der Platz VERGEBEN wurde - nur bei Wertung je Partie gesetzt (siehe
+     * `TeamPlacement`). Nicht dasselbe wie [matchName]: der beschreibt das zuletzt gefahrene
+     * Rennen fürs Blatt, diese beiden hier steuern Rechnung und Blockbildung - jede Partie zählt
+     * ihre Ränge für sich, und nur Boote derselben Partie können sich einen teilen.
+     */
+    val placementMatchName: String? = null,
+    val placementMatchWeighting: Int? = null,
     val participants: List<AwardCeremonyCandidateParticipant>,
 )
 

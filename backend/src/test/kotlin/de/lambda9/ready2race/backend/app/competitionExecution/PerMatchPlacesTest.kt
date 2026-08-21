@@ -66,7 +66,7 @@ class PerMatchPlacesTest {
     }
 
     @Test
-    fun partienStehenNacheinanderUndNichtVerschraenkt() {
+    fun partienStehenNacheinanderUndZaehlenJedeFuerSich() {
         val entries = CompetitionExecutionService.placesByRatingCategory(zweiFinals())
             .flatMap { it.entries }
 
@@ -74,7 +74,26 @@ class PerMatchPlacesTest {
             listOf("Finale A" to 1, "Finale A" to 2, "Finale B" to 1, "Finale B" to 2),
             entries.map { it.item.matchName to it.item.place },
         )
-        assertEquals(listOf(1, 2, 3, 4), entries.map { it.categoryPlace })
+        // Der Kategorieplatz ist die angezeigte Zahl (Platzierungsansicht, Ergebnis-PDF): jede
+        // Partie hat ihren eigenen Ersten, statt dass Finale B bei 3 weiterzählt.
+        assertEquals(listOf(1, 2, 1, 2), entries.map { it.categoryPlace })
+    }
+
+    @Test
+    fun bootsOhnePartieStehenHinterAllenPartien() {
+        // Ein Boot, das in einer früheren Runde ausgeschieden ist: sein Platz zählt das
+        // Gesamtfeld (hier 5) und trägt keine Partie. Es gehört hinter beide Finals - nicht
+        // wegen der Zahl, sondern weil die Partie-internen Plätze zuerst kommen - und zählt
+        // dort an der Gesamtposition weiter, statt selbst wieder bei 1 anzufangen.
+        val entries = CompetitionExecutionService.placesByRatingCategory(
+            zweiFinals() + TeamPlacement(team(5), place = 5)
+        ).flatMap { it.entries }
+
+        assertEquals(
+            listOf("Finale A", "Finale A", "Finale B", "Finale B", null),
+            entries.map { it.item.matchName },
+        )
+        assertEquals(listOf(1, 2, 1, 2, 5), entries.map { it.categoryPlace })
     }
 
     @Test
@@ -92,8 +111,10 @@ class PerMatchPlacesTest {
         )
 
         assertEquals(listOf("Leichtgewicht", "Offen"), sections.map { it.category?.name })
+        // In jeder Kategorie zählt jede Partie für sich: das beste Boot der Kategorie in seiner
+        // Partie ist dort Kategorie-Erster, auch wenn es die Partie nicht gewonnen hat.
         sections.forEach { section ->
-            assertEquals(listOf(1, 2), section.entries.map { it.categoryPlace })
+            assertEquals(listOf(1, 1), section.entries.map { it.categoryPlace })
         }
     }
 

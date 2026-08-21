@@ -35,19 +35,28 @@ object RatingCategoryRanking {
      * ausgeschieden, disqualifiziert oder schlicht noch nicht gewertet.
      * @param tieBreak Entscheidet die Reihenfolge zwischen Booten mit demselben Platz und
      * zwischen den ungewerteten; in der Praxis die Startnummer.
+     * @param subgroup Die Partie des Bootes in Setup-Reihenfolge, wenn die Runde je Partie
+     * gewertet wird (`CompetitionSetupPlacesOption.PER_MATCH`) — dann ist [place] nur innerhalb
+     * derselben Partie vergleichbar. Die Partien stehen nacheinander, in jeder beginnt die
+     * Zählung neu ab 1, und nur Boote derselben Partie können sich einen Platz teilen. `null`
+     * heißt „ohne Partie" und steht hinter allen Partien: solche Plätze zählen das Gesamtfeld
+     * einer Runde — sie zählen deshalb an der Gesamtposition weiter, statt neu zu beginnen (nach
+     * Finale A mit 1–2 und Finale B mit 1–2 ist ein Vorrunden-Ausgeschiedener der 5.). Ohne
+     * Wertung je Partie sind alle Werte `null`, und alles bleibt beim Alten.
      */
     fun <T> groupAndRank(
         items: List<T>,
         category: (T) -> RatingCategoryRef?,
         place: (T) -> Int?,
         tieBreak: (T) -> Int,
+        subgroup: (T) -> Int? = { null },
     ): List<RankedCategory<T>> = items
         .groupBy { category(it)?.id }
         .map { (_, boats) ->
             val ref = category(boats.first())
             RankedCategory(
                 category = ref,
-                entries = rankWithinCategory(boats, place, tieBreak),
+                entries = rankWithinCategory(boats, place, tieBreak, subgroup),
             )
         }
         // Ein Abschnitt ohne Kategorie sortiert sich nicht gegen die anderen, er hängt hinten an.
@@ -72,19 +81,35 @@ object RatingCategoryRanking {
         boats: List<T>,
         place: (T) -> Int?,
         tieBreak: (T) -> Int,
+        subgroup: (T) -> Int?,
     ): List<RankedEntry<T>> {
         val (ranked, unranked) = boats.partition { place(it) != null }
 
-        val sorted = ranked.sortedWith(compareBy({ place(it)!! }, { tieBreak(it) }))
+        val sorted = ranked.sortedWith(
+            compareBy({ subgroup(it) ?: Int.MAX_VALUE }, { place(it)!! }, { tieBreak(it) })
+        )
 
+        var currentSubgroup: Int? = null
+        var subgroupStart = 0
         var lastPlace: Int? = null
         var lastCategoryPlace = 0
 
         val rankedEntries = sorted.mapIndexed { index, boat ->
+            // Partiewechsel: die Zählung beginnt neu, und der letzte Platz der vorigen Partie
+            // stiftet keinen Gleichstand über die Partiegrenze hinweg. Boote ohne Partie zählen
+            // dagegen an der Gesamtposition weiter (subgroupStart bleibt 0) - ihr Platz misst
+            // das Gesamtfeld, nicht eine Partie.
+            if (index == 0 || subgroup(boat) != currentSubgroup) {
+                currentSubgroup = subgroup(boat)
+                subgroupStart = if (subgroup(boat) != null) index else 0
+                lastPlace = null
+                lastCategoryPlace = 0
+            }
+
             val categoryPlace = if (place(boat) == lastPlace) {
                 lastCategoryPlace
             } else {
-                index + 1
+                index - subgroupStart + 1
             }
             lastPlace = place(boat)
             lastCategoryPlace = categoryPlace
