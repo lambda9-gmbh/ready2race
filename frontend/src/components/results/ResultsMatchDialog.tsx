@@ -96,12 +96,31 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                     </DialogTitle>
                     <DialogContent>
                         <Stack spacing={2}>
-                            {match.startTime && (
-                                <Stack direction={'row'} spacing={1}>
-                                    <ScheduleOutlinedIcon color={'primary'} />
-                                    <Typography>
-                                        {format(new Date(match.startTime), t('format.datetime'))}
-                                    </Typography>
+                            {/* Uhrzeit und Nennung der Zeitnahme in einer Zeile, gleich zu Anfang:
+                                Wer die Zeiten gemessen hat, gehört zur Zeitangabe und nicht in eine
+                                Fußzeile, die erst nach dem Durchblättern aller Boote auftaucht.
+                                Auf schmalen Anzeigen bricht die Nennung in die zweite Zeile um. */}
+                            {(match.startTime || 'timingProviderName' in match) && (
+                                <Stack
+                                    direction={'row'}
+                                    spacing={2}
+                                    alignItems={'center'}
+                                    flexWrap={'wrap'}
+                                    useFlexGap>
+                                    {match.startTime && (
+                                        <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                                            <ScheduleOutlinedIcon color={'primary'} />
+                                            <Typography>
+                                                {format(
+                                                    new Date(match.startTime),
+                                                    t('format.datetime'),
+                                                )}
+                                            </Typography>
+                                        </Stack>
+                                    )}
+                                    {'timingProviderName' in match && (
+                                        <TimingProviderAttribution matches={[match]} inline />
+                                    )}
                                 </Stack>
                             )}
                             {sections.map(section => (
@@ -277,9 +296,6 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                     ))}
                                 </Stack>
                             ))}
-                            {'timingProviderName' in match && (
-                                <TimingProviderAttribution matches={[match]} />
-                            )}
                         </Stack>
                     </DialogContent>
                     <DialogActions>
