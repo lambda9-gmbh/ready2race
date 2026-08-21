@@ -751,7 +751,24 @@ object CompetitionExecutionService {
      */
     private fun prepareForNewPlaces(
         matchId: UUID,
+        userId: UUID,
+        timing: TimingAttribution?,
     ): App<Nothing, Unit> = KIO.comprehension {
+
+        // Hält fest, wessen Zeitnahme die Ergebnisse dieses Laufs zuletzt geliefert hat - die
+        // Nennung auf den öffentlichen Ergebnissen hängt daran. `activated_at`/`currently_running`
+        // bleiben unberührt - siehe Erklärung oben. Geschrieben wird nur bei echter Änderung: Der
+        // automatische RaceClocker-Abruf läuft im Sekundentakt durch diese Funktion, und ein
+        // `updated_at` bei jedem Takt würde die „zuletzt aktualisiert"-Reihenfolge der
+        // öffentlichen Ergebnisse durcheinanderbringen.
+        !CompetitionMatchRepo.update(matchId) {
+            if (timingProviderName != timing?.name || timingProviderUrl != timing?.url) {
+                timingProviderName = timing?.name
+                timingProviderUrl = timing?.url
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }
+        }.orDie()
 
         !CompetitionMatchTeamRepo.updateManyByMatch(matchId) {
             place = null
@@ -802,7 +819,7 @@ object CompetitionExecutionService {
         !checkUpdateMatchResult(competitionId, matchId)
         !pauseRaceClockerAutoPull(matchId)
 
-        !prepareForNewPlaces(matchId)
+        !prepareForNewPlaces(matchId, userId, timing = null)
 
         val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
 
@@ -928,7 +945,6 @@ object CompetitionExecutionService {
 
         val match = !checkUpdateMatchResult(competitionId, matchId)
         !pauseRaceClockerAutoPull(matchId)
-        !prepareForNewPlaces(matchId)
 
         // Das Format gehoert zum Wettkampf (Zeitnahme-Tab), nicht mehr zur einzelnen Anfrage --
         // und der Wettkampf erbt es von der Veranstaltung, solange er selbst keines gesetzt hat
@@ -942,6 +958,8 @@ object CompetitionExecutionService {
         }
         val config = !MatchResultImportConfigRepo.get(configId).orDie()
             .onNullFail { MatchResultImportConfigError.NotFound }
+
+        !prepareForNewPlaces(matchId, userId, timing = TimingAttribution.of(config.attributionName, config.attributionUrl))
 
         val identifierColumn = config.colTeamRegistrationId
 
@@ -1365,7 +1383,8 @@ object CompetitionExecutionService {
             }.orDie()
         }
 
-        !prepareForNewPlaces(matchId)
+        // Die Ergebnisse dieses Laufs kommen aus RaceClocker - die Nennung steht damit fest.
+        !prepareForNewPlaces(matchId, userId, timing = TimingAttribution.RACECLOCKER)
 
         val parsed = withResult.map { (registrationId, row) ->
             ParsedTeamResult(

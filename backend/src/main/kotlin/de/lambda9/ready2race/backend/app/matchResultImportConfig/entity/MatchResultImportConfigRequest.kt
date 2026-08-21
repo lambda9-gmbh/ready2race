@@ -13,6 +13,8 @@ data class MatchResultImportConfigRequest(
     val colTeamRegistrationId: String,
     val colTeamPlace: String,
     val colTeamTime: String,
+    val attributionName: String?,
+    val attributionUrl: String?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -30,6 +32,8 @@ data class MatchResultImportConfigRequest(
             colTeamRegistrationId = "Info 1",
             colTeamPlace = "Place",
             colTeamTime = "2:31",
+            attributionName = "Webscorer",
+            attributionUrl = "https://www.webscorer.com",
         )
     }
 }

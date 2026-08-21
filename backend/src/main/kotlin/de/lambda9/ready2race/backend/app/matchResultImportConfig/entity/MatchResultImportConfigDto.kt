@@ -9,4 +9,6 @@ data class MatchResultImportConfigDto(
     val colTeamRegistrationId: String,
     val colTeamPlace: String?,
     val colTeamTime: String?,
+    val attributionName: String?,
+    val attributionUrl: String?,
 )

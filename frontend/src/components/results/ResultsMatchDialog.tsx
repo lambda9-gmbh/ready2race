@@ -25,6 +25,7 @@ import {sortByPlaces, compareNullsHigh} from '@utils/helpers.ts'
 import {groupByRatingCategory, hasRatingCategories} from '@utils/ratingCategorySections.ts'
 import {failedLabel} from '@utils/matchResultStatus.ts'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
+import TimingProviderAttribution from '@components/results/TimingProviderAttribution.tsx'
 
 type Props<M extends ResultsMatchInfo> = {
     match: M | null
@@ -276,6 +277,9 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                     ))}
                                 </Stack>
                             ))}
+                            {'timingProviderName' in match && (
+                                <TimingProviderAttribution matches={[match]} />
+                            )}
                         </Stack>
                     </DialogContent>
                     <DialogActions>
