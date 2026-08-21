@@ -14,10 +14,15 @@ data class TeamPlacement(
     val matchName: String? = null,
     val matchWeighting: Int? = null,
 ) {
-    /**
-     * Der Schlüssel, nach dem Platzierungen untereinander geordnet werden: erst die Partie in
-     * Setup-Reihenfolge, dann der Platz. Ohne Wertung je Partie ist der Partie-Anteil für alle
-     * gleich, es entscheidet also allein der Platz.
-     */
-    fun rankKey(): Pair<Int, Int> = (matchWeighting ?: 0) to place
+    companion object {
+        /**
+         * Die Reihenfolge der Platzierungen untereinander: Partien in Setup-Reihenfolge, innerhalb
+         * der Partie nach Platz. Platzierungen ohne Partie stehen hinter allen Partien - das sind
+         * in einem Wettkampf mit Wertung je Partie die Boote früherer Runden, deren Plätze das
+         * Gesamtfeld zählen und numerisch hinter den Partie-internen liegen. Ohne Wertung je
+         * Partie sind alle Partie-Anteile gleich, es entscheidet also allein der Platz.
+         */
+        val ordering: Comparator<TeamPlacement> =
+            compareBy({ it.matchWeighting ?: Int.MAX_VALUE }, { it.place })
+    }
 }

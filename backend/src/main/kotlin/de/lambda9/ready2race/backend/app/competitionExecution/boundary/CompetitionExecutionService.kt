@@ -2260,6 +2260,8 @@ object CompetitionExecutionService {
         val categoryPlace: Int?,
         /** Die Partie, in der der Platz gefahren wurde - nur bei Wertung je Partie gesetzt. */
         val matchName: String?,
+        /** Die Setup-Reihenfolge der Partie - ordnet die Partien untereinander an. */
+        val matchWeighting: Int?,
     )
 
     /**
@@ -2267,43 +2269,32 @@ object CompetitionExecutionService {
      * jedem Abschnitt neu ab 1. [computeCompetitionPlaces] selbst bleibt unberührt und liefert
      * weiter die wettkampfweite Platzierung — daran hängen die Urkunden.
      *
+     * Wird je Partie gewertet, zählt jede Partie für sich: Finale A, B und C haben in jeder
+     * Kategorie je einen Ersten, und der Erste aus Finale B steht hinter dem Letzten aus
+     * Finale A. Beides — Anordnung und Neuzählung — erledigt `RatingCategoryRanking` über die
+     * Partie-Dimension; die Anzeige stellt den Partienamen daneben.
+     *
      * Abgemeldete, ausgeschiedene und disqualifizierte Boote gelten hier als ungewertet: sie haben
      * zwar einen rechnerischen Platz, aber keinen, der in einer Ergebnisliste etwas zu suchen hat.
      * Sie behalten ihren Abschnitt und stehen dort am Ende.
      */
     fun placesByRatingCategory(
         places: List<TeamPlacement>,
-    ): List<RankedCategory<PlaceInCategory>> {
-
-        // Der Rang, nach dem geordnet und im Abschnitt durchgezählt wird. Ohne Wertung je Partie
-        // ist das die Reihenfolge der Plätze selbst. Wird je Partie gewertet, sind die Plätze nur
-        // innerhalb ihrer Partie vergleichbar - der Erste aus Finale B steht hinter dem Letzten
-        // aus Finale A, sonst stünden in der Ergebnisliste abwechselnd Erste und Zweite
-        // verschiedener Partien. Gleiche Schlüssel behalten denselben Rang, Gleichstände (etwa aus
-        // EQUAL) bleiben also Gleichstände.
-        val rankByKey = places
-            .map { it.rankKey() }
-            .distinct()
-            .sortedWith(compareBy({ it.first }, { it.second }))
-            .withIndex()
-            .associate { (index, key) -> key to index + 1 }
-
-        val rankByTeam = places.associate { it.team.competitionRegistration to rankByKey.getValue(it.rankKey()) }
-
-        return RatingCategoryRanking.groupAndRank(
-            items = places.map { PlaceInCategory(it.team, it.place, null, it.matchName) },
+    ): List<RankedCategory<PlaceInCategory>> =
+        RatingCategoryRanking.groupAndRank(
+            items = places.map { PlaceInCategory(it.team, it.place, null, it.matchName, it.matchWeighting) },
             category = { it.team.ratingCategory },
             place = {
                 if (it.team.deregistered || it.team.out || it.team.failed) null
-                else rankByTeam[it.team.competitionRegistration]
+                else it.place
             },
             tieBreak = { it.team.startNumber },
+            subgroup = { it.matchWeighting },
         ).map { section ->
             section.copy(
                 entries = section.entries.map { it.copy(item = it.item.copy(categoryPlace = it.categoryPlace)) }
             )
         }
-    }
 
     fun getCompetitionPlaces(
         eventId: UUID,
@@ -3227,10 +3218,7 @@ object CompetitionExecutionService {
         val bytes = ByteArrayOutputStream().use { out ->
             CSV.write(
                 out,
-                // Bei Wertung je Partie kommen die Partien in Setup-Reihenfolge, innerhalb der
-                // Partie nach Platz - sonst stünden abwechselnd Erste und Zweite verschiedener
-                // Partien untereinander. Ohne diese Wertung entscheidet allein der Platz.
-                teamsData.sortedWith(compareBy({ it.matchWeighting ?: 0 }, { it.place }))
+                teamsData.sortedWith(TeamPlacement.ordering)
             ) {
 
                 column("Veranstaltung") { competitionData.eventName }
