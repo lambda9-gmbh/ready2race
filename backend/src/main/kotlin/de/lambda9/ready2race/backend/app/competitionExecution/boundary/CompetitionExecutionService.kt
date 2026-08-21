@@ -2134,7 +2134,7 @@ object CompetitionExecutionService {
 
     fun computeCompetitionPlaces(
         competitionId: UUID,
-    ): App<ServiceError, List<Pair<CompetitionMatchTeamWithRegistration, Int>>> = KIO.comprehension {
+    ): App<ServiceError, List<TeamPlacement>> = KIO.comprehension {
         val setupRoundRecords = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
         KIO.ok(computeCompetitionPlaces(sortRounds(setupRoundRecords)))
@@ -2151,7 +2151,7 @@ object CompetitionExecutionService {
      */
     fun computeCompetitionPlaces(
         setupRounds: List<CompetitionSetupRoundWithMatches>,
-    ): List<Pair<CompetitionMatchTeamWithRegistration, Int>> {
+    ): List<TeamPlacement> {
 
         val roundsWithTeamsToPlaces =
             setupRounds.filterIndexed { roundIdx, round -> // filters out rounds for which there was no following round created yet
@@ -2205,20 +2205,39 @@ object CompetitionExecutionService {
 
                     val teamToPlace = when (round.placesOption) {
                         CompetitionSetupPlacesOption.EQUAL.name -> {
-                            team to if (!isLastRound) {
+                            val place = if (!isLastRound) {
                                 setupRounds[roundIdx + 1].matches.flatMap { m -> m.teams.toList() }.size + 1 // Place is one higher than the count of participants in the next round
                             } else 1 // 1 if this is the final round
+                            TeamPlacement(team, place, null, null)
                         }
 
                         CompetitionSetupPlacesOption.ASCENDING.name ->
-                            team to getRoundOutcome(seedingList!!, matchIndex, realPlace)
+                            TeamPlacement(team, getRoundOutcome(seedingList!!, matchIndex, realPlace))
+
+                        // Jede Partie wird für sich gewertet: Finale A, B und C haben jeweils einen
+                        // Ersten. Der Platz ist also der Platz IN DER PARTIE, und die Partie gehört
+                        // zur Aussage dazu - ohne sie stünden mehrere „1" nebeneinander, ohne dass
+                        // sich sagen ließe, woher sie kommen.
+                        CompetitionSetupPlacesOption.PER_MATCH.name -> {
+                            val setupMatch = round.setupMatches
+                                .firstOrNull { it.id == sortedRoundMatches[matchIndex].competitionSetupMatch }
+                            TeamPlacement(
+                                team = team,
+                                place = realPlace,
+                                matchName = setupMatch?.name,
+                                matchWeighting = setupMatch?.weighting,
+                            )
+                        }
 
                         else -> {
                             val roundOutcome = getRoundOutcome(seedingList!!, matchIndex, realPlace)
                             // Für ein Massenfeld lässt sich im Setup keine Platztabelle pflegen, weil die
                             // Zahl der Startenden dort erst zur Laufzeit feststeht. Fehlt der Eintrag,
                             // gilt das Rundenergebnis selbst als Platz — wie bei ASCENDING.
-                            team to (round.places.firstOrNull { it.roundOutcome == roundOutcome }?.place ?: roundOutcome)
+                            TeamPlacement(
+                                team,
+                                round.places.firstOrNull { it.roundOutcome == roundOutcome }?.place ?: roundOutcome,
+                            )
                         }
                     }
                     teamToPlace
@@ -2239,6 +2258,8 @@ object CompetitionExecutionService {
         val team: CompetitionMatchTeamWithRegistration,
         val place: Int,
         val categoryPlace: Int?,
+        /** Die Partie, in der der Platz gefahren wurde - nur bei Wertung je Partie gesetzt. */
+        val matchName: String?,
     )
 
     /**
@@ -2251,18 +2272,38 @@ object CompetitionExecutionService {
      * Sie behalten ihren Abschnitt und stehen dort am Ende.
      */
     fun placesByRatingCategory(
-        places: List<Pair<CompetitionMatchTeamWithRegistration, Int>>,
-    ): List<RankedCategory<PlaceInCategory>> =
-        RatingCategoryRanking.groupAndRank(
-            items = places.map { (team, place) -> PlaceInCategory(team, place, null) },
+        places: List<TeamPlacement>,
+    ): List<RankedCategory<PlaceInCategory>> {
+
+        // Der Rang, nach dem geordnet und im Abschnitt durchgezählt wird. Ohne Wertung je Partie
+        // ist das die Reihenfolge der Plätze selbst. Wird je Partie gewertet, sind die Plätze nur
+        // innerhalb ihrer Partie vergleichbar - der Erste aus Finale B steht hinter dem Letzten
+        // aus Finale A, sonst stünden in der Ergebnisliste abwechselnd Erste und Zweite
+        // verschiedener Partien. Gleiche Schlüssel behalten denselben Rang, Gleichstände (etwa aus
+        // EQUAL) bleiben also Gleichstände.
+        val rankByKey = places
+            .map { it.rankKey() }
+            .distinct()
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .withIndex()
+            .associate { (index, key) -> key to index + 1 }
+
+        val rankByTeam = places.associate { it.team.competitionRegistration to rankByKey.getValue(it.rankKey()) }
+
+        return RatingCategoryRanking.groupAndRank(
+            items = places.map { PlaceInCategory(it.team, it.place, null, it.matchName) },
             category = { it.team.ratingCategory },
-            place = { if (it.team.deregistered || it.team.out || it.team.failed) null else it.place },
+            place = {
+                if (it.team.deregistered || it.team.out || it.team.failed) null
+                else rankByTeam[it.team.competitionRegistration]
+            },
             tieBreak = { it.team.startNumber },
         ).map { section ->
             section.copy(
                 entries = section.entries.map { it.copy(item = it.item.copy(categoryPlace = it.categoryPlace)) }
             )
         }
+    }
 
     fun getCompetitionPlaces(
         eventId: UUID,
@@ -2278,7 +2319,7 @@ object CompetitionExecutionService {
                 // Anzeige gruppiert die flache Liste danach wieder auf.
                 placesByRatingCategory(places)
                     .flatMap { it.entries.map { entry -> entry.item } }
-                    .traverse { it.team.toCompetitionTeamPlaceDto(it.place, it.categoryPlace) }
+                    .traverse { it.team.toCompetitionTeamPlaceDto(it.place, it.categoryPlace, it.matchName) }
             }.map {
                 ApiResponse.ListDto(
                     it
@@ -3179,14 +3220,17 @@ object CompetitionExecutionService {
     }
 
     fun buildCompetitionPlacesCsv(
-        teamsData:  List<Pair<CompetitionMatchTeamWithRegistration, Int>>,
+        teamsData:  List<TeamPlacement>,
         competitionData: EventDataForCompetitionResultsData
     ): ByteArray {
 
         val bytes = ByteArrayOutputStream().use { out ->
             CSV.write(
                 out,
-                teamsData.sortedBy { it.second }
+                // Bei Wertung je Partie kommen die Partien in Setup-Reihenfolge, innerhalb der
+                // Partie nach Platz - sonst stünden abwechselnd Erste und Zweite verschiedener
+                // Partien untereinander. Ohne diese Wertung entscheidet allein der Platz.
+                teamsData.sortedWith(compareBy({ it.matchWeighting ?: 0 }, { it.place }))
             ) {
 
                 column("Veranstaltung") { competitionData.eventName }
@@ -3195,10 +3239,15 @@ object CompetitionExecutionService {
                     column("Veranstaltungsende") { competitionData.eventDateRange.second.format(DateTimeFormatter.ISO_LOCAL_DATE) }
                 }
                 column("Wettkampf") { competitionData.competitionName }
-                column("Platz") { second.toString()}
-                column("Team") { singletonOrFallback(first.participants.map { it.externalClubName }.toSet(), first.mixedTeamTerm)?: first.clubName }
-                column("Anmelder") { first.clubName + if (first.teamNumber != null) " | ${first.teamNumber}" else "" }
-                column("Teammitglieder"){ first.participants.joinToString(", ") { "${it.firstName} ${it.lastName} [${it.namedParticipantName}] (${it.externalClubName?:first.clubName})" }}
+                column("Platz") { place.toString()}
+                // Die Spalte steht nur, wenn es je Lauf gewertete Plätze gibt - sonst trüge sie
+                // in jeder Zeile dasselbe Nichts.
+                if (teamsData.any { it.matchName != null }) {
+                    column("Partie") { matchName ?: "" }
+                }
+                column("Team") { singletonOrFallback(team.participants.map { it.externalClubName }.toSet(), team.mixedTeamTerm)?: team.clubName }
+                column("Anmelder") { team.clubName + if (team.teamNumber != null) " | ${team.teamNumber}" else "" }
+                column("Teammitglieder"){ team.participants.joinToString(", ") { "${it.firstName} ${it.lastName} [${it.namedParticipantName}] (${it.externalClubName?:team.clubName})" }}
 
             }
             out.toByteArray()

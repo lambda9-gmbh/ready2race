@@ -21,6 +21,11 @@ data class CompetitionTeamPlaceDto(
      * Mannschaften.
      */
     val categoryPlace: Int?,
+    /**
+     * Die Partie, in der der Platz gefahren wurde — nur gesetzt, wenn die Runde je Partie
+     * gewertet wird und mehrere Partien je einen Ersten haben.
+     */
+    val matchName: String?,
     val deregistered: Boolean,
     val deregistrationReason: String?,
     val excluded: Boolean,

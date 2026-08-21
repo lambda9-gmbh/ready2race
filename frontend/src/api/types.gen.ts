@@ -1215,7 +1215,7 @@ export type CompetitionSetupRoundDto = {
     groups?: Array<CompetitionSetupGroupDto>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
-    placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM'
+    placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM' | 'PER_MATCH'
     places?: Array<CompetitionSetupPlaceDto>
     /**
      * Marks a preliminary / qualification round. The number of teams qualifying out of the qualification round(s) defines the fixed bracket size N used to resolve the match namings.
@@ -1224,7 +1224,7 @@ export type CompetitionSetupRoundDto = {
     matchNamings?: Array<CompetitionSetupMatchNamingDto>
 }
 
-export type placesOption = 'EQUAL' | 'ASCENDING' | 'CUSTOM'
+export type placesOption = 'EQUAL' | 'ASCENDING' | 'CUSTOM' | 'PER_MATCH'
 
 export type CompetitionSetupTemplateDto = {
     id: string
@@ -1287,6 +1287,10 @@ export type CompetitionTeamPlaceDto = {
      * the place within the rating category, counted from 1; null for excluded teams
      */
     categoryPlace?: number | null
+    /**
+     * Name of the match the place was scored in. Only set when the round scores places separately per match (each match has its own first place).
+     */
+    matchName?: string | null
     deregistered: boolean
     deregistrationReason?: string
     excluded: boolean

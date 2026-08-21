@@ -30,7 +30,7 @@ export type FormSetupRound = {
     groups: Array<FormSetupGroup>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
-    placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM'
+    placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM' | 'PER_MATCH'
     places: Array<{
         roundOutcome: number
         place: number

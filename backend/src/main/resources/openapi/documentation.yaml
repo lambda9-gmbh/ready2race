@@ -12007,6 +12007,7 @@ components:
             - EQUAL
             - ASCENDING
             - CUSTOM
+            - PER_MATCH
         places:
           type: array
           items:
@@ -14508,6 +14509,12 @@ components:
           type: integer
           nullable: true
           description: "the place within the rating category, counted from 1; null for excluded teams"
+        matchName:
+          type: string
+          nullable: true
+          description: >-
+            Name of the match the place was scored in. Only set when the round scores places
+            separately per match (each match has its own first place).
         deregistered:
           type: boolean
         deregistrationReason:

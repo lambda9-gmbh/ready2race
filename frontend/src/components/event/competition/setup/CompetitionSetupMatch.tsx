@@ -110,7 +110,13 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         props.participantFunctions,
                         props.teamCounts,
                         () => {
-                            formContext.setValue(`rounds.${roundIndex}.placesOption`, 'EQUAL')
+                            // Only CUSTOM requires defined team counts - other options stay selected
+                            if (
+                                formContext.getValues(`rounds.${roundIndex}.placesOption`) ===
+                                'CUSTOM'
+                            ) {
+                                formContext.setValue(`rounds.${roundIndex}.placesOption`, 'EQUAL')
+                            }
                         },
                     )
                 }}

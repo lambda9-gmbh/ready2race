@@ -47,6 +47,8 @@ model CompetitionTeamPlaceDto {
   clubName: string;
   namedParticipants: CompetitionTeamNamedParticipantDto[];
   place: int32;
+  /** Name of the match the place was scored in. Only set when the round scores places separately per match. */
+  matchName?: string;
   deregistered: boolean;
   deregistrationReason?: string;
 }

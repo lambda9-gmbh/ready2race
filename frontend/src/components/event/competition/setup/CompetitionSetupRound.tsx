@@ -520,6 +520,11 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                                 'event.competition.setup.place.placesOption.ascending',
                                                             )}
                                                         </MenuItem>
+                                                        <MenuItem value={'PER_MATCH'}>
+                                                            {t(
+                                                                'event.competition.setup.place.placesOption.perMatch',
+                                                            )}
+                                                        </MenuItem>
                                                         {!roundHasUndefinedTeams && (
                                                             <MenuItem value={'CUSTOM'}>
                                                                 {t(
