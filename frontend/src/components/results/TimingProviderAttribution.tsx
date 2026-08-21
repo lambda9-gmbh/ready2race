@@ -9,11 +9,17 @@ type TimingProviderSource = {
 
 type Props = {
     matches: TimingProviderSource[]
+    /**
+     * Inline steht die Nennung in einer fremden Zeile - im Lauf-Dialog direkt hinter der Uhrzeit.
+     * Sie trägt dort dieselbe Schrift und dieselbe Symbolfarbe wie die Zeitangabe daneben, statt
+     * als kleingedruckte Fußzeile unter der ganzen Liste zu stehen.
+     */
+    inline?: boolean
 }
 
 // Attribution of the external timing provider (e.g. RaceClocker) whose terms require a visible
 // reference/link wherever their timing data is published.
-const TimingProviderAttribution = ({matches}: Props) => {
+const TimingProviderAttribution = ({matches, inline = false}: Props) => {
     const {t} = useTranslation()
 
     const providers = [
@@ -31,12 +37,17 @@ const TimingProviderAttribution = ({matches}: Props) => {
     return (
         <Stack
             direction={'row'}
-            spacing={0.5}
-            justifyContent={'center'}
+            spacing={inline ? 1 : 0.5}
+            justifyContent={inline ? undefined : 'center'}
             alignItems={'center'}
-            sx={{py: 1}}>
-            <TimerOutlinedIcon color={'action'} fontSize={'inherit'} />
-            <Typography variant={'body2'} color={'textSecondary'}>
+            sx={inline ? undefined : {py: 1}}>
+            <TimerOutlinedIcon
+                color={inline ? 'primary' : 'action'}
+                fontSize={inline ? undefined : 'inherit'}
+            />
+            <Typography
+                variant={inline ? undefined : 'body2'}
+                color={inline ? undefined : 'textSecondary'}>
                 {t('results.timing.attribution')}{' '}
                 {providers.map(([name, url], index) => (
                     <span key={name}>
