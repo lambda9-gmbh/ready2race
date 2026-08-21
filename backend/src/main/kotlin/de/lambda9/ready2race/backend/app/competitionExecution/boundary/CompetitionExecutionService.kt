@@ -1383,8 +1383,9 @@ object CompetitionExecutionService {
             }.orDie()
         }
 
-        // Die Ergebnisse dieses Laufs kommen aus RaceClocker - die Nennung steht damit fest.
-        !prepareForNewPlaces(matchId, userId, timing = TimingAttribution.RACECLOCKER)
+        // Die Ergebnisse dieses Laufs kommen aus RaceClocker - die Nennung steht damit fest und
+        // zeigt auf die Ergebnisseite des Rennens, aus dem sie geholt wurden.
+        !prepareForNewPlaces(matchId, userId, timing = TimingAttribution.raceClocker(target.resultsUrl))
 
         val parsed = withResult.map { (registrationId, row) ->
             ParsedTeamResult(

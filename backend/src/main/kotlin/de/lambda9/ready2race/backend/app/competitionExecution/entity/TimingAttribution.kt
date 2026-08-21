@@ -13,11 +13,22 @@ data class TimingAttribution(
 ) {
     companion object {
 
+        const val RACECLOCKER_NAME = "RaceClocker"
+
+        /** Der Rückfall, wenn dem Wettkampf kein Rennen zugeordnet ist - dann gibt es keine Seite. */
+        const val RACECLOCKER_HOME = "https://raceclocker.com"
+
         /**
          * Der Live-Abruf holt seine Ergebnisse direkt aus RaceClocker und kennt keine
-         * Import-Konfiguration, an der eine Nennung gepflegt wäre. Für ihn steht sie hier.
+         * Import-Konfiguration, an der eine Nennung gepflegt wäre. Verlinkt wird die
+         * Ergebnisseite des Rennens, aus dem die Zeiten kommen - dieselbe Adresse, die der Abruf
+         * anfragt. Ein Verweis auf die Startseite ließe den Leser mit der Suche allein, und die
+         * Nennung soll die Zeiten belegen und nicht nur den Anbieter nennen.
          */
-        val RACECLOCKER = TimingAttribution("RaceClocker", "https://raceclocker.com")
+        fun raceClocker(resultsUrl: String?) = TimingAttribution(
+            name = RACECLOCKER_NAME,
+            url = resultsUrl?.takeIf { it.isNotBlank() } ?: RACECLOCKER_HOME,
+        )
 
         /**
          * Die Nennung einer Import-Konfiguration - `null`, solange dort keine gepflegt ist.
