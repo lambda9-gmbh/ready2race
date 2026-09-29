@@ -35,6 +35,7 @@ out/
 ### VS Code ###
 .vscode/
 target/
+build/
 
 ### Tests ###
 testOutputs/

@@ -11,12 +11,12 @@
 Before building, make you are using a JAVA JDK version, that is not higher than the JAVA JRE version on your target server.
 
 To build the backend `.jar`-File, you have to boot a local postgres database container via docker compose and run the
-Maven-Wrapper. Run these commands :
+Gradle-Wrapper. Run these commands:
 ```shell
 $ docker compose up -d
-$ ./mvnw clean package
+$ ../gradlew clean build
 ```
-This should generate a `/target` directory, where you can find the Archive bundled with dependencies to run it.
+This generates a `/build/libs` directory containing the application JAR bundled with its dependencies.
 
 ## Running
 
@@ -47,7 +47,7 @@ Run the following command to start up the application (you can use additional op
 $ java -jar ready2race.jar config.env
 ```
 
-When building the jar yourself, the name of it should look like `ready2race-api-{version}-jar-with-dependencies.jar`.
+When building the JAR yourself, its name is `ready2race-api-{version}-jar-with-dependencies.jar`.
 
 ## Contributing
 
