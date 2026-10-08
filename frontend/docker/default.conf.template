@@ -1,0 +1,50 @@
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    client_max_body_size 100m;
+
+    # Docker DNS follows backend replacements without restarting the frontend.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $backend_upstream "${BACKEND_UPSTREAM}";
+
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
+    }
+
+    location = /runtime-config.js {
+        add_header Cache-Control "no-store";
+        # Public configuration and module assets can be loaded by embedded frontends.
+        add_header Access-Control-Allow-Origin "*";
+        try_files $uri =404;
+    }
+
+    location /api/ {
+        proxy_pass http://$backend_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_buffering off;
+        proxy_read_timeout 3600s;
+    }
+
+    location /static/ {
+        proxy_pass http://$backend_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /assets/ {
+        add_header Access-Control-Allow-Origin "*";
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    location / {
+        add_header Cache-Control "no-cache";
+        # /app/ contains PWA assets but no index.html; route directories to the SPA too.
+        try_files $uri /index.html;
+    }
+}

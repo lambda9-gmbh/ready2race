@@ -1,13 +1,14 @@
 package de.lambda9.ready2race.backend.plugins
 
 import de.lambda9.ready2race.backend.config.Config
+import de.lambda9.ready2race.backend.config.parseCorsOrigin
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.defaultheaders.*
 
-fun Application.configureHTTP(mode: Config.Mode) {
+fun Application.configureHTTP(mode: Config.Mode, corsAllowedOrigins: List<String> = emptyList()) {
     install(DefaultHeaders) {
         header("X-Engine", "Ktor")
     }
@@ -27,15 +28,23 @@ fun Application.configureHTTP(mode: Config.Mode) {
         minimumSize(1024)
     }
 
-    if (mode == Config.Mode.DEV) {
+    if (mode == Config.Mode.DEV || corsAllowedOrigins.isNotEmpty()) {
         install(CORS) {
-            anyHost()
+            if (mode == Config.Mode.DEV) {
+                anyHost()
+            } else {
+                corsAllowedOrigins.forEach { origin ->
+                    val uri = parseCorsOrigin(origin)
+                    allowHost(uri.rawAuthority, schemes = listOf(uri.scheme))
+                }
+            }
             allowHeader(HttpHeaders.ContentType)
             allowHeader("X-Api-Session")
             exposeHeader(HttpHeaders.ContentDisposition)
             exposeHeader("X-Api-Session")
             allowMethod(HttpMethod.Options)
             allowMethod(HttpMethod.Put)
+            allowMethod(HttpMethod.Patch)
             allowMethod(HttpMethod.Delete)
             allowCredentials = true
         }

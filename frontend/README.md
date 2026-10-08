@@ -1,5 +1,9 @@
 # Ready2Race Frontend
 
+For Docker self-hosting and runtime URL configuration, see the
+[deployment guide](../docs/docker-deployment.md). Runtime settings in `window.READY2RACE_CONFIG`
+override build-time `VITE_*` settings; absolute URLs remain supported for embedded frontends.
+
 ## Installation
 
 ### Dependencies

@@ -1,0 +1,14 @@
+# Add to compose.yaml to build both images from this checkout, without a registry.
+services:
+  backend:
+    image: ready2race-backend:local
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+  frontend:
+    image: ready2race-frontend:local
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile

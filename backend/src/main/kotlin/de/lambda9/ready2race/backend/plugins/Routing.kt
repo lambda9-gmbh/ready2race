@@ -39,9 +39,12 @@ import de.lambda9.ready2race.backend.dev.devRoutes
 import io.ktor.server.application.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
+import io.ktor.server.response.respondText
 
 fun Application.configureRouting(config: Config, env: JEnv) {
     routing {
+        // The server starts accepting requests only after migrations and initialization finish.
+        get("/healthz") { call.respondText("ok") }
         route("/api") {
             swaggerUI(path = "documentation")
             devRoutes(config)

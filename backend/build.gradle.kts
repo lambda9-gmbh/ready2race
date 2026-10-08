@@ -39,6 +39,10 @@ val skipCodegen = providers.gradleProperty("skipCodegen")
     .orElse(providers.systemProperty("skipCodegen"))
     .map(String::toBoolean)
     .getOrElse(false)
+val buildDatabaseUrl = providers.environmentVariable("BUILD_DATABASE_URL")
+    .getOrElse("jdbc:postgresql://localhost:7652/ready2race-build")
+val buildDatabaseUser = providers.environmentVariable("BUILD_DATABASE_USER").getOrElse("developer")
+val buildDatabasePassword = providers.environmentVariable("BUILD_DATABASE_PASSWORD").getOrElse("sql")
 
 repositories {
     mavenCentral()
@@ -121,9 +125,9 @@ tasks.test {
 }
 
 flyway {
-    url = "jdbc:postgresql://localhost:7652/ready2race-build"
-    user = "developer"
-    password = "sql"
+    url = buildDatabaseUrl
+    user = buildDatabaseUser
+    password = buildDatabasePassword
     schemas = arrayOf("ready2race")
     cleanDisabled = false
 }
@@ -136,9 +140,9 @@ jooq {
             jooqConfiguration.apply {
                 jdbc.apply {
                     driver = "org.postgresql.Driver"
-                    url = "jdbc:postgresql://localhost:7652/ready2race-build"
-                    user = "developer"
-                    password = "sql"
+                    url = buildDatabaseUrl
+                    user = buildDatabaseUser
+                    password = buildDatabasePassword
                 }
                 generator.apply {
                     name = "org.jooq.codegen.KotlinGenerator"

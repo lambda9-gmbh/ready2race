@@ -38,6 +38,7 @@ private val logger = KotlinLogging.logger {}
 fun main(args: Array<String>): Unit = runBlocking {
     val config = dotenv {
         filename = args.getOrNull(0) ?: ".env"
+        ignoreIfMissing = true
     }.parseConfig()
     val (env, ds) = Env.create(config)
 
@@ -59,7 +60,7 @@ fun main(args: Array<String>): Unit = runBlocking {
 
 fun Application.module(env: JEnv) {
     configureKIO(env)
-    configureHTTP(env.env.config.mode)
+    configureHTTP(env.env.config.mode, env.env.config.corsAllowedOrigins)
     configureSerialization()
     configureSessions()
     configureRequests()

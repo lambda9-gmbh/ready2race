@@ -126,7 +126,7 @@ export default defineConfig({
       manifestFilename: 'app/manifest.webmanifest',
       injectManifest: {
         // Die index.html wird bewusst nicht vorgeladen, sie läuft über NetworkFirst.
-        globIgnores: ['**/index.html'],
+        globIgnores: ['**/index.html', '**/runtime-config.js'],
         // Das Bundle ist ein einziger Brocken von gut 3 MB und wird vom Server unkomprimiert
         // ausgeliefert. Workbox lässt standardmäßig nur 2 MiB in den Precache und würde es
         // stillschweigend auslassen - womit die Helfer-App offline nichts mehr hätte. Die

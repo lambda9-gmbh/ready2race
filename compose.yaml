@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ready2race
+      POSTGRES_USER: ready2race
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in your instance env file}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ready2race -d ready2race"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/lambda9-gmbh/ready2race-backend}:${BACKEND_VERSION:?Set BACKEND_VERSION to a release tag}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MODE: PROD
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: 8080
+      DATABASE_URL: jdbc:postgresql://db:5432/ready2race
+      DATABASE_USER: ready2race
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD}
+      STATIC_FILES_PATH: /data/static
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}
+      SECURITY_PEPPER: ${SECURITY_PEPPER:?Set SECURITY_PEPPER}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      SMTP_HOST: ${SMTP_HOST:?Set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:?Set SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?Set SMTP_PASSWORD}
+      SMTP_STRATEGY: ${SMTP_STRATEGY:-SMTP_TLS}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:?Set SMTP_FROM_ADDRESS}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Ready2Race}
+      SMTP_LOCALHOST: ${SMTP_LOCALHOST:-}
+      SMTP_REPLY: ${SMTP_REPLY:-}
+      WHITELIST_EMAIL_RECEIVER: ${WHITELIST_EMAIL_RECEIVER:-}
+      WEBDAV_URL_SCHEME: ${WEBDAV_URL_SCHEME:-}
+      WEBDAV_HOST: ${WEBDAV_HOST:-}
+      WEBDAV_PATH: ${WEBDAV_PATH:-}
+      WEBDAV_FOLDER_PATH: ${WEBDAV_FOLDER_PATH:-}
+      WEBDAV_AUTH_USER: ${WEBDAV_AUTH_USER:-}
+      WEBDAV_AUTH_PASSWORD: ${WEBDAV_AUTH_PASSWORD:-}
+    volumes:
+      - static:/data/static
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 12
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/lambda9-gmbh/ready2race-frontend}:${FRONTEND_VERSION:?Set FRONTEND_VERSION to a release tag}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_UPSTREAM: backend:8080
+      API_BASE_URL: ${API_BASE_URL:-/api}
+      THEME_URL: ${THEME_URL:-/static/theme.json}
+      FONTS_URL: ${FONTS_URL:-/static/fonts}
+      LOGOS_URL: ${LOGOS_URL:-/static/logos}
+      R2R_LOGO_URL: ${R2R_LOGO_URL:-/r2r_logo.png}
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  database:
+  static:

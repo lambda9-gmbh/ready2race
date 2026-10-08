@@ -24,3 +24,7 @@ deploy*.sh
 .kotlin/
 build/
 **/build/
+
+# Deployment credentials and local instance configuration
+/.env
+/deploy/*.env

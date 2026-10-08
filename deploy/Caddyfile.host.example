@@ -1,0 +1,8 @@
+# Add these blocks to an existing Caddy installation on the host.
+a.example.org {
+	reverse_proxy 127.0.0.1:8081
+}
+
+b.example.org {
+	reverse_proxy 127.0.0.1:8082
+}

@@ -1,0 +1,7 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$PUBLIC_DOMAIN} {
+	reverse_proxy frontend:80
+}

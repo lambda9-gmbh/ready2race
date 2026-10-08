@@ -33,7 +33,8 @@ data class Config(
     val security: Security,
     val admin: Admin,
     val staticFilesPath: String,
-    val webDAV: WebDAV?
+    val webDAV: WebDAV?,
+    val corsAllowedOrigins: List<String> = emptyList(),
 ) {
 
     enum class Mode {
@@ -119,7 +120,7 @@ data class Config(
     companion object {
 
         private inline fun <reified T : Any> Dotenv.optional(key: String, parser: Parser<T>): IO<ParseEnvError, T?> =
-            KIO.ok(get(key)).andThenNotNull { value ->
+            KIO.ok(get(key)?.takeIf { it.isNotBlank() }).andThenNotNull { value ->
                 parser(value) { task ->
                     task.mapError { ParseEnvError.UnparsableValue(key, value, T::class) }
                 }
@@ -200,6 +201,9 @@ data class Config(
             }
 
             val staticFilesPath = !required("STATIC_FILES_PATH")
+            val corsAllowedOrigins = !optional("CORS_ALLOWED_ORIGINS", Parser { value ->
+                value.split(',').map(String::trim).filter(String::isNotEmpty).onEach(::parseCorsOrigin)
+            }) ?: emptyList()
 
             val webDAV = run {
                 val urlScheme = !optional("WEBDAV_URL_SCHEME")
@@ -249,7 +253,8 @@ data class Config(
                 security = security,
                 admin = admin,
                 staticFilesPath = staticFilesPath,
-                webDAV = webDAV
+                webDAV = webDAV,
+                corsAllowedOrigins = corsAllowedOrigins,
             )
 
             KIO.ok(config)

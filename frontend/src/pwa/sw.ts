@@ -19,6 +19,13 @@ declare const self: ServiceWorkerGlobalScope
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
+// Runtime settings change independently of the build. Keep the last configuration for offline
+// startup, but fetch it again whenever the network is available.
+registerRoute(
+    ({url}) => url.origin === self.location.origin && url.pathname === '/runtime-config.js',
+    new NetworkFirst({cacheName: 'app-runtime-config'}),
+)
+
 // Bewusst NICHT createHandlerBoundToURL('index.html'): Das setzt voraus, dass die index.html im
 // Precache liegt, und genau die ist per globIgnores ausgenommen (sie wird beim Ausliefern nicht
 // verändert, aber ein eingefrorener Shell-Einstieg ist bei einem Regatta-Update das Letzte, was

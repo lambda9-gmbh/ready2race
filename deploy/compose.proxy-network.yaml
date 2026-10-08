@@ -1,0 +1,13 @@
+# Connect only the frontend gateway to the network of an existing container proxy.
+services:
+  frontend:
+    networks:
+      default:
+      proxy:
+        aliases:
+          - ${PROXY_ALIAS:?Set a unique PROXY_ALIAS per instance}
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:?Set the existing Docker proxy network name}

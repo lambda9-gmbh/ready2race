@@ -1,5 +1,8 @@
 # Ready2Race Backend
 
+For Docker self-hosting, see the [deployment guide](../docs/docker-deployment.md).
+The application also accepts process environment variables without an `.env` file.
+
 ## Installation
 
 ### Dependencies
