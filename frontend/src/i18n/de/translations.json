@@ -923,6 +923,66 @@
         }
       },
       "setup": {
+        "preview": {
+          "conditionalSource": "{{source}} (besetzungsabhängig)",
+          "conditionalLegend": "Gepunktet: geplante Verbindung unter einer Besetzungsannahme.",
+          "occupancyAssumption": "Für die gezeigte Zuordnung: mindestens {{count}} Teilnehmende je unbegrenztem Lauf dieser Runde.",
+          "conditionalNotice": "Diese Weiterleitungen gelten unter der angegebenen Besetzungsannahme. Bei kleineren Feldern können sich die Herkunftsläufe verschieben; spätere Verbindungen übernehmen diese Unsicherheit.",
+          "title": "Wettbewerbsverlauf",
+          "subtitle": "Aktueller Formularstand · Nur Vorschau",
+          "planned": "Geplanter Ablauf bei vollständiger Besetzung. Tatsächliche Teilnehmerzahlen können die Zuordnung bei der Durchführung verändern.",
+          "navigation": "Runden von links nach rechts · Seitlich scrollen oder Runde wählen · Gestrichelt: Verlierer eines Zweierlaufs",
+          "fullscreen": "Vollbild",
+          "windowed": "Dialogansicht",
+          "empty": "Noch keine Runden angelegt.",
+          "matchName": "Lauf {{number}}",
+          "roundName": "Runde {{number}}",
+          "winner": "Sieger",
+          "loser": "Verlierer",
+          "places": "Platz {{places}}",
+          "from": "{{place}} aus {{match}}",
+          "seed": "Seed {{number}}",
+          "openOutcome": "Rundenergebnis {{number}} · {{reason}}",
+          "open": {
+            "missing": "Startplatz noch nicht zugeordnet",
+            "invalidSeed": "Ungültiger Seed",
+            "duplicateSeed": "Mehrfach zugeordnet – Herkunft offen",
+            "unknownField": "Herkunft hängt von der tatsächlichen Besetzung ab",
+            "unknownOutcome": "Kein entsprechendes Ergebnis in der Vorrunde",
+            "groupRound": "Herkunft aus Gruppenphase nicht dargestellt"
+          },
+          "qualification": "Qualifikation",
+          "groupsExcluded": "Gruppenphasen sind nicht Teil dieser Vorschau.",
+          "noMatches": "Noch keine Läufe angelegt.",
+          "unlimited": "∞ Teilnehmende · unbegrenzt",
+          "participants_one": "{{count}} Startplatz",
+          "participants_other": "{{count}} Startplätze",
+          "invalidCapacity": "Teilnehmerzahl ungültig",
+          "more_one": "+ {{count}} weitere Herkunft · Details bei Auswahl",
+          "more_other": "+ {{count}} weitere Herkünfte · Details bei Auswahl",
+          "dynamicFirst": "Verteilung nach Seed-Liste und tatsächlicher Teilnehmerzahl; keine feste Startplatzanzahl.",
+          "dynamicFollowing": "Nur ausdrücklich zugeordnete Rundenergebnisse werden gezeigt. Unbegrenzt ergänzt keine weiteren Zuordnungen.",
+          "omitted_one": "{{count}} weiterer Startplatz aus Darstellungsgründen nicht aufgelöst.",
+          "omitted_other": "{{count}} weitere Startplätze aus Darstellungsgründen nicht aufgelöst.",
+          "checkAssignments": "Offene oder widersprüchliche Zuordnungen",
+          "selectMatch": "Lauf auswählen, um Herkunft und direkte Weiterleitungen hervorzuheben.",
+          "order": "Laufgewichtung {{weighting}} · Durchführungsreihenfolge {{order}}",
+          "autoAdvance": "Freilos",
+          "autoAdvanceHint": "Automatisch weiter · ohne Begegnung",
+          "singleRequired": "Ein Startplatz; diese Runde muss laut Setup durchgeführt werden.",
+          "singleOptional": "Ein Startplatz: automatische Platzierung nur, wenn bei der Durchführung genau ein teilnahmeberechtigtes Team übrig ist.",
+          "customNaming": "Standardnamen angezeigt. Abweichende Namen und Reihenfolgen je tatsächlicher Teilnehmerzahl werden erst bei der Durchführung bestimmt.",
+          "issues": {
+            "invalidCapacity": "Die Teilnehmerzahl ist ungültig; Zuordnung prüfen.",
+            "missingSlots": "Für die geplante Teilnehmerzahl fehlen Startplatzzuordnungen.",
+            "extraSlots": "Es sind mehr Startplätze zugeordnet als Teilnehmende vorgesehen.",
+            "ignoredSeeds": "Die eingetragenen Teilnehmer-Seeds werden in der ersten Runde nicht verwendet."
+          },
+          "sources": "Herkunft",
+          "destinations": "Direkte Weiterleitungen",
+          "goToSource": "Zu {{match}}",
+          "noDestination": "Keine eindeutige Weiterleitung im aktuellen Setup zugeordnet."
+        },
         "setup": "Wettbewerbsablauf",
         "save": {
           "save": "Speichern",
@@ -977,9 +1037,9 @@
             "unlimited": "Unbegrenzt"
           },
           "outcome": {
-            "outcome": "Setzung",
-            "outcomes": "Setzungen",
-            "tooltip": "Resultierende Setzungen dieser Partie",
+            "outcome": "Seed",
+            "outcomes": "Seeds",
+            "tooltip": "Resultierende Seeds dieser Partie",
             "result": "Ergebnis"
           },
           "remove": "Partie entfernen",
@@ -992,7 +1052,7 @@
           "places": "Gesamtplatzierungen",
           "placesOption": {
             "equal": "Gleichgestellt (Platz = {{place}})",
-            "ascending": "Aufsteigend (Platz = Setzung)",
+            "ascending": "Aufsteigend (Platz = Seed)",
             "custom": "Benutzerdefiniert",
             "perMatch": "Pro Partie (Platz = Platz in der Partie)"
           }
