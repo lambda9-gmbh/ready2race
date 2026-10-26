@@ -17,6 +17,8 @@ import {getCompetitionSetupTemplates} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {CompetitionSetupTemplateDto} from '@api/types.gen.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
+import CompetitionSetupPreview from './CompetitionSetupPreview'
+import {AccountTree} from '@mui/icons-material'
 
 type Props = {
     formContext: UseFormReturn<CompetitionSetupForm>
@@ -31,6 +33,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     const theme = useTheme()
 
     const [roundsError] = useState<string | null>(null)
+    const [previewOpen, setPreviewOpen] = useState(false)
 
     const {
         fields: roundFields,
@@ -164,6 +167,13 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     [theme.breakpoints.down('md')]: {flexDirection: 'column', alignItems: 'start'},
                 }}>
                 <Button
+                    type="button"
+                    variant="outlined"
+                    startIcon={<AccountTree />}
+                    onClick={() => setPreviewOpen(true)}>
+                    {t('event.competition.setup.preview.title')}
+                </Button>
+                <Button
                     variant="outlined"
                     disabled={hasLockedRounds}
                     onClick={() => resetForm([])}>
@@ -198,6 +208,12 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     </SubmitButton>
                 )}
             </Stack>
+            {previewOpen && (
+                <CompetitionSetupPreview
+                    rounds={formWatch ?? []}
+                    onClose={() => setPreviewOpen(false)}
+                />
+            )}
             <Stack spacing={6}>
                 {lastLockedRoundIndex < 0 && <AddRoundButton index={0} insertRound={insertRound} />}
                 {roundsError && <Typography color={'error'}>{roundsError}</Typography>}

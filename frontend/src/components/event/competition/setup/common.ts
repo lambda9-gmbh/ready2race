@@ -562,6 +562,17 @@ export const getNewPlaces = (
     nextRoundTeams: number,
     currentPlaces: {roundOutcome: number; place: number}[],
 ) => {
+    // Keep the editor (and its read-only preview) usable while a participant-count field
+    // contains an invalid intermediate value. Preserve manually entered places until valid.
+    if (
+        !Number.isSafeInteger(thisRoundTeams) ||
+        thisRoundTeams < 0 ||
+        thisRoundTeams > 0xffffffff ||
+        !Number.isSafeInteger(nextRoundTeams) ||
+        nextRoundTeams < 0
+    ) {
+        return currentPlaces
+    }
     return new Array(thisRoundTeams)
         .fill(null)
         .map((_, i) => ({
